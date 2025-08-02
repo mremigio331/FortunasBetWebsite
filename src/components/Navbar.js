@@ -1,9 +1,7 @@
 import React, { useContext, useState } from "react";
-import { Layout, Menu, Button, Avatar } from "antd";
+import { Menu, Button, Avatar } from "antd";
 import { Link } from "react-router-dom";
 import { UserAuthenticationContext } from "../provider/UserAuthenticationProvider";
-
-const { Header } = Layout;
 
 const Navbar = () => {
   const {
@@ -89,40 +87,38 @@ const Navbar = () => {
   ];
 
   return (
-    <Layout>
-      <Header
+    <div
+      style={{
+        width: "100%",
+        backgroundColor: "#001529",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        padding: "0 24px",
+        height: "100%",
+      }}
+    >
+      <div
         style={{
-          position: "fixed",
-          zIndex: 1,
-          width: "100%",
-          backgroundColor: "#001529",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
+          color: "white",
+          fontSize: "20px",
+          fontWeight: "bold",
+          backgroundColor: "transparent",
         }}
       >
-        <div
-          style={{
-            color: "white",
-            fontSize: "20px",
-            fontWeight: "bold",
-            backgroundColor: "transparent",
-          }}
-        >
-          <Link to="/" style={{ color: "white", textDecoration: "none" }}>
-            Fortunas Bets
-          </Link>
-        </div>
-        <Menu
-          onClick={onClick}
-          selectedKeys={[current]}
-          mode="horizontal"
-          items={items.slice(1)}
-          theme="dark"
-          style={{ backgroundColor: "transparent" }}
-        />
-      </Header>
-    </Layout>
+        <Link to="/" style={{ color: "white", textDecoration: "none" }}>
+          Fortunas Bets
+        </Link>
+      </div>
+      <Menu
+        onClick={onClick}
+        selectedKeys={[current]}
+        mode="horizontal"
+        items={items.slice(1)}
+        theme="dark"
+        style={{ backgroundColor: "transparent", border: "none" }}
+      />
+    </div>
   );
 };
 

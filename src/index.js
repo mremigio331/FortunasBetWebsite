@@ -4,6 +4,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import AWS from "aws-sdk";
 import App from "./App";
 import UserAuthenticationProvider from "./provider/UserAuthenticationProvider";
+import { UserProfileProvider } from "./provider/UserProfileProvider";
+
 import ApiProvider from "./provider/ApiProvider";
 
 // Add this import at the top if you have a global CSS file (e.g., index.css or App.css)
@@ -30,7 +32,9 @@ createRoot(document.getElementById("app")).render(
   <QueryClientProvider client={queryClient}>
     <ApiProvider>
       <UserAuthenticationProvider>
-        <App />
+        <UserProfileProvider>
+          <App />
+        </UserProfileProvider>
       </UserAuthenticationProvider>
     </ApiProvider>
   </QueryClientProvider>,
