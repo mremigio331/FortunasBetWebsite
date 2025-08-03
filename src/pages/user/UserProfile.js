@@ -12,7 +12,7 @@ import {
   Switch,
   message,
 } from "antd";
-import usePutProfile from "../../hooks/usePutProfile";
+import usePutProfile from "../../hooks/user/usePutProfile";
 import { UserAuthenticationContext } from "../../provider/UserAuthenticationProvider";
 
 const { Title, Text } = Typography;

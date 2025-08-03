@@ -5,7 +5,7 @@ import React, {
   useContext,
   useEffect,
 } from "react";
-import useGetUserProfile from "../hooks/useGetUserProfile";
+import useGetUserProfile from "../hooks/user/useGetUserProfile";
 import { UserAuthenticationContext } from "../provider/UserAuthenticationProvider";
 import { useLocation } from "react-router-dom";
 

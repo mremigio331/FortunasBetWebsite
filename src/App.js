@@ -10,6 +10,9 @@ import {
 import Navbar from "./components/Navbar";
 import Home from "./pages/home/Home";
 import UserProfile from "./pages/user/UserProfile";
+import Room from "./pages/rooms/Room";
+import AllRooms from "./pages/rooms/AllRooms";
+import CreateRoom from "./pages/rooms/CreateRoom";
 import { UserAuthenticationContext } from "./provider/UserAuthenticationProvider";
 import PageNavigationBar from "./components/PageNavigationBar";
 
@@ -31,6 +34,9 @@ const PageRoutes = () => {
     <Routes location={location}>
       <Route path="/" element={<Home />} />
       <Route path="/user/profile" element={<UserProfile />} />
+      <Route path="/room/:roomId" element={<Room />} />
+      <Route path="/rooms" element={<AllRooms />} />
+      <Route path="/rooms/create" element={<CreateRoom />} />
     </Routes>
   );
 };
@@ -46,10 +52,25 @@ const App = () => {
   const SIDENAV_WIDTH = 180;
   const SIDENAV_COLLAPSED_WIDTH = 80;
 
+  // Detect mobile
+  const isMobile =
+    typeof window !== "undefined" ? window.innerWidth <= 768 : false;
+
+  // Calculate content margin for desktop
+  const getContentMarginLeft = () => {
+    if (isMobile || !isAuthenticated) return 0;
+    return sideCollapsed ? SIDENAV_COLLAPSED_WIDTH : SIDENAV_WIDTH;
+  };
+
+  // Calculate bottom padding for mobile navigation
+  const getContentPaddingBottom = () => {
+    return isMobile && isAuthenticated ? 60 : 0; // Bottom nav height
+  };
+
   return (
     <Router>
       <Layout style={{ minHeight: "100vh" }}>
-        {isAuthenticated && !sideHidden && (
+        {isAuthenticated && !sideHidden && !isMobile && (
           <PageNavigationBar
             collapsed={sideCollapsed}
             setCollapsed={setSideCollapsed}
@@ -79,18 +100,26 @@ const App = () => {
           <Content
             style={{
               padding: 0,
+              paddingBottom: getContentPaddingBottom(),
               margin: 0,
+              marginLeft: getContentMarginLeft(),
               boxSizing: "border-box",
-              width: "100%",
-              maxWidth: "100vw",
+              width: `calc(100% - ${getContentMarginLeft()}px)`,
+              maxWidth: `calc(100vw - ${getContentMarginLeft()}px)`,
               overflowX: "hidden",
-              minHeight: "calc(100vh - 64px)",
+              minHeight: `calc(100vh - 64px - ${getContentPaddingBottom()}px)`,
               transition: "all 0.2s",
             }}
           >
             <PageRoutes />
           </Content>
         </Layout>
+        {isAuthenticated && !sideHidden && isMobile && (
+          <PageNavigationBar
+            collapsed={sideCollapsed}
+            setCollapsed={setSideCollapsed}
+          />
+        )}
       </Layout>
     </Router>
   );

@@ -2,12 +2,12 @@ import React, { createContext, useReducer, useMemo, useContext } from "react";
 import getStage from "../utility/getStage";
 import {
   PROD_API_ENDPOINT,
-  STAGING_API_ENDPOINT,
+  TESTING_API_ENDPOINT,
 } from "../constants/endpoints";
 
 const endpointMap = {
   prod: PROD_API_ENDPOINT,
-  staging: STAGING_API_ENDPOINT,
+  testing: TESTING_API_ENDPOINT,
   dev: "http://localhost:5000",
 };
 
