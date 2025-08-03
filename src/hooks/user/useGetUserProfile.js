@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { useContext, useMemo } from "react";
-import { UserAuthenticationContext } from "../provider/UserAuthenticationProvider";
-import { apiRequestGet } from "../api/apiRequest";
-import { useApi } from "../provider/ApiProvider";
+import { UserAuthenticationContext } from "../../provider/UserAuthenticationProvider";
+import { apiRequestGet } from "../../api/apiRequest";
+import { useApi } from "../../provider/ApiProvider";
 
 const useGetUserProfile = (enabled = true) => {
   const { idToken } = useContext(UserAuthenticationContext);
@@ -23,7 +23,7 @@ const useGetUserProfile = (enabled = true) => {
     cacheTime: 1000 * 60 * 30, // 30 minutes: keeps data in cache
   });
 
-  if (stage === "dev" || stage === "staging") {
+  if (stage === "dev" || stage === "testing") {
     console.log("User Profile Data:", data);
     console.log("User Profile Status:", status);
     console.log("User Profile Error:", error);

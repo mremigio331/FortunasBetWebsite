@@ -1,8 +1,8 @@
 import { useMutation } from "@tanstack/react-query";
 import { useContext } from "react";
-import { UserAuthenticationContext } from "../provider/UserAuthenticationProvider";
-import { apiRequestPut } from "../api/apiRequest";
-import { useApi } from "../provider/ApiProvider";
+import { UserAuthenticationContext } from "../../provider/UserAuthenticationProvider";
+import { apiRequestPut } from "../../api/apiRequest";
+import { useApi } from "../../provider/ApiProvider";
 
 const usePutProfile = () => {
   const { idToken } = useContext(UserAuthenticationContext);
