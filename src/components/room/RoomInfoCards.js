@@ -1,30 +1,13 @@
 import React from "react";
 import { Card, Row, Col, Typography } from "antd";
-import {
-  CalendarOutlined,
-  UserOutlined,
-  TrophyOutlined,
-} from "@ant-design/icons";
+import { TrophyOutlined, TeamOutlined } from "@ant-design/icons";
 
 const { Text } = Typography;
 
 const RoomInfoCards = ({ room }) => {
   return (
-    <Row gutter={[16, 16]}>
-      <Col xs={24} sm={12} md={6}>
-        <Card size="small" style={{ textAlign: "center" }}>
-          <CalendarOutlined style={{ fontSize: "24px", color: "#1890ff" }} />
-          <div style={{ marginTop: "8px" }}>
-            <Text strong>Created</Text>
-            <br />
-            <Text type="secondary">
-              {new Date(room.created_date).toLocaleDateString()}
-            </Text>
-          </div>
-        </Card>
-      </Col>
-
-      <Col xs={24} sm={12} md={6}>
+    <Row gutter={[16, 16]} justify="center">
+      <Col xs={24} sm={12} md={8} lg={6}>
         <Card size="small" style={{ textAlign: "center" }}>
           <TrophyOutlined style={{ fontSize: "24px", color: "#52c41a" }} />
           <div style={{ marginTop: "8px" }}>
@@ -44,28 +27,16 @@ const RoomInfoCards = ({ room }) => {
           </div>
         </Card>
       </Col>
-
-      <Col xs={24} sm={12} md={6}>
+      <Col xs={24} sm={12} md={8} lg={6}>
         <Card size="small" style={{ textAlign: "center" }}>
-          <CalendarOutlined style={{ fontSize: "24px", color: "#fa8c16" }} />
+          <TeamOutlined style={{ fontSize: "24px", color: "#1890ff" }} />
           <div style={{ marginTop: "8px" }}>
-            <Text strong>Last Updated</Text>
+            <Text strong>Leagues</Text>
             <br />
-            <Text type="secondary">
-              {new Date(room.updated_date).toLocaleDateString()}
-            </Text>
-          </div>
-        </Card>
-      </Col>
-
-      <Col xs={24} sm={12} md={6}>
-        <Card size="small" style={{ textAlign: "center" }}>
-          <UserOutlined style={{ fontSize: "24px", color: "#722ed1" }} />
-          <div style={{ marginTop: "8px" }}>
-            <Text strong>Admins</Text>
-            <br />
-            <Text type="secondary">
-              {room.admin_user_ids ? room.admin_user_ids.length : 0}
+            <Text type="secondary" style={{ fontSize: "12px" }}>
+              {room.leagues && room.leagues.length > 0
+                ? room.leagues.join(", ")
+                : "No leagues"}
             </Text>
           </div>
         </Card>

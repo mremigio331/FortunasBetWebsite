@@ -71,6 +71,8 @@ const useGetNFLOdds = (week, year, seasonType = 2, enabled = true) => {
     week: data ? data.data.week : week,
     year: data ? data.data.year : year,
     seasonType: data ? data.data.season_type : seasonType,
+    sport: data ? data.data.sport : null,
+    league: data ? data.data.league : null,
     message: data ? data.data.message : null,
     isOddsFetching: isFetching,
     isOddsError: isError,

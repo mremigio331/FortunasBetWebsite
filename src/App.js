@@ -15,6 +15,7 @@ import AllRooms from "./pages/rooms/AllRooms";
 import CreateRoom from "./pages/rooms/CreateRoom";
 import { UserAuthenticationContext } from "./provider/UserAuthenticationProvider";
 import PageNavigationBar from "./components/PageNavigationBar";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 const { Header, Content } = Layout;
 
@@ -33,10 +34,38 @@ const PageRoutes = () => {
   return (
     <Routes location={location}>
       <Route path="/" element={<Home />} />
-      <Route path="/user/profile" element={<UserProfile />} />
-      <Route path="/room/:roomId" element={<Room />} />
-      <Route path="/rooms" element={<AllRooms />} />
-      <Route path="/rooms/create" element={<CreateRoom />} />
+      <Route
+        path="/user/profile"
+        element={
+          <ProtectedRoute>
+            <UserProfile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/room/:roomId"
+        element={
+          <ProtectedRoute>
+            <Room />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/rooms"
+        element={
+          <ProtectedRoute>
+            <AllRooms />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/rooms/create"
+        element={
+          <ProtectedRoute>
+            <CreateRoom />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   );
 };

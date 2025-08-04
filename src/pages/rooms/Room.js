@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Card,
@@ -21,9 +21,12 @@ import {
   TrophyOutlined,
   ReloadOutlined,
 } from "@ant-design/icons";
+import { jwtDecode } from "jwt-decode";
+import { UserAuthenticationContext } from "../../provider/UserAuthenticationProvider";
 import useGetRoom from "../../hooks/room/useGetRoom";
 import useGetNFLOdds from "../../hooks/odds/useGetNFLOdds";
 import useGetNFLWeeksInRange from "../../hooks/odds/useGetNFLWeeksInRange";
+import useCreateBet from "../../hooks/bet/useCreateBet";
 import { getSeasonTypeOptions } from "../../config/nflSeasonTypes";
 import { getDefaultNFLSelection } from "../../config/nflCurrentWeek";
 import RoomInfoCards from "../../components/room/RoomInfoCards";
@@ -31,18 +34,64 @@ import BettingSummary from "../../components/room/BettingSummary";
 import WeekYearSelector from "../../components/room/WeekYearSelector";
 import GameCard from "../../components/room/GameCard";
 import StatusMessages from "../../components/room/StatusMessages";
+import RoomBetsDisplay from "../../components/room/RoomBetsDisplay";
+import MembershipManagement from "../../components/room/MembershipManagement";
+import useGetUserMembershipStatus from "../../hooks/membership/useGetUserMembershipStatus";
 
 const { Title, Text, Paragraph } = Typography;
 
 const Room = () => {
   const { roomId } = useParams();
   const navigate = useNavigate();
+  const { idToken } = useContext(UserAuthenticationContext);
 
   // State for betting selections
   const [selectedBets, setSelectedBets] = useState({});
 
   const { room, isRoomFetching, isRoomError, roomError, roomRefetch } =
     useGetRoom(roomId);
+
+  // Get current user ID and check if they're an admin
+  const currentUserId = useMemo(() => {
+    if (!idToken) return null;
+    try {
+      return jwtDecode(idToken).sub;
+    } catch (error) {
+      console.error("Failed to decode token:", error);
+      return null;
+    }
+  }, [idToken]);
+
+  const isCurrentUserAdmin = useMemo(() => {
+    if (!room || !currentUserId) return false;
+    // Check both possible field names for backward compatibility
+    const adminIds = room.admin_user_ids || room.admins || [];
+    const isAdmin = adminIds.includes(currentUserId);
+
+    console.log("Admin Check Debug:", {
+      roomId,
+      currentUserId,
+      adminIds,
+      isAdmin,
+      room_admin_user_ids: room.admin_user_ids,
+      room_admins: room.admins,
+    });
+
+    return isAdmin;
+  }, [room, currentUserId, roomId]);
+
+  // Get user's membership status for this room
+  const {
+    isMember,
+    isApproved,
+    isPending,
+    isDenied,
+    membershipStatus,
+    isMembershipFetching,
+  } = useGetUserMembershipStatus(roomId);
+
+  // Bet creation hook
+  const { createBet, isLoading: isBetCreating } = useCreateBet();
 
   // Get NFL weeks available in the room's date range
   const {
@@ -113,6 +162,8 @@ const Room = () => {
   const {
     nflOdds,
     oddsCount,
+    sport,
+    league,
     isOddsFetching,
     isOddsError,
     oddsError,
@@ -279,7 +330,7 @@ const Room = () => {
   );
 
   const handleSubmitBets = useMemo(
-    () => () => {
+    () => async () => {
       const betEntries = Object.entries(selectedBets);
       if (betEntries.length === 0) {
         message.warning("Please select at least one game to bet on");
@@ -293,14 +344,99 @@ const Room = () => {
         return;
       }
 
-      // Here you would call your API to submit the bets
-      console.log("Submitting bets:", selectedBets);
-      message.success(`Successfully submitted ${betEntries.length} bets!`);
+      try {
+        // Submit each bet individually
+        const betPromises = betEntries.map(async ([gameId, bet]) => {
+          const game = memoizedNflOdds.find((g) => g.game_id === gameId);
+          if (!game) {
+            throw new Error(`Game not found: ${gameId}`);
+          }
 
-      // Optionally clear bets after submission
-      // setSelectedBets({});
+          // Determine the bet choice based on bet type
+          let teamChoice = null;
+          let overUnderChoice = null;
+
+          if (bet.betType === "spread") {
+            teamChoice = bet.teamChoice; // "home" or "away"
+          } else {
+            overUnderChoice = bet.teamChoice; // "over" or "under"
+          }
+
+          // Create the game_bet object
+          const gameBet = {
+            game_id: gameId,
+            bet_type: bet.betType === "overUnder" ? "over_under" : bet.betType,
+            points_wagered: bet.points,
+            ...(teamChoice && { team_choice: teamChoice }),
+            ...(overUnderChoice && { over_under_choice: overUnderChoice }),
+            ...(bet.betType === "spread" && {
+              spread_value:
+                bet.teamChoice === "home" ? game.homeSpread : game.awaySpread,
+            }),
+            ...(bet.betType === "overUnder" && { total_value: game.overUnder }),
+          };
+
+          // Ensure event_datetime is properly converted to epoch timestamp (seconds)
+          let eventDateTime;
+          if (!game.date || game.date === null) {
+            throw new Error(
+              `Game ${gameId} is missing date - cannot place bet`,
+            );
+          }
+
+          try {
+            const gameDate = new Date(game.date);
+            if (isNaN(gameDate.getTime())) {
+              throw new Error(`Game ${gameId} has invalid date: ${game.date}`);
+            }
+            eventDateTime = Math.floor(gameDate.getTime() / 1000);
+          } catch (error) {
+            if (error.message.includes("date")) {
+              throw error; // Re-throw our custom error
+            }
+            throw new Error(
+              `Failed to parse date for game ${gameId}: ${game.date}`,
+            );
+          }
+
+          return createBet({
+            room_id: roomId,
+            game_id: gameId,
+            sport: sport || "football", // Use sport from odds response, fallback to football
+            league: league || "nfl", // Use league from odds response, fallback to nfl
+            season_type: selectedSeasonType,
+            event_datetime: eventDateTime, // Epoch timestamp in seconds
+            game_bet: gameBet,
+            points_wagered: bet.points,
+            locked: false,
+            submitted_at: Math.floor(Date.now() / 1000), // Current time in epoch seconds
+            odds_snapshot: game, // Full game data as odds snapshot
+          });
+        });
+
+        await Promise.all(betPromises);
+
+        message.success(
+          `Successfully placed ${betEntries.length} bet${betEntries.length !== 1 ? "s" : ""}!`,
+        );
+
+        // Clear the selected bets after successful submission
+        setSelectedBets({});
+      } catch (error) {
+        // Error handling is done by the useCreateBet hook
+        console.error("Error submitting bets:", error);
+      }
     },
-    [selectedBets, hasDuplicatePoints],
+    [
+      selectedBets,
+      hasDuplicatePoints,
+      memoizedNflOdds,
+      roomId,
+      createBet,
+      selectedSeasonType,
+      sport,
+      league,
+    ],
   );
 
   // Get selected bets count and total points (memoized)
@@ -449,20 +585,35 @@ const Room = () => {
                 <RoomInfoCards room={room} />
               </Col>
 
-              {room.admin_user_ids && room.admin_user_ids.length > 0 && (
-                <Col span={24}>
-                  <Divider orientation="left">Room Admins</Divider>
-                  <Space wrap>
-                    {room.admin_user_ids.map((adminId, index) => (
-                      <Tag key={adminId} color="blue">
-                        Admin {index + 1}: {adminId}
-                      </Tag>
-                    ))}
-                  </Space>
-                </Col>
-              )}
+              {(room.admin_user_ids || room.admins || room.admin_profiles) &&
+                ((room.admin_user_ids || room.admins || []).length > 0 ||
+                  (room.admin_profiles || []).length > 0) && (
+                  <Col span={24}>
+                    <Divider orientation="left">Room Admins</Divider>
+                    <Space wrap>
+                      {room.admin_profiles
+                        ? room.admin_profiles.map((admin, index) => (
+                            <Tag key={admin.user_id} color="blue">
+                              {admin.user_name}
+                            </Tag>
+                          ))
+                        : (room.admin_user_ids || room.admins).map(
+                            (adminId, index) => (
+                              <Tag key={adminId} color="blue">
+                                Admin {index + 1}: {adminId}
+                              </Tag>
+                            ),
+                          )}
+                    </Space>
+                  </Col>
+                )}
             </Row>
           </Card>
+        </Col>
+
+        {/* Room Bets Display */}
+        <Col span={24}>
+          <RoomBetsDisplay roomId={roomId} />
         </Col>
 
         {/* NFL Betting Odds Section */}
@@ -481,12 +632,16 @@ const Room = () => {
             }
             extra={
               <Space>
-                {selectedBetsCount > 0 && (
+                {selectedBetsCount > 0 && (isCurrentUserAdmin || isMember) && (
                   <>
                     <Button
                       type="primary"
                       onClick={handleSubmitBets}
-                      disabled={selectedBetsCount === 0 || hasDuplicatePoints}
+                      disabled={
+                        selectedBetsCount === 0 ||
+                        hasDuplicatePoints ||
+                        (!isCurrentUserAdmin && !isMember)
+                      }
                     >
                       Submit Bets ({totalPoints} pts)
                     </Button>
@@ -504,6 +659,29 @@ const Room = () => {
               </Space>
             }
           >
+            {/* Membership Status Alert for Non-Members */}
+            {!isMembershipFetching && !isCurrentUserAdmin && !isMember && (
+              <Alert
+                message={
+                  isDenied
+                    ? "Access Denied"
+                    : isPending
+                      ? "Membership Pending"
+                      : "Member Access Required"
+                }
+                description={
+                  isDenied
+                    ? "Your request to join this room was denied. You cannot place bets."
+                    : isPending
+                      ? "Your membership request is pending approval. You cannot place bets until approved."
+                      : "You must be a member of this room to place bets. Please request to join the room."
+                }
+                type={isDenied ? "error" : isPending ? "warning" : "info"}
+                showIcon
+                style={{ marginBottom: "16px" }}
+              />
+            )}
+
             <WeekYearSelector
               selectedSeasonType={selectedSeasonType}
               setSelectedSeasonType={handleSeasonTypeChange}
@@ -573,11 +751,49 @@ const Room = () => {
                   selectedBetsCount={selectedBetsCount}
                   hasDuplicatePoints={hasDuplicatePoints}
                 />
+
+                {/* Place Bets Button */}
+                {selectedBetsCount > 0 && (
+                  <div style={{ marginBottom: "16px", textAlign: "center" }}>
+                    <Space>
+                      <Button
+                        type="primary"
+                        size="large"
+                        onClick={handleSubmitBets}
+                        loading={isBetCreating}
+                        disabled={hasDuplicatePoints || selectedBetsCount === 0}
+                        style={{
+                          backgroundColor: hasDuplicatePoints
+                            ? undefined
+                            : "#52c41a",
+                          borderColor: hasDuplicatePoints
+                            ? undefined
+                            : "#52c41a",
+                        }}
+                      >
+                        {isBetCreating
+                          ? "Placing Bets..."
+                          : `Place ${selectedBetsCount} Bet${selectedBetsCount !== 1 ? "s" : ""}`}
+                      </Button>
+                      <Button
+                        type="default"
+                        size="large"
+                        onClick={handleClearBets}
+                        disabled={isBetCreating || selectedBetsCount === 0}
+                      >
+                        Clear All
+                      </Button>
+                    </Space>
+                  </div>
+                )}
+
                 <Row gutter={[16, 16]}>
                   {memoizedNflOdds.map((game) => {
                     const isSelected = selectedBets[game.game_id];
                     const bet = selectedBets[game.game_id];
-                    const canSelect = selectedBetsCount < 3 || isSelected;
+                    const canSelect =
+                      (selectedBetsCount < 3 || isSelected) &&
+                      (isCurrentUserAdmin || isMember);
                     const hasConflictingPoints =
                       isSelected && duplicatePointValues.includes(bet.points);
 
@@ -602,6 +818,13 @@ const Room = () => {
             )}
           </Card>
         </Col>
+
+        {/* Membership Management - Only for Admins */}
+        {isCurrentUserAdmin && (
+          <Col span={24}>
+            <MembershipManagement roomId={roomId} idToken={idToken} />
+          </Col>
+        )}
       </Row>
     </div>
   );

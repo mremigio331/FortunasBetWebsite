@@ -140,7 +140,14 @@ const UserAuthenticationProvider = ({ children }) => {
   const loadUserSessionFromCookies = () => {
     const idToken = Cookies.get("idToken");
     const accessToken = Cookies.get("accessToken");
-    if (idToken && accessToken && !isTokenExpired(accessToken)) {
+
+    // Check if both tokens exist and are not expired
+    if (
+      idToken &&
+      accessToken &&
+      !isTokenExpired(idToken) &&
+      !isTokenExpired(accessToken)
+    ) {
       dispatch({
         type: "SET_AUTH",
         payload: {
@@ -149,16 +156,49 @@ const UserAuthenticationProvider = ({ children }) => {
         },
       });
     } else {
+      // Tokens are missing or expired, clear them and set authentication to false
       Cookies.remove("idToken");
       Cookies.remove("accessToken");
+      dispatch({ type: "LOGOUT" });
+
+      if (stage === DEV && (idToken || accessToken)) {
+        console.log("Tokens expired or invalid, user logged out");
+      }
     }
   };
 
   useEffect(() => {
     loadUserSessionFromCookies();
     fetchUserSession();
+
+    // Set up periodic token validation (every 5 minutes)
+    const tokenCheckInterval = setInterval(
+      () => {
+        const idToken = Cookies.get("idToken");
+        const accessToken = Cookies.get("accessToken");
+
+        if (state.isAuthenticated && (idToken || accessToken)) {
+          // Check if tokens are expired
+          if (
+            !idToken ||
+            !accessToken ||
+            isTokenExpired(idToken) ||
+            isTokenExpired(accessToken)
+          ) {
+            console.log("Tokens expired during session, logging out user");
+            dispatch({ type: "LOGOUT" });
+            Cookies.remove("idToken");
+            Cookies.remove("accessToken");
+            window.location.href = "/"; // Redirect to homepage
+          }
+        }
+      },
+      5 * 60 * 1000,
+    ); // Check every 5 minutes
+
+    return () => clearInterval(tokenCheckInterval);
     // eslint-disable-next-line
-  }, []);
+  }, [state.isAuthenticated]);
 
   const contextValue = useMemo(
     () => ({

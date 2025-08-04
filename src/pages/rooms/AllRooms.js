@@ -27,7 +27,6 @@ import {
 import { jwtDecode } from "jwt-decode";
 import { UserAuthenticationContext } from "../../provider/UserAuthenticationProvider";
 import useGetAllRooms from "../../hooks/room/useGetAllRooms";
-import useGetAllMembershipRequests from "../../hooks/membership/useGetAllMembershipRequests";
 import useCreateMembershipRequest from "../../hooks/membership/useCreateMembershipRequest";
 
 const { Title } = Typography;
@@ -63,35 +62,13 @@ const AllRooms = () => {
     roomsRefetch,
   } = useGetAllRooms();
 
-  const {
-    membershipRequests,
-    isMembershipRequestsFetching,
-    membershipRequestsRefetch,
-  } = useGetAllMembershipRequests();
-
   const { createMembershipRequest, createMembershipRequestLoading } =
     useCreateMembershipRequest();
 
-  // Get membership status for each room
-  const getMembershipStatus = (room) => {
-    if (!currentUserId) return "none";
-
-    // Check if user is an admin (owner or in admins list)
-    const isAdmin =
-      room.owner_id === currentUserId ||
-      (room.admins && room.admins.includes(currentUserId));
-
-    if (isAdmin) return "admin";
-
-    // Check membership requests
-    if (!membershipRequests || membershipRequests.length === 0) return "none";
-
-    const request = membershipRequests.find(
-      (req) => req.room_id === room.room_id,
-    );
-    if (!request) return "none";
-
-    return request.status; // 'approved', 'pending', 'denied'
+  // Simple membership status function - uses the membership_status from room data
+  const getRoomMembershipStatus = (room) => {
+    // If user is not logged in or membership_status is not provided, default to "none"
+    return room.membership_status || "none";
   };
 
   // Handle room access request
@@ -101,7 +78,8 @@ const AllRooms = () => {
         room_id: roomId,
       });
       message.success("Room access requested successfully!");
-      membershipRequestsRefetch();
+      // Refetch rooms to get updated membership status
+      roomsRefetch();
     } catch (error) {
       message.error("Failed to request room access. Please try again.");
     }
@@ -146,7 +124,7 @@ const AllRooms = () => {
 
   // Mobile Card Component
   const RoomCard = ({ room }) => {
-    const status = getMembershipStatus(room);
+    const status = getRoomMembershipStatus(room);
 
     const renderMembershipStatus = () => {
       if (status === "admin") {
@@ -165,7 +143,7 @@ const AllRooms = () => {
             </Button>
           </Space>
         );
-      } else if (status === "approved") {
+      } else if (status === "approved" || status === "member") {
         return (
           <Space>
             <Tag icon={<CheckCircleOutlined />} color="green">
@@ -185,6 +163,12 @@ const AllRooms = () => {
         return (
           <Tag icon={<ClockCircleOutlined />} color="orange">
             Pending
+          </Tag>
+        );
+      } else if (status === "denied") {
+        return (
+          <Tag icon={<ClockCircleOutlined />} color="red">
+            Denied
           </Tag>
         );
       } else {
@@ -332,7 +316,7 @@ const AllRooms = () => {
       width: 150,
       align: "center",
       render: (_, record) => {
-        const status = getMembershipStatus(record);
+        const status = getRoomMembershipStatus(record);
 
         if (status === "admin") {
           return (
@@ -350,7 +334,7 @@ const AllRooms = () => {
               </Button>
             </Space>
           );
-        } else if (status === "approved") {
+        } else if (status === "approved" || status === "member") {
           return (
             <Space>
               <Tag icon={<CheckCircleOutlined />} color="green">
@@ -370,6 +354,12 @@ const AllRooms = () => {
           return (
             <Tag icon={<ClockCircleOutlined />} color="orange">
               Pending
+            </Tag>
+          );
+        } else if (status === "denied") {
+          return (
+            <Tag icon={<ClockCircleOutlined />} color="red">
+              Denied
             </Tag>
           );
         } else {

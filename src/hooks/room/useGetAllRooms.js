@@ -8,11 +8,18 @@ const useGetAllRooms = (enabled = true) => {
   const { idToken } = useContext(UserAuthenticationContext);
   const { apiEndpoint, stage } = useApi();
 
-  const isEnabled = useMemo(
-    () =>
-      enabled && !!idToken && typeof idToken === "string" && idToken.length > 0,
-    [enabled, idToken],
-  );
+  const isEnabled = useMemo(() => {
+    const enabled_check =
+      enabled && !!idToken && typeof idToken === "string" && idToken.length > 0;
+    console.log("useGetAllRooms isEnabled check:", {
+      enabled,
+      idToken: idToken ? `${idToken.substring(0, 20)}...` : "null/undefined",
+      idTokenType: typeof idToken,
+      idTokenLength: idToken ? idToken.length : 0,
+      finalEnabled: enabled_check,
+    });
+    return enabled_check;
+  }, [enabled, idToken]);
 
   const { data, isFetching, isError, status, error, refetch } = useQuery({
     queryKey: ["allRooms"],
@@ -29,6 +36,13 @@ const useGetAllRooms = (enabled = true) => {
     console.log("All Rooms Error:", error);
     console.log("All Rooms isFetching:", isFetching);
     console.log("All Rooms isError:", isError);
+    if (error) {
+      console.log("All Rooms Error Details:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
+    }
   }
 
   return {
