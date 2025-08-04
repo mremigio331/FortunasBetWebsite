@@ -3,6 +3,7 @@ import {
   Card,
   Typography,
   Tag,
+  Button,
   Divider,
   Radio,
   InputNumber,
@@ -18,6 +19,7 @@ const GameCard = ({
   bet,
   canSelect,
   hasConflictingPoints,
+  duplicatePointValues,
   onGameSelect,
   onBetTypeChange,
   onTeamChoiceChange,
@@ -591,14 +593,33 @@ const GameCard = ({
           {/* Points Selection */}
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <Text style={{ fontSize: "11px", color: "#666" }}>Points:</Text>
-            <InputNumber
-              size="small"
-              min={1}
-              max={3}
-              value={bet.points}
-              onChange={(value) => onPointsChange(game.game_id, value)}
-              style={{ width: "60px" }}
-            />
+            <div style={{ display: "flex", gap: "4px" }}>
+              {[1, 2, 3].map((points) => {
+                const isCurrentPointValue = bet.points === points;
+                const isDisabled =
+                  !isCurrentPointValue &&
+                  duplicatePointValues?.includes(points);
+
+                return (
+                  <Button
+                    key={points}
+                    size="small"
+                    type={isCurrentPointValue ? "primary" : "default"}
+                    disabled={isDisabled}
+                    onClick={() => onPointsChange(game.game_id, points)}
+                    style={{
+                      width: "32px",
+                      height: "24px",
+                      fontSize: "11px",
+                      padding: "0",
+                      opacity: isDisabled ? 0.5 : 1,
+                    }}
+                  >
+                    {points}
+                  </Button>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
