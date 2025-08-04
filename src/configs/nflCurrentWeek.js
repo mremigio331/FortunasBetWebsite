@@ -3,7 +3,7 @@
  * Determines the current NFL week and season based on the current date
  */
 
-import { getSeasonType } from "./nflSeasonTypes";
+import { getSeasonType } from "../configs/nflSeasonTypes";
 
 /**
  * NFL Season dates structure
