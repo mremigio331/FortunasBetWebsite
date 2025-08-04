@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
   Card,
-  Table,
   Tag,
   Button,
   Space,
@@ -11,6 +10,8 @@ import {
   Popconfirm,
   Avatar,
   Divider,
+  Row,
+  Col,
 } from "antd";
 import {
   UserOutlined,
@@ -22,7 +23,7 @@ import {
 } from "@ant-design/icons";
 import { jwtDecode } from "jwt-decode";
 import useGetRoomMembers from "../../hooks/membership/useGetRoomMembers";
-import useChangeMemberStatus from "../../hooks/membership/useChangeMemberStatus";
+import useEditMembershipRequest from "../../hooks/membership/useEditMembershipRequest";
 
 const { Title, Text } = Typography;
 
@@ -53,8 +54,8 @@ const MembershipManagement = ({ roomId, idToken }) => {
     isMembersError,
   });
 
-  const { changeMemberStatus, isLoading: isChangingStatus } =
-    useChangeMemberStatus();
+  const { editMembershipRequestAsync, editMembershipRequestLoading } =
+    useEditMembershipRequest();
 
   // Separate members by status (case-insensitive)
   const approvedMembers = members.filter(
@@ -72,15 +73,31 @@ const MembershipManagement = ({ roomId, idToken }) => {
     newStatus,
     newMembershipType = null,
   ) => {
+    console.log("handleStatusChange called with:", {
+      targetUserId,
+      newStatus,
+      newMembershipType,
+      roomId,
+    });
+
     try {
-      await changeMemberStatus({
-        roomId,
-        targetUserId,
-        newStatus: newStatus.toLowerCase(),
-        newMembershipType: newMembershipType?.toLowerCase(),
-      });
+      // Convert status to approve/deny boolean for the edit_membership_request endpoint
+      const approve = newStatus.toLowerCase() === "approved";
+
+      const requestData = {
+        room_id: roomId,
+        target_user_id: targetUserId,
+        approve: approve,
+      };
+
+      console.log("Calling editMembershipRequestAsync with:", requestData);
+      const result = await editMembershipRequestAsync(requestData);
+      console.log("editMembershipRequestAsync result:", result);
+
+      // Refresh the members list
+      membersRefetch();
     } catch (error) {
-      console.error("Failed to change member status:", error);
+      console.error("Failed to edit membership request:", error);
     }
   };
 
@@ -132,25 +149,23 @@ const MembershipManagement = ({ roomId, idToken }) => {
     if (memberStatus === "pending") {
       items.push(
         {
-          key: "approve-member",
-          label: "Approve as Member",
+          key: "approve",
+          label: "Approve Request",
           icon: <CheckOutlined />,
-          onClick: () =>
-            handleStatusChange(member.user_id, "APPROVED", "MEMBER"),
-        },
-        {
-          key: "approve-admin",
-          label: "Approve as Admin",
-          icon: <CrownOutlined />,
-          onClick: () =>
-            handleStatusChange(member.user_id, "APPROVED", "ADMIN"),
+          onClick: () => {
+            console.log("Approve Request clicked for user:", member.user_id);
+            handleStatusChange(member.user_id, "APPROVED");
+          },
         },
         {
           key: "deny",
           label: "Deny Request",
           icon: <CloseOutlined />,
           danger: true,
-          onClick: () => handleStatusChange(member.user_id, "DENIED"),
+          onClick: () => {
+            console.log("Deny Request clicked for user:", member.user_id);
+            handleStatusChange(member.user_id, "DENIED");
+          },
         },
       );
     } else if (memberStatus === "approved") {
@@ -200,6 +215,98 @@ const MembershipManagement = ({ roomId, idToken }) => {
     }
 
     return items;
+  };
+
+  const renderMemberCard = (member) => {
+    const menuItems = getActionMenuItems(member);
+
+    return (
+      <Card
+        key={member.user_id}
+        size="small"
+        style={{ marginBottom: 8 }}
+        bodyStyle={{ padding: "12px 16px" }}
+      >
+        <Row justify="space-between" align="middle">
+          <Col span={16}>
+            <Space direction="vertical" size="small" style={{ width: "100%" }}>
+              {/* User Info */}
+              <Space>
+                <Avatar
+                  icon={<UserOutlined />}
+                  style={{ backgroundColor: member.user_color || "#1890ff" }}
+                  size="small"
+                />
+                <div>
+                  <Text strong style={{ fontSize: "14px" }}>
+                    {member.user_name || member.user_id}
+                  </Text>
+                  {member.is_current_user && (
+                    <Text type="secondary" style={{ fontSize: "12px" }}>
+                      {" "}
+                      (You)
+                    </Text>
+                  )}
+                </div>
+              </Space>
+
+              {/* Status and Role Tags */}
+              <Space size="small" wrap>
+                {getStatusTag(member.status)}
+                {getMembershipTypeTag(member.membership_type)}
+              </Space>
+
+              {/* Join Date */}
+              {member.join_date && (
+                <Text type="secondary" style={{ fontSize: "12px" }}>
+                  Joined:{" "}
+                  {new Date(member.join_date * 1000).toLocaleDateString()}
+                </Text>
+              )}
+            </Space>
+          </Col>
+
+          <Col span={8} style={{ textAlign: "right" }}>
+            {menuItems.length > 0 ? (
+              <Dropdown
+                menu={{ items: menuItems }}
+                trigger={["click"]}
+                disabled={editMembershipRequestLoading}
+                placement="bottomRight"
+              >
+                <Button
+                  icon={<SettingOutlined />}
+                  size="small"
+                  loading={editMembershipRequestLoading}
+                  style={{ width: "100%" }}
+                >
+                  Actions
+                </Button>
+              </Dropdown>
+            ) : (
+              <Text type="secondary" style={{ fontSize: "12px" }}>
+                -
+              </Text>
+            )}
+          </Col>
+        </Row>
+      </Card>
+    );
+  };
+
+  const renderMemberSection = (members, title, titleType = null, count) => {
+    if (members.length === 0) return null;
+
+    return (
+      <div>
+        <Title level={5} type={titleType} style={{ marginBottom: "12px" }}>
+          {title} ({count})
+        </Title>
+        <div style={{ marginBottom: "16px" }}>
+          {members.map(renderMemberCard)}
+        </div>
+      </div>
+    );
   };
 
   const columns = [
@@ -302,35 +409,23 @@ const MembershipManagement = ({ roomId, idToken }) => {
     >
       <Space direction="vertical" style={{ width: "100%" }} size="large">
         {/* Active Members */}
-        <div>
-          <Title level={5}>Active Members ({approvedMembers.length})</Title>
-          <Table
-            dataSource={approvedMembers}
-            columns={columns}
-            rowKey="user_id"
-            pagination={false}
-            size="small"
-            loading={isMembersFetching}
-          />
-        </div>
+        {renderMemberSection(
+          approvedMembers,
+          "Active Members",
+          null,
+          approvedMembers.length,
+        )}
 
         {/* Pending Requests */}
         {pendingRequests.length > 0 && (
           <>
             <Divider />
-            <div>
-              <Title level={5} type="warning">
-                Pending Requests ({pendingRequests.length})
-              </Title>
-              <Table
-                dataSource={pendingRequests}
-                columns={columns}
-                rowKey="user_id"
-                pagination={false}
-                size="small"
-                loading={isMembersFetching}
-              />
-            </div>
+            {renderMemberSection(
+              pendingRequests,
+              "Pending Requests",
+              "warning",
+              pendingRequests.length,
+            )}
           </>
         )}
 
@@ -338,19 +433,12 @@ const MembershipManagement = ({ roomId, idToken }) => {
         {deniedMembers.length > 0 && (
           <>
             <Divider />
-            <div>
-              <Title level={5} type="secondary">
-                Denied/Removed Members ({deniedMembers.length})
-              </Title>
-              <Table
-                dataSource={deniedMembers}
-                columns={columns}
-                rowKey="user_id"
-                pagination={false}
-                size="small"
-                loading={isMembersFetching}
-              />
-            </div>
+            {renderMemberSection(
+              deniedMembers,
+              "Denied/Removed Members",
+              "secondary",
+              deniedMembers.length,
+            )}
           </>
         )}
       </Space>

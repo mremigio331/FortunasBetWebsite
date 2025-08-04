@@ -4,7 +4,7 @@ import { useMemo, useContext } from "react";
 import { UserAuthenticationContext } from "../../provider/UserAuthenticationProvider";
 import { apiRequestGet } from "../../api/apiRequest";
 import { useApi } from "../../provider/ApiProvider";
-import { getSeasonTypeDisplayName } from "../../config/nflSeasonTypes";
+import { getSeasonTypeDisplayName } from "../../configs/nflSeasonTypes";
 
 const useGetNFLWeeksInRange = (startDate, endDate, options = {}) => {
   const { idToken } = useContext(UserAuthenticationContext);

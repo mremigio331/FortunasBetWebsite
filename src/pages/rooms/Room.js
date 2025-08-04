@@ -27,8 +27,8 @@ import useGetRoom from "../../hooks/room/useGetRoom";
 import useGetNFLOdds from "../../hooks/odds/useGetNFLOdds";
 import useGetNFLWeeksInRange from "../../hooks/odds/useGetNFLWeeksInRange";
 import useCreateBet from "../../hooks/bet/useCreateBet";
-import { getSeasonTypeOptions } from "../../config/nflSeasonTypes";
-import { getDefaultNFLSelection } from "../../config/nflCurrentWeek";
+import { getSeasonTypeOptions } from "../../configs/nflSeasonTypes";
+import { getDefaultNFLSelection } from "../../configs/nflCurrentWeek";
 import RoomInfoCards from "../../components/room/RoomInfoCards";
 import BettingSummary from "../../components/room/BettingSummary";
 import WeekYearSelector from "../../components/room/WeekYearSelector";
@@ -805,6 +805,7 @@ const Room = () => {
                           bet={bet}
                           canSelect={canSelect}
                           hasConflictingPoints={hasConflictingPoints}
+                          duplicatePointValues={duplicatePointValues}
                           onGameSelect={handleGameSelect}
                           onBetTypeChange={handleBetTypeChange}
                           onTeamChoiceChange={handleTeamChoiceChange}

@@ -1,6 +1,6 @@
 import React from "react";
 import { Typography } from "antd";
-import { getSeasonTypeDisplayName } from "../../config/nflSeasonTypes";
+import { getSeasonTypeDisplayName } from "../../configs/nflSeasonTypes";
 
 const { Text } = Typography;
 

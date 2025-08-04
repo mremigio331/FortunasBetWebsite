@@ -1,6 +1,6 @@
 import React from "react";
 import { Row, Col, Typography, Select } from "antd";
-import { getSeasonTypeOptions } from "../../config/nflSeasonTypes";
+import { getSeasonTypeOptions } from "../../configs/nflSeasonTypes";
 
 const { Text } = Typography;
 const { Option } = Select;

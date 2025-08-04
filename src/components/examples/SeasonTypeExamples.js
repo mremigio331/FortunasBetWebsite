@@ -14,7 +14,7 @@ import {
   isValidSeasonType,
   isValidWeekForSeasonType,
   getSeasonTypeWithMeta,
-} from "../config/nflSeasonTypes";
+} from "../configs/nflSeasonTypes";
 
 const { Text, Title } = Typography;
 const { Option } = Select;

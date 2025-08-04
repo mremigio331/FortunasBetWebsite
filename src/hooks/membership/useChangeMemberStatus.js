@@ -17,19 +17,44 @@ const useChangeMemberStatus = () => {
       newStatus,
       newMembershipType,
     }) => {
-      const body = {
-        room_id: roomId,
-        target_user_id: targetUserId,
-        new_status: newStatus,
-        ...(newMembershipType && { new_membership_type: newMembershipType }),
-      };
+      // Determine which endpoint to use based on the operation
+      const statusLower = newStatus.toLowerCase();
 
-      return apiRequestPut(
-        apiEndpoint,
-        "/membership/change_member_status",
-        body,
-        idToken,
-      );
+      // If it's a simple approve/deny without specific membership type, use edit_membership_request
+      if (
+        (statusLower === "approved" || statusLower === "denied") &&
+        !newMembershipType
+      ) {
+        const approve = statusLower === "approved";
+        const body = {
+          room_id: roomId,
+          target_user_id: targetUserId,
+          approve: approve,
+        };
+
+        return apiRequestPut({
+          apiEndpoint: `${apiEndpoint}/membership/edit_membership_request`,
+          idToken,
+          body,
+        });
+      }
+      // For role changes or specific membership types, use change_member_status
+      else {
+        const body = {
+          room_id: roomId,
+          target_user_id: targetUserId,
+          new_status: statusLower,
+          ...(newMembershipType && {
+            new_membership_type: newMembershipType.toLowerCase(),
+          }),
+        };
+
+        return apiRequestPut({
+          apiEndpoint: `${apiEndpoint}/membership/change_member_status`,
+          idToken,
+          body,
+        });
+      }
     },
     onSuccess: (data, variables) => {
       const { roomId } = variables;
