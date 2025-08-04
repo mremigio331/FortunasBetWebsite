@@ -9,64 +9,96 @@ import {
   Spin,
   Alert,
   Button,
-  Switch,
   message,
+  Select,
+  Space,
 } from "antd";
 import usePutProfile from "../../hooks/user/usePutProfile";
 import { UserAuthenticationContext } from "../../provider/UserAuthenticationProvider";
 
 const { Title, Text } = Typography;
+const { Option } = Select;
+
+// Available color options for user avatars
+const COLOR_OPTIONS = [
+  { value: "black", label: "Black", color: "#262626" },
+  { value: "white", label: "White", color: "#ffffff" },
+  { value: "red", label: "Red", color: "#ff4d4f" },
+  { value: "blue", label: "Blue", color: "#1890ff" },
+  { value: "green", label: "Green", color: "#52c41a" },
+  { value: "yellow", label: "Yellow", color: "#faad14" },
+  { value: "orange", label: "Orange", color: "#fa8c16" },
+  { value: "purple", label: "Purple", color: "#722ed1" },
+  { value: "pink", label: "Pink", color: "#eb2f96" },
+  { value: "brown", label: "Brown", color: "#8b4513" },
+  { value: "gray", label: "Gray", color: "#8c8c8c" },
+  { value: "cyan", label: "Cyan", color: "#13c2c2" },
+];
 
 const UserProfileCard = ({
   userProfile,
   isUserFetching,
-  onTogglePublic,
-  updatingPublic,
   onNameSave,
   nameEditLoading,
-  onDistanceUnitSave,
-  distanceUnitEditLoading,
+  onColorSave,
+  colorEditLoading,
 }) => {
   const [editing, setEditing] = useState(false);
   const [nameValue, setNameValue] = useState(userProfile?.name || "");
-  const [distanceUnit, setDistanceUnit] = useState(
-    userProfile?.distance_unit || "Imperial",
-  );
-  const [editingDistanceUnit, setEditingDistanceUnit] = useState(false);
+  const [editingColor, setEditingColor] = useState(false);
+  const [colorValue, setColorValue] = useState(userProfile?.color || "blue");
 
   useEffect(() => {
     setNameValue(userProfile?.name || "");
   }, [userProfile?.name]);
 
   useEffect(() => {
-    setDistanceUnit(userProfile?.distance_unit || "Imperial");
-  }, [userProfile?.distance_unit]);
+    setColorValue(userProfile?.color || "blue");
+  }, [userProfile?.color]);
+
+  // Get color style for avatar
+  const getColorStyle = (color) => {
+    const colorOption = COLOR_OPTIONS.find((opt) => opt.value === color);
+    if (!colorOption) return { backgroundColor: "#1890ff", color: "#ffffff" };
+
+    return {
+      backgroundColor: colorOption.color,
+      color: colorOption.value === "white" ? "#262626" : "#ffffff",
+      border: colorOption.value === "white" ? "1px solid #d9d9d9" : "none",
+    };
+  };
 
   return (
     <Card
       title="User Profile"
       extra={
-        <Avatar
-          size={64}
-          src={
-            userProfile?.avatar ||
-            `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile?.name || "User")}`
-          }
-        />
+        <Avatar size={64} style={getColorStyle(userProfile?.color || "blue")}>
+          {userProfile?.name ? userProfile.name.charAt(0).toUpperCase() : "U"}
+        </Avatar>
       }
     >
       {isUserFetching ? (
         <Spin />
       ) : userProfile ? (
-        <>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <Space direction="vertical" size="large" style={{ width: "100%" }}>
+          {/* Name Section */}
+          <div>
+            <Text strong style={{ display: "block", marginBottom: 8 }}>
+              Display Name
+            </Text>
             {editing ? (
-              <>
+              <Space>
                 <input
                   value={nameValue}
                   onChange={(e) => setNameValue(e.target.value)}
-                  style={{ fontSize: 18, padding: 4, marginRight: 8 }}
+                  style={{
+                    fontSize: 16,
+                    padding: 8,
+                    borderRadius: 4,
+                    border: "1px solid #d9d9d9",
+                  }}
                   disabled={nameEditLoading}
+                  placeholder="Enter your display name"
                 />
                 <Button
                   size="small"
@@ -78,7 +110,6 @@ const UserProfileCard = ({
                     }
                     setEditing(false);
                   }}
-                  style={{ marginRight: 4 }}
                 >
                   Save
                 </Button>
@@ -92,56 +123,108 @@ const UserProfileCard = ({
                 >
                   Cancel
                 </Button>
-              </>
+              </Space>
             ) : (
-              <>
-                <Title level={4} style={{ margin: 0 }}>
-                  {userProfile.name || "N/A"}
-                </Title>
-                <Button
-                  size="small"
-                  onClick={() => setEditing(true)}
-                  style={{ marginLeft: 8 }}
-                >
+              <Space>
+                <Text style={{ fontSize: 16 }}>
+                  {userProfile.name || "Not set"}
+                </Text>
+                <Button size="small" onClick={() => setEditing(true)}>
                   Edit
                 </Button>
-              </>
+              </Space>
             )}
           </div>
-          <Text type="secondary">{userProfile.email || "N/A"}</Text>
-          <br />
 
-          {userProfile.public_profile !== undefined ? (
-            <>
-              <Switch
-                checked={userProfile.public_profile}
-                loading={updatingPublic}
-                onChange={onTogglePublic}
-                checkedChildren="Public"
-                unCheckedChildren="Private"
-                style={{ marginRight: 8 }}
-              />
-              <Text
-                style={{ color: userProfile.public_profile ? "green" : "red" }}
-              >
-                <b>
-                  {userProfile.public_profile
-                    ? "Public Profile"
-                    : "Private Profile"}
-                </b>
-              </Text>
-              <div style={{ marginTop: 16 }}>
-                <Alert
-                  message="If you want others to see your profile, make sure your profile is set to public."
-                  type="info"
-                  showIcon
-                />
-              </div>
-            </>
-          ) : (
-            <Text>N/A</Text>
-          )}
-        </>
+          {/* Email Section */}
+          <div>
+            <Text strong style={{ display: "block", marginBottom: 8 }}>
+              Email
+            </Text>
+            <Text type="secondary">{userProfile.email || "N/A"}</Text>
+          </div>
+
+          {/* Avatar Color Section */}
+          <div>
+            <Text strong style={{ display: "block", marginBottom: 8 }}>
+              Avatar Color
+            </Text>
+            {editingColor ? (
+              <Space>
+                <Select
+                  value={colorValue}
+                  onChange={setColorValue}
+                  style={{ width: 150 }}
+                  disabled={colorEditLoading}
+                >
+                  {COLOR_OPTIONS.map((option) => (
+                    <Option key={option.value} value={option.value}>
+                      <Space>
+                        <div
+                          style={{
+                            width: 16,
+                            height: 16,
+                            backgroundColor: option.color,
+                            border:
+                              option.value === "white"
+                                ? "1px solid #d9d9d9"
+                                : "none",
+                            borderRadius: "50%",
+                          }}
+                        />
+                        {option.label}
+                      </Space>
+                    </Option>
+                  ))}
+                </Select>
+                <Button
+                  size="small"
+                  type="primary"
+                  loading={colorEditLoading}
+                  onClick={async () => {
+                    if (colorValue !== userProfile.color) {
+                      await onColorSave(colorValue);
+                    }
+                    setEditingColor(false);
+                  }}
+                >
+                  Save
+                </Button>
+                <Button
+                  size="small"
+                  onClick={() => {
+                    setEditingColor(false);
+                    setColorValue(userProfile.color || "blue");
+                  }}
+                  disabled={colorEditLoading}
+                >
+                  Cancel
+                </Button>
+              </Space>
+            ) : (
+              <Space>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <Avatar
+                    size="small"
+                    style={getColorStyle(userProfile.color || "blue")}
+                  >
+                    {userProfile?.name
+                      ? userProfile.name.charAt(0).toUpperCase()
+                      : "U"}
+                  </Avatar>
+                  <Text>
+                    {COLOR_OPTIONS.find(
+                      (opt) => opt.value === (userProfile.color || "blue"),
+                    )?.label || "Blue"}
+                  </Text>
+                </div>
+                <Button size="small" onClick={() => setEditingColor(true)}>
+                  Change
+                </Button>
+              </Space>
+            )}
+          </div>
+        </Space>
       ) : (
         <Alert message="No user profile data." type="info" />
       )}
@@ -159,21 +242,7 @@ const UserProfile = () => {
   const { idToken } = useContext(UserAuthenticationContext);
 
   const [nameEditLoading, setNameEditLoading] = useState(false);
-  const [distanceUnitEditLoading, setDistanceUnitEditLoading] = useState(false);
-
-  // Handle toggle public/private
-  const handleTogglePublic = async (checked) => {
-    try {
-      await updateUserProfileAsync({ public_profile: checked });
-      message.success(`Profile is now ${checked ? "public" : "private"}.`);
-      // Force a repull of the user profile
-      if (typeof userRefetch === "function") {
-        userRefetch();
-      }
-    } catch (err) {
-      message.error("Failed to update profile privacy.");
-    }
-  };
+  const [colorEditLoading, setColorEditLoading] = useState(false);
 
   // Handle name save
   const handleNameSave = async (newName) => {
@@ -191,19 +260,19 @@ const UserProfile = () => {
     }
   };
 
-  // Handle distance unit save
-  const handleDistanceUnitSave = async (newUnit) => {
-    setDistanceUnitEditLoading(true);
+  // Handle color save
+  const handleColorSave = async (newColor) => {
+    setColorEditLoading(true);
     try {
-      await updateUserProfileAsync({ distance_unit: newUnit });
-      message.success("Distance unit updated!");
+      await updateUserProfileAsync({ color: newColor });
+      message.success("Avatar color updated!");
       if (typeof userRefetch === "function") {
         userRefetch();
       }
     } catch (err) {
-      message.error("Failed to update distance unit.");
+      message.error("Failed to update avatar color.");
     } finally {
-      setDistanceUnitEditLoading(false);
+      setColorEditLoading(false);
     }
   };
 
@@ -213,12 +282,10 @@ const UserProfile = () => {
         <UserProfileCard
           userProfile={userProfile}
           isUserFetching={isUserFetching}
-          onTogglePublic={handleTogglePublic}
-          updatingPublic={updateUserProfileLoading}
           onNameSave={handleNameSave}
           nameEditLoading={nameEditLoading}
-          onDistanceUnitSave={handleDistanceUnitSave}
-          distanceUnitEditLoading={distanceUnitEditLoading}
+          onColorSave={handleColorSave}
+          colorEditLoading={colorEditLoading}
         />
         {updateUserProfileError && (
           <Alert

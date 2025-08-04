@@ -15,7 +15,7 @@ const usePutProfile = () => {
         throw new Error("No ID token available.");
       }
       // Only send allowed fields
-      const allowedFields = ["name", "public_profile"];
+      const allowedFields = ["name", "public_profile", "color"];
       const body = {};
       for (const key of allowedFields) {
         if (profileFields[key] !== undefined) {
