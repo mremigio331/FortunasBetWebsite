@@ -389,6 +389,77 @@ const RoomBetsDisplay = ({ roomId }) => {
                   </Space>
                 </div>
               )}
+
+              {/* Show game scores when available */}
+              {!isPrivate &&
+                bet.odds_snapshot?.teams?.home &&
+                bet.odds_snapshot?.teams?.away && (
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      color: "#595959",
+                      marginTop: "4px",
+                    }}
+                  >
+                    <Space
+                      direction="vertical"
+                      size={2}
+                      style={{ width: "100%" }}
+                    >
+                      <Space size={4}>
+                        <Text style={{ fontSize: "12px", fontWeight: "500" }}>
+                          {bet.odds_snapshot.teams.away.abbreviation}:{" "}
+                          {bet.odds_snapshot.teams.away.score || 0}
+                        </Text>
+                        <Text style={{ fontSize: "12px", color: "#8c8c8c" }}>
+                          -
+                        </Text>
+                        <Text style={{ fontSize: "12px", fontWeight: "500" }}>
+                          {bet.odds_snapshot.teams.home.abbreviation}:{" "}
+                          {bet.odds_snapshot.teams.home.score || 0}
+                        </Text>
+                        {(bet.odds_snapshot.status?.state === "in" ||
+                          bet.odds_snapshot.status?.state === "post" ||
+                          bet.odds_snapshot.status?.completed) && (
+                          <Tag
+                            color={
+                              bet.odds_snapshot.status?.state === "in"
+                                ? "#ff4d4f"
+                                : "#52c41a"
+                            }
+                            size="small"
+                            style={{ fontSize: "10px", lineHeight: "14px" }}
+                          >
+                            {bet.odds_snapshot.status?.state === "in"
+                              ? "LIVE"
+                              : "FINAL"}
+                          </Tag>
+                        )}
+                      </Space>
+
+                      {/* Show total for over/under bets */}
+                      {bet.game_bet?.bet_type === "over_under" && (
+                        <Text style={{ fontSize: "11px", color: "#8c8c8c" }}>
+                          Total:{" "}
+                          {parseInt(bet.odds_snapshot.teams.away.score || 0) +
+                            parseInt(bet.odds_snapshot.teams.home.score || 0)}
+                          {bet.game_bet.total_value &&
+                            ` (O/U ${bet.game_bet.total_value})`}
+                        </Text>
+                      )}
+
+                      {/* Show spread info for spread bets */}
+                      {bet.game_bet?.bet_type === "spread" &&
+                        bet.game_bet.spread_value && (
+                          <Text style={{ fontSize: "11px", color: "#8c8c8c" }}>
+                            Spread: {bet.game_bet.team_choice?.toUpperCase()}{" "}
+                            {bet.game_bet.spread_value > 0 ? "+" : ""}
+                            {bet.game_bet.spread_value}
+                          </Text>
+                        )}
+                    </Space>
+                  </div>
+                )}
             </Space>
           </Col>
 

@@ -27,6 +27,7 @@ import useGetRoom from "../../hooks/room/useGetRoom";
 import useGetNFLOdds from "../../hooks/odds/useGetNFLOdds";
 import useGetNFLWeeksInRange from "../../hooks/odds/useGetNFLWeeksInRange";
 import useCreateBet from "../../hooks/bet/useCreateBet";
+import useGetBetsForRoom from "../../hooks/bet/useGetBetsForRoom";
 import { getSeasonTypeOptions } from "../../configs/nflSeasonTypes";
 import { getDefaultNFLSelection } from "../../configs/nflCurrentWeek";
 import RoomInfoCards from "../../components/room/RoomInfoCards";
@@ -92,6 +93,16 @@ const Room = () => {
 
   // Bet creation hook
   const { createBet, isLoading: isBetCreating } = useCreateBet();
+
+  // Get existing bets for the room to check weekly constraints
+  const {
+    bets: existingBets,
+    users: existingBetsUsers,
+    betsCount,
+    isFetching: isBetsFetching,
+    isError: isBetsError,
+    refetch: refetchBets,
+  } = useGetBetsForRoom(roomId);
 
   // Get NFL weeks available in the room's date range
   const {
@@ -338,9 +349,28 @@ const Room = () => {
       }
 
       if (hasDuplicatePoints) {
-        message.error(
-          "Each bet must have a unique point value. Please adjust your selections.",
+        // Determine if conflicts are from session duplicates or weekly taken points
+        const sessionDuplicates = duplicatePointValues.filter(
+          (point) =>
+            Object.values(selectedBets).filter((bet) => bet.points === point)
+              .length > 1,
         );
+        const weeklyConflicts = duplicatePointValues.filter(
+          (point) =>
+            weeklyTakenPoints.includes(point) &&
+            Object.values(selectedBets).some((bet) => bet.points === point),
+        );
+
+        let errorMessage = "Cannot place bets:";
+        if (sessionDuplicates.length > 0) {
+          errorMessage += ` Point values ${sessionDuplicates.join(", ")} are used multiple times in this session.`;
+        }
+        if (weeklyConflicts.length > 0) {
+          errorMessage += ` Point values ${weeklyConflicts.join(", ")} were already used this week.`;
+        }
+        errorMessage += " Please adjust your selections.";
+
+        message.error(errorMessage);
         return;
       }
 
@@ -404,12 +434,10 @@ const Room = () => {
             game_id: gameId,
             sport: sport || "football", // Use sport from odds response, fallback to football
             league: league || "nfl", // Use league from odds response, fallback to nfl
-            season_type: selectedSeasonType,
+            season_type: parseInt(selectedSeasonType), // Ensure it's an integer
+            week: selectedWeek, // Add week field
             event_datetime: eventDateTime, // Epoch timestamp in seconds
             game_bet: gameBet,
-            points_wagered: bet.points,
-            locked: false,
-            submitted_at: Math.floor(Date.now() / 1000), // Current time in epoch seconds
             odds_snapshot: game, // Full game data as odds snapshot
           });
         });
@@ -419,6 +447,9 @@ const Room = () => {
         message.success(
           `Successfully placed ${betEntries.length} bet${betEntries.length !== 1 ? "s" : ""}!`,
         );
+
+        // Refresh bets to update weekly constraints
+        refetchBets();
 
         // Clear the selected bets after successful submission
         setSelectedBets({});
@@ -449,6 +480,38 @@ const Room = () => {
     [selectedBets],
   );
 
+  // Get current user's bets for the selected week (memoized)
+  const currentWeekUserBets = useMemo(() => {
+    if (!existingBets || !Array.isArray(existingBets) || !currentUserId) {
+      return [];
+    }
+
+    // Filter bets for current user, current week, season type, sport, and league
+    return existingBets.filter((bet) => {
+      return (
+        bet.user_id === currentUserId &&
+        bet.week === selectedWeek &&
+        bet.season_type === parseInt(selectedSeasonType) &&
+        bet.sport === (sport || "football") &&
+        bet.league === (league || "nfl") &&
+        new Date(bet.event_datetime * 1000).getFullYear() === selectedYear
+      );
+    });
+  }, [
+    existingBets,
+    currentUserId,
+    selectedWeek,
+    selectedSeasonType,
+    selectedYear,
+    sport,
+    league,
+  ]);
+
+  // Get weekly taken points to disable in UI
+  const weeklyTakenPoints = useMemo(() => {
+    return currentWeekUserBets.map((bet) => bet.points_wagered);
+  }, [currentWeekUserBets]);
+
   // Check for duplicate point values (memoized)
   const { hasDuplicatePoints, duplicatePointValues } = useMemo(() => {
     const pointCounts = Object.values(selectedBets).reduce((acc, bet) => {
@@ -461,11 +524,21 @@ const Room = () => {
       .filter(([_, count]) => count > 1)
       .map(([points, _]) => parseInt(points));
 
+    // Check if any selected bets conflict with weekly taken points
+    const weeklyConflicts = Object.values(selectedBets)
+      .map((bet) => bet.points)
+      .filter((points) => weeklyTakenPoints.includes(points));
+
+    // Combine session duplicates with weekly taken points for UI disabling
+    const allConflictingPoints = [
+      ...new Set([...dupValues, ...weeklyTakenPoints]),
+    ];
+
     return {
-      hasDuplicatePoints: hasDups,
-      duplicatePointValues: dupValues,
+      hasDuplicatePoints: hasDups || weeklyConflicts.length > 0,
+      duplicatePointValues: allConflictingPoints,
     };
-  }, [selectedBets]);
+  }, [selectedBets, weeklyTakenPoints]);
 
   if (isRoomFetching || (room && isNFLWeeksFetching)) {
     return (
@@ -695,6 +768,160 @@ const Room = () => {
               isValidCombination={isValidCombination}
             />
 
+            {/* Current Week User Bets Display */}
+            {currentWeekUserBets.length > 0 && (
+              <Alert
+                message={`Your bets for Week ${selectedWeek} (${currentWeekUserBets.length}/3)`}
+                description={
+                  <div style={{ marginTop: "8px" }}>
+                    <Row gutter={[12, 12]}>
+                      {currentWeekUserBets.map((bet, index) => {
+                        // Extract team names from odds_snapshot
+                        let awayTeam = "Away Team";
+                        let homeTeam = "Home Team";
+
+                        if (bet.odds_snapshot?.teams) {
+                          const { home, away } = bet.odds_snapshot.teams;
+                          if (home?.name) homeTeam = home.name;
+                          if (away?.name) awayTeam = away.name;
+                        } else if (
+                          bet.odds_snapshot?.home_team &&
+                          bet.odds_snapshot?.away_team
+                        ) {
+                          homeTeam = bet.odds_snapshot.home_team;
+                          awayTeam = bet.odds_snapshot.away_team;
+                        }
+
+                        // Get spread and total values
+                        const spreadValue =
+                          bet.game_bet?.spread_value ||
+                          bet.odds_snapshot?.spread;
+                        const totalValue =
+                          bet.game_bet?.total_value ||
+                          bet.odds_snapshot?.overUnder ||
+                          bet.odds_snapshot?.total;
+
+                        // Format bet date
+                        const betDate = bet.event_datetime
+                          ? new Date(
+                              bet.event_datetime * 1000,
+                            ).toLocaleDateString("en-US", {
+                              month: "numeric",
+                              day: "numeric",
+                              year: "numeric",
+                            })
+                          : "";
+
+                        return (
+                          <Col
+                            key={bet.game_id || index}
+                            xs={24}
+                            sm={12}
+                            lg={8}
+                          >
+                            <Card
+                              size="small"
+                              style={{
+                                backgroundColor: "#f8f9fa",
+                                border: "1px solid #1890ff",
+                                borderRadius: "6px",
+                              }}
+                            >
+                              <Row align="middle">
+                                <Col span={16}>
+                                  <Space
+                                    direction="vertical"
+                                    size="small"
+                                    style={{ width: "100%" }}
+                                  >
+                                    <Text strong style={{ fontSize: "16px" }}>
+                                      {awayTeam} @ {homeTeam}
+                                    </Text>
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "center",
+                                      }}
+                                    >
+                                      <Text
+                                        type="secondary"
+                                        style={{ fontSize: "12px" }}
+                                      >
+                                        {betDate}
+                                      </Text>
+                                      <Tag color="green" size="small">
+                                        ACTIVE
+                                      </Tag>
+                                    </div>
+
+                                    {bet.game_bet && (
+                                      <div>
+                                        <Space size="small" wrap>
+                                          <Tag color="blue" size="small">
+                                            {bet.game_bet.bet_type === "spread"
+                                              ? "Spread"
+                                              : "Over/Under"}
+                                          </Tag>
+                                          <Text
+                                            style={{
+                                              fontSize: "13px",
+                                              color: "#52c41a",
+                                              fontWeight: "500",
+                                            }}
+                                          >
+                                            {bet.game_bet.bet_type === "spread"
+                                              ? `${bet.game_bet.team_choice?.toUpperCase()} ${spreadValue ? (spreadValue > 0 ? `+${spreadValue}` : spreadValue) : "TBD"}`
+                                              : `${bet.game_bet.over_under_choice?.toUpperCase()} ${totalValue || "TBD"}`}
+                                          </Text>
+                                        </Space>
+                                      </div>
+                                    )}
+                                  </Space>
+                                </Col>
+
+                                <Col span={8} style={{ textAlign: "right" }}>
+                                  <Space
+                                    direction="vertical"
+                                    size="small"
+                                    align="end"
+                                  >
+                                    <Text
+                                      strong
+                                      style={{
+                                        color: "#1890ff",
+                                        fontSize: "16px",
+                                      }}
+                                    >
+                                      {bet.points_wagered} pts
+                                    </Text>
+                                  </Space>
+                                </Col>
+                              </Row>
+                            </Card>
+                          </Col>
+                        );
+                      })}
+                    </Row>
+                    <div
+                      style={{
+                        marginTop: "12px",
+                        fontSize: "12px",
+                        color: "#666",
+                        fontStyle: "italic",
+                      }}
+                    >
+                      💡 Point values {weeklyTakenPoints.join(", ")} are
+                      unavailable for new bets this week.
+                    </div>
+                  </div>
+                }
+                type="info"
+                showIcon
+                style={{ marginBottom: "16px" }}
+              />
+            )}
+
             {isNFLWeeksError && (
               <Alert
                 message="Error Loading NFL Schedule"
@@ -806,6 +1033,7 @@ const Room = () => {
                           canSelect={canSelect}
                           hasConflictingPoints={hasConflictingPoints}
                           duplicatePointValues={duplicatePointValues}
+                          weeklyTakenPoints={weeklyTakenPoints}
                           onGameSelect={handleGameSelect}
                           onBetTypeChange={handleBetTypeChange}
                           onTeamChoiceChange={handleTeamChoiceChange}

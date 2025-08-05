@@ -8,6 +8,7 @@ import {
   Radio,
   InputNumber,
   Image,
+  Tooltip,
 } from "antd";
 import { CheckCircleOutlined } from "@ant-design/icons";
 
@@ -20,6 +21,7 @@ const GameCard = ({
   canSelect,
   hasConflictingPoints,
   duplicatePointValues,
+  weeklyTakenPoints,
   onGameSelect,
   onBetTypeChange,
   onTeamChoiceChange,
@@ -100,7 +102,9 @@ const GameCard = ({
             fontWeight: "600",
           }}
         >
-          DUPLICATE
+          {weeklyTakenPoints?.includes(bet.points)
+            ? "USED THIS WEEK"
+            : "DUPLICATE"}
         </div>
       )}
 
@@ -600,7 +604,19 @@ const GameCard = ({
                   !isCurrentPointValue &&
                   duplicatePointValues?.includes(points);
 
-                return (
+                // Determine reason for disabling
+                const isWeeklyTaken = weeklyTakenPoints?.includes(points);
+                const isSessionDuplicate =
+                  !isWeeklyTaken && duplicatePointValues?.includes(points);
+
+                let tooltipTitle = "";
+                if (isWeeklyTaken) {
+                  tooltipTitle = `${points} points already used this week`;
+                } else if (isSessionDuplicate) {
+                  tooltipTitle = `${points} points already selected in another bet`;
+                }
+
+                const pointButton = (
                   <Button
                     key={points}
                     size="small"
@@ -617,6 +633,14 @@ const GameCard = ({
                   >
                     {points}
                   </Button>
+                );
+
+                return isDisabled ? (
+                  <Tooltip key={points} title={tooltipTitle}>
+                    {pointButton}
+                  </Tooltip>
+                ) : (
+                  pointButton
                 );
               })}
             </div>
