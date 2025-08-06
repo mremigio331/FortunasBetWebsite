@@ -1,8 +1,34 @@
 import React, { useContext, useState } from "react";
-import { Menu, Button, Avatar } from "antd";
+import { Menu, Button, Avatar, Dropdown } from "antd";
 import { Link } from "react-router-dom";
 import { UserAuthenticationContext } from "../provider/UserAuthenticationProvider";
 import { useUserProfile } from "../provider/UserProfileProvider";
+
+// UserDropdown component for avatar dropdown menu
+const UserDropdown = ({ avatarStyle, avatarText, onProfile, onLogout }) => {
+  return (
+    <Dropdown
+      overlay={
+        <Menu>
+          <Menu.Item key="profile" onClick={onProfile}>
+            Profile
+          </Menu.Item>
+          <Menu.Item key="logout" onClick={onLogout}>
+            Log Out
+          </Menu.Item>
+        </Menu>
+      }
+      placement="bottomRight"
+      trigger={["click"]}
+    >
+      <span>
+        <Avatar style={{ ...avatarStyle, cursor: "pointer" }} size="default">
+          {avatarText}
+        </Avatar>
+      </span>
+    </Dropdown>
+  );
+};
 
 const Navbar = () => {
   const {
@@ -93,19 +119,16 @@ const Navbar = () => {
 
         {/* User section */}
         {isAuthenticated ? (
-          <Link to="/user/profile" style={{ textDecoration: "none" }}>
-            <Avatar
-              style={{
-                ...getAvatarStyle(userProfile?.color),
-                cursor: "pointer",
-              }}
-              size="default"
-            >
-              {userProfile?.name
+          <UserDropdown
+            avatarStyle={getAvatarStyle(userProfile?.color)}
+            avatarText={
+              userProfile?.name
                 ? userProfile.name.charAt(0).toUpperCase()
-                : nickname?.charAt(0)?.toUpperCase() || "U"}
-            </Avatar>
-          </Link>
+                : nickname?.charAt(0)?.toUpperCase() || "U"
+            }
+            onProfile={() => (window.location.href = "/user/profile")}
+            onLogout={logoutUser}
+          />
         ) : (
           <div style={{ display: "flex", gap: "8px" }}>
             <Button type="primary" onClick={initiateSignIn} size="small">
