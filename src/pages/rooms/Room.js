@@ -38,7 +38,7 @@ import CurrentWeekUserBetsAlert from "./Room/CurrentWeekUserBetsAlert";
 import { createHandlers } from "./Room/roomUtils";
 import RoomBetsDisplay from "../../components/room/RoomBetsDisplay";
 import MembershipManagement from "../../components/room/MembershipManagement";
-import useGetUserMembershipStatus from "../../hooks/membership/useGetUserMembershipStatus";
+import useGetRoomMembers from "../../hooks/membership/useGetRoomMembers";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -82,15 +82,24 @@ const Room = () => {
     return isAdmin;
   }, [room, currentUserId, roomId]);
 
-  // Get user's membership status for this room
+  // Get room members and check if current user is a member
   const {
-    isMember,
-    isApproved,
-    isPending,
-    isDenied,
-    membershipStatus,
-    isMembershipFetching,
-  } = useGetUserMembershipStatus(roomId);
+    members,
+    memberCount,
+    isMembersFetching,
+    isMembersError,
+    membersStatus,
+    membersError,
+    membersRefetch,
+  } = useGetRoomMembers(roomId);
+
+  const isMember = useMemo(() => {
+    if (!currentUserId || !Array.isArray(members)) return false;
+    return members.some((m) => m.user_id === currentUserId);
+  }, [members, currentUserId]);
+
+  // For compatibility, keep isMembershipFetching for UI
+  const isMembershipFetching = isMembersFetching;
 
   // Bet creation hook
   const { createBet, isLoading: isBetCreating } = useCreateBet();
@@ -616,7 +625,16 @@ const Room = () => {
       <Row gutter={[24, 24]}>
         <Col span={24}>
           <Card style={{ marginBottom: 24, boxShadow: "0 2px 8px #f0f1f2" }}>
-            <RoomHeader room={room} handleGoBack={handleGoBack} />
+            <RoomHeader
+              room={room}
+              isMember={isMember}
+              isMembershipFetching={isMembershipFetching}
+              currentUserId={currentUserId}
+              members={members}
+              onRequestMembership={() => {
+                /* TODO: implement request membership logic */
+              }}
+            />
           </Card>
         </Col>
         <Col span={24}>
@@ -655,8 +673,7 @@ const Room = () => {
             isMember={isMember}
             hasDuplicatePoints={hasDuplicatePoints}
             isMembershipFetching={isMembershipFetching}
-            isDenied={isDenied}
-            isPending={isPending}
+            // Removed isDenied and isPending props
             selectedSeasonType={selectedSeasonType}
             handleSeasonTypeChange={handlers.handleSeasonTypeChange}
             selectedYear={selectedYear}
