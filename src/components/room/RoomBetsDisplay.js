@@ -13,9 +13,9 @@ import {
   Empty,
   Button,
   Tooltip,
-  Table,
-  Collapse,
 } from "antd";
+import RoomBetsTable from "./RoomBetsTable";
+import RoomBetsCards from "./RoomBetsCards";
 import {
   TrophyOutlined,
   UserOutlined,
@@ -29,9 +29,23 @@ import { UserAuthenticationContext } from "../../provider/UserAuthenticationProv
 import useGetBetsForRoom from "../../hooks/bet/useGetBetsForRoom";
 
 const { Title, Text } = Typography;
-const { Panel } = Collapse;
+
+// Responsive hook
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = React.useState(false);
+  React.useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+  return isMobile;
+};
 
 const RoomBetsDisplay = ({ roomId }) => {
+  const isMobile = useIsMobile();
   const { user } = useContext(UserAuthenticationContext);
   const [expandedUsers, setExpandedUsers] = useState({});
 
@@ -580,137 +594,35 @@ const RoomBetsDisplay = ({ roomId }) => {
         </Empty>
       ) : (
         <>
-          {/* User Statistics Table */}
+          {/* Bet History Section - Responsive Table for Desktop, Table for Bets on Mobile */}
           <div style={{ marginBottom: "24px" }}>
             <Title level={4} style={{ marginBottom: "16px" }}>
               <TrophyOutlined
                 style={{ color: "#faad14", marginRight: "8px" }}
               />
-              User Statistics
+              Bet History
             </Title>
-            <Table
-              dataSource={userStats}
-              columns={userStatsColumns}
-              rowKey="user_id"
-              pagination={false}
-              size="middle"
-              style={{ marginBottom: "16px" }}
-            />
-
-            {/* Expandable User Bet Details */}
-            {Object.keys(expandedUsers).map((userId) => {
-              if (!expandedUsers[userId]) return null;
-
-              const userStat = userStats.find(
-                (stat) => stat.user_id === userId,
-              );
-              if (!userStat || !userStat.bets.length) return null;
-
-              return (
-                <Card
-                  key={`expanded-${userId}`}
-                  title={
-                    <Space>
-                      <Avatar
-                        icon={<UserOutlined />}
-                        size="small"
-                        style={getAvatarStyle(userStat.user_color)}
-                      />
-                      <Text strong>
-                        {userStat.user_id === user?.user_id
-                          ? "Your Bets"
-                          : `${userStat.user_name}'s Bets`}
-                      </Text>
-                      <Tag color="blue">{userStat.bets.length} bets</Tag>
-                    </Space>
-                  }
-                  size="small"
-                  style={{ marginBottom: "16px" }}
-                  extra={
-                    <Button
-                      size="small"
-                      type="text"
-                      icon={<DownOutlined />}
-                      onClick={() => toggleUserExpansion(userId)}
-                    >
-                      Hide
-                    </Button>
-                  }
-                >
-                  {userStat.bets.map((bet, index) =>
-                    renderBetCard(bet, userStat.user_id === user?.user_id),
-                  )}
-                </Card>
-              );
-            })}
+            <div className="bet-history-responsive">
+              {isMobile ? (
+                <RoomBetsCards
+                  userStats={userStats}
+                  getAvatarStyle={getAvatarStyle}
+                  user={user}
+                  renderBetCard={renderBetCard}
+                />
+              ) : (
+                <RoomBetsTable
+                  userStats={userStats}
+                  userStatsColumns={userStatsColumns}
+                  expandedUsers={expandedUsers}
+                  toggleUserExpansion={toggleUserExpansion}
+                  getAvatarStyle={getAvatarStyle}
+                  user={user}
+                  renderBetCard={renderBetCard}
+                />
+              )}
+            </div>
           </div>
-
-          {/* Summary Stats */}
-          <Row gutter={16} style={{ marginBottom: "16px" }}>
-            <Col xs={24} sm={8}>
-              <div
-                style={{
-                  textAlign: "center",
-                  padding: "12px",
-                  backgroundColor: "#f5f5f5",
-                  borderRadius: "6px",
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: "20px",
-                    fontWeight: "bold",
-                    color: "#1890ff",
-                  }}
-                >
-                  {betsCount}
-                </div>
-                <Text type="secondary">Total Bets</Text>
-              </div>
-            </Col>
-            <Col xs={24} sm={8}>
-              <div
-                style={{
-                  textAlign: "center",
-                  padding: "12px",
-                  backgroundColor: "#f5f5f5",
-                  borderRadius: "6px",
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: "20px",
-                    fontWeight: "bold",
-                    color: "#faad14",
-                  }}
-                >
-                  {totalPointsWagered}
-                </div>
-                <Text type="secondary">Points Wagered</Text>
-              </div>
-            </Col>
-            <Col xs={24} sm={8}>
-              <div
-                style={{
-                  textAlign: "center",
-                  padding: "12px",
-                  backgroundColor: "#f5f5f5",
-                  borderRadius: "6px",
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: "20px",
-                    fontWeight: "bold",
-                    color: "#52c41a",
-                  }}
-                >
-                  {currentUserBets.length}
-                </div>
-                <Text type="secondary">Your Bets</Text>
-              </div>
-            </Col>
-          </Row>
 
           {/* Current User's Bets */}
           {currentUserBets.length > 0 && (
