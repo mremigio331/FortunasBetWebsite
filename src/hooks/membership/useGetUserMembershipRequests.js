@@ -61,14 +61,6 @@ const useGetUserMembershipRequests = (enabled = true) => {
     };
   }, [data]);
 
-  if (stage === "dev" || stage === "testing") {
-    console.log("User Membership Requests Data:", data);
-    console.log("User Membership Requests Status:", status);
-    console.log("User Membership Requests Error:", error);
-    console.log("User Membership Requests isFetching:", isFetching);
-    console.log("User Membership Requests isError:", isError);
-  }
-
   return {
     userMembershipRequests: memoizedValues.allRequests,
     userMembershipRequestsCount: memoizedValues.allRequests.length,

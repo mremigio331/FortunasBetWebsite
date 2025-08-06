@@ -28,14 +28,6 @@ const useGetAllMembershipRequests = (enabled = true) => {
     cacheTime: 1000 * 60 * 10, // 10 minutes
   });
 
-  if (stage === "dev" || stage === "testing") {
-    console.log("Membership Requests Data:", data);
-    console.log("Membership Requests Status:", status);
-    console.log("Membership Requests Error:", error);
-    console.log("Membership Requests isFetching:", isFetching);
-    console.log("Membership Requests isError:", isError);
-  }
-
   return {
     membershipRequests: data ? data.data.membership_requests : [],
     membershipRequestsCount: data ? data.data.count : 0,

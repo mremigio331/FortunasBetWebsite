@@ -26,25 +26,27 @@ export const createHandlers = ({
       "season";
     message.info(`Loading ${seasonName} games...`);
   },
-  handleGameSelect: (selectedBets, setSelectedBets) => (gameId) => {
-    if (selectedBets[gameId]) {
-      const newBets = { ...selectedBets };
-      delete newBets[gameId];
-      setSelectedBets(newBets);
-    } else {
-      if (Object.keys(selectedBets).length >= 3) {
-        message.warning("You can only select up to 3 games for betting");
-        return;
-      }
-      setSelectedBets({
-        ...selectedBets,
-        [gameId]: {
+  handleGameSelect: (selectedBets, setSelectedBets) => (gameId, betData) => {
+    // Toggle selection: deselect if already selected, otherwise select
+    setSelectedBets((prev) => {
+      if (prev[gameId]) {
+        // Deselect
+        const newBets = { ...prev };
+        delete newBets[gameId];
+        return newBets;
+      } else {
+        // Select with default bet structure
+        const defaultBetData = {
           betType: "spread",
           teamChoice: "home",
           points: 1,
-        },
-      });
-    }
+        };
+        return {
+          ...prev,
+          [gameId]: defaultBetData,
+        };
+      }
+    });
   },
   handleBetTypeChange: (selectedBets, setSelectedBets) => (gameId, betType) => {
     setSelectedBets({

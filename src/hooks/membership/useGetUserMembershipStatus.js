@@ -49,13 +49,6 @@ const useGetUserMembershipStatus = (roomId, enabled = true) => {
     staleTime: 1000 * 60 * 2, // 2 minutes
     cacheTime: 1000 * 60 * 10, // 10 minutes
   });
-
-  if (stage === "dev" || stage === "testing") {
-    console.log("User Membership Status Data:", data);
-    console.log("User Membership Status:", status);
-    console.log("User Membership Error:", error);
-  }
-
   return {
     membershipData: data?.membership || null,
     membershipStatus: data?.status || "none",

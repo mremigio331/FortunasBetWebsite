@@ -20,6 +20,7 @@ import GameCard from "../../../components/room/GameCard";
 import CurrentWeekUserBetsAlert from "./CurrentWeekUserBetsAlert";
 
 const NFLOddsSection = ({
+  selectedBets,
   selectedBetsCount,
   handleSubmitBets,
   totalPoints,
@@ -38,6 +39,9 @@ const NFLOddsSection = ({
   handleYearChange,
   selectedWeek,
   handleWeekChange,
+  setSelectedWeek,
+  setSelectedYear,
+  setSelectedSeasonType,
   weekOptions,
   yearOptions,
   seasonTypeOptions,
@@ -120,11 +124,11 @@ const NFLOddsSection = ({
     )}
     <WeekYearSelector
       selectedSeasonType={selectedSeasonType}
-      setSelectedSeasonType={handleSeasonTypeChange}
+      setSelectedSeasonType={setSelectedSeasonType}
       selectedYear={selectedYear}
-      setSelectedYear={handleYearChange}
+      setSelectedYear={setSelectedYear}
       selectedWeek={selectedWeek}
-      setSelectedWeek={handleWeekChange}
+      setSelectedWeek={setSelectedWeek}
       weekOptions={weekOptions}
       yearOptions={yearOptions}
       seasonTypeOptions={seasonTypeOptions}
@@ -174,10 +178,7 @@ const NFLOddsSection = ({
     )}
     {!isOddsFetching && !isOddsError && hasOdds && (
       <>
-        <BettingSummary
-          selectedBets={selectedBetsCount}
-          nflOdds={memoizedNflOdds}
-        />
+        <BettingSummary selectedBets={selectedBets} nflOdds={memoizedNflOdds} />
         <StatusMessages
           oddsCount={memoizedOddsCount}
           selectedWeek={selectedWeek}
@@ -217,13 +218,13 @@ const NFLOddsSection = ({
         )}
         <Row gutter={[16, 16]}>
           {memoizedNflOdds.map((game) => {
-            const isSelected = selectedBetsCount[game.game_id];
-            const bet = selectedBetsCount[game.game_id];
+            const isSelected = !!selectedBets[game.game_id];
+            const bet = selectedBets[game.game_id];
             const canSelect =
               (selectedBetsCount < 3 || isSelected) &&
               (isCurrentUserAdmin || isMember);
             const hasConflictingPoints =
-              isSelected && duplicatePointValues.includes(bet.points);
+              isSelected && bet && duplicatePointValues.includes(bet.points);
             return (
               <Col xs={24} sm={12} lg={8} key={game.game_id}>
                 <GameCard

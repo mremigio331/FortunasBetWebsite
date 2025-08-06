@@ -56,15 +56,6 @@ const useGetNFLOdds = (week, year, seasonType = 2, enabled = true) => {
     refetchOnWindowFocus: true, // Refetch when window comes back into focus
   });
 
-  if (stage === "dev" || stage === "testing") {
-    console.log("NFL Odds Data:", data);
-    console.log("NFL Odds Status:", status);
-    console.log("NFL Odds Error:", error);
-    console.log("NFL Odds isFetching:", isFetching);
-    console.log("NFL Odds isError:", isError);
-    console.log("NFL Odds Query Params:", queryParams);
-  }
-
   return {
     nflOdds: data ? data.data.odds : [],
     oddsCount: data ? data.data.count : 0,

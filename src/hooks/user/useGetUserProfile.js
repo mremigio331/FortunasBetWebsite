@@ -23,14 +23,6 @@ const useGetUserProfile = (enabled = true) => {
     cacheTime: 1000 * 60 * 30, // 30 minutes: keeps data in cache
   });
 
-  if (stage === "dev" || stage === "testing") {
-    console.log("User Profile Data:", data);
-    console.log("User Profile Status:", status);
-    console.log("User Profile Error:", error);
-    console.log("User Profile isFetching:", isFetching);
-    console.log("User Profile isError:", isError);
-  }
-
   return {
     userProfile: data ? data.data.user_profile : {},
     isUserFetching: isFetching,

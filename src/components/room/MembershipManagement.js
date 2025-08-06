@@ -47,13 +47,6 @@ const MembershipManagement = ({ roomId, idToken }) => {
     membersRefetch,
   } = useGetRoomMembers(roomId);
 
-  console.log("Members Data:", {
-    members,
-    memberCount,
-    isMembersFetching,
-    isMembersError,
-  });
-
   const { editMembershipRequestAsync, editMembershipRequestLoading } =
     useEditMembershipRequest();
 
@@ -73,13 +66,6 @@ const MembershipManagement = ({ roomId, idToken }) => {
     newStatus,
     newMembershipType = null,
   ) => {
-    console.log("handleStatusChange called with:", {
-      targetUserId,
-      newStatus,
-      newMembershipType,
-      roomId,
-    });
-
     try {
       // Convert status to approve/deny boolean for the edit_membership_request endpoint
       const approve = newStatus.toLowerCase() === "approved";

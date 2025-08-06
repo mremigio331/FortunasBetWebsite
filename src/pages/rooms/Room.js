@@ -40,6 +40,16 @@ const Room = () => {
 
   // State for betting selections
   const [selectedBets, setSelectedBets] = useState({});
+  // Count of selected bets
+  const selectedBetsCount = Object.keys(selectedBets).length;
+  // Handlers for bet actions
+  const handlers = createHandlers({
+    setSelectedWeek,
+    setSelectedYear,
+    setSelectedSeasonType,
+    setSelectedBets,
+    seasonTypeOptions,
+  });
 
   const { room, isRoomFetching, isRoomError, roomError, roomRefetch } =
     useGetRoom(roomId);
@@ -220,13 +230,7 @@ const Room = () => {
   };
 
   // Memoized handlers from roomUtils
-  const handlers = createHandlers({
-    setSelectedWeek,
-    setSelectedYear,
-    setSelectedSeasonType,
-    setSelectedBets,
-    seasonTypeOptions,
-  });
+  // ...existing code...
 
   const handleClearBets = useMemo(
     () => () => {
@@ -366,12 +370,13 @@ const Room = () => {
   );
 
   // Get selected bets count and total points (memoized)
-  const selectedBetsCount = useMemo(
-    () => Object.keys(selectedBets).length,
-    [selectedBets],
-  );
+  // ...existing code...
   const totalPoints = useMemo(
-    () => Object.values(selectedBets).reduce((sum, bet) => sum + bet.points, 0),
+    () =>
+      Object.values(selectedBets).reduce(
+        (sum, bet) => sum + (bet?.points ?? 0),
+        0,
+      ),
     [selectedBets],
   );
 
@@ -525,6 +530,7 @@ const Room = () => {
         </Col>
         <Col span={24}>
           <NFLOddsSection
+            selectedBets={selectedBets}
             selectedBetsCount={selectedBetsCount}
             handleSubmitBets={handleSubmitBets}
             totalPoints={totalPoints}
@@ -535,13 +541,15 @@ const Room = () => {
             isMember={isMember}
             hasDuplicatePoints={hasDuplicatePoints}
             isMembershipFetching={isMembershipFetching}
-            // Removed isDenied and isPending props
             selectedSeasonType={selectedSeasonType}
             handleSeasonTypeChange={handlers.handleSeasonTypeChange}
             selectedYear={selectedYear}
             handleYearChange={handlers.handleYearChange}
             selectedWeek={selectedWeek}
             handleWeekChange={handlers.handleWeekChange}
+            setSelectedWeek={setSelectedWeek}
+            setSelectedYear={setSelectedYear}
+            setSelectedSeasonType={setSelectedSeasonType}
             weekOptions={weekOptions}
             yearOptions={yearOptions}
             seasonTypeOptions={seasonTypeOptions}

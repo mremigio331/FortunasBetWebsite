@@ -28,14 +28,6 @@ const useGetRoom = (roomId, enabled = true) => {
     cacheTime: 1000 * 60 * 15, // 15 minutes
   });
 
-  if (stage === "dev" || stage === "testing") {
-    console.log("Room Data:", data);
-    console.log("Room Status:", status);
-    console.log("Room Error:", error);
-    console.log("Room isFetching:", isFetching);
-    console.log("Room isError:", isError);
-  }
-
   return {
     room: data ? data.data.room : null,
     isRoomFetching: isFetching,

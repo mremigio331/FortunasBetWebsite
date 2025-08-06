@@ -24,14 +24,6 @@ const useGetAdminRequests = (enabled = true) => {
     cacheTime: 1000 * 60 * 10, // 10 minutes
   });
 
-  if (stage === "dev" || stage === "testing") {
-    console.log("Admin Requests Data:", data);
-    console.log("Admin Requests Status:", status);
-    console.log("Admin Requests Error:", error);
-    console.log("Admin Requests isFetching:", isFetching);
-    console.log("Admin Requests isError:", isError);
-  }
-
   return {
     adminRequests: data ? data.data.admin_requests : [],
     adminRoomIds: data ? data.data.admin_room_ids : [],

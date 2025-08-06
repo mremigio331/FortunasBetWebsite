@@ -32,14 +32,6 @@ const useGetRoomMembers = (roomId, enabled = true) => {
     cacheTime: 1000 * 60 * 10, // 10 minutes
   });
 
-  if (stage === "dev" || stage === "testing") {
-    console.log("Room Members Data:", data);
-    console.log("Room Members Status:", status);
-    console.log("Room Members Error:", error);
-    console.log("Room Members isFetching:", isFetching);
-    console.log("Room Members isError:", isError);
-  }
-
   return {
     members: data?.data?.members || [],
     memberCount: data?.data?.count || 0,
