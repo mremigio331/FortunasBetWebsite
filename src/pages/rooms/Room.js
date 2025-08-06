@@ -31,10 +31,11 @@ import useGetBetsForRoom from "../../hooks/bet/useGetBetsForRoom";
 import { getSeasonTypeOptions } from "../../configs/nflSeasonTypes";
 import { getDefaultNFLSelection } from "../../configs/nflCurrentWeek";
 import RoomInfoCards from "../../components/room/RoomInfoCards";
-import BettingSummary from "../../components/room/BettingSummary";
-import WeekYearSelector from "../../components/room/WeekYearSelector";
-import GameCard from "../../components/room/GameCard";
-import StatusMessages from "../../components/room/StatusMessages";
+import RoomHeader from "./Room/RoomHeader";
+import RoomAdmins from "./Room/RoomAdmins";
+import NFLOddsSection from "./Room/NFLOddsSection";
+import CurrentWeekUserBetsAlert from "./Room/CurrentWeekUserBetsAlert";
+import { createHandlers } from "./Room/roomUtils";
 import RoomBetsDisplay from "../../components/room/RoomBetsDisplay";
 import MembershipManagement from "../../components/room/MembershipManagement";
 import useGetUserMembershipStatus from "../../hooks/membership/useGetUserMembershipStatus";
@@ -227,6 +228,15 @@ const Room = () => {
   const handleGoBack = () => {
     navigate(-1);
   };
+
+  // Memoized handlers from roomUtils
+  const handlers = createHandlers({
+    setSelectedWeek,
+    setSelectedYear,
+    setSelectedSeasonType,
+    setSelectedBets,
+    seasonTypeOptions,
+  });
 
   // Enhanced handlers for selection changes with immediate feedback
   const handleWeekChange = useMemo(
@@ -605,45 +615,13 @@ const Room = () => {
     <div style={{ padding: "24px", maxWidth: "1200px", margin: "0 auto" }}>
       <Row gutter={[24, 24]}>
         <Col span={24}>
-          <Button
-            icon={<ArrowLeftOutlined />}
-            onClick={handleGoBack}
-            style={{ marginBottom: "16px" }}
-          >
-            Back
-          </Button>
+          <Card style={{ marginBottom: 24, boxShadow: "0 2px 8px #f0f1f2" }}>
+            <RoomHeader room={room} handleGoBack={handleGoBack} />
+          </Card>
         </Col>
-
         <Col span={24}>
           <Card>
             <Row gutter={[24, 24]}>
-              <Col span={24}>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "flex-start",
-                    marginBottom: "16px",
-                  }}
-                >
-                  <div>
-                    <Title level={2} style={{ margin: 0 }}>
-                      {room.room_name}
-                    </Title>
-                    <Text type="secondary">Room ID: {room.room_id}</Text>
-                  </div>
-                  <Tag
-                    icon={
-                      room.is_private ? <LockOutlined /> : <UnlockOutlined />
-                    }
-                    color={room.is_private ? "red" : "green"}
-                    style={{ fontSize: "14px", padding: "4px 8px" }}
-                  >
-                    {room.is_private ? "Private" : "Public"}
-                  </Tag>
-                </div>
-              </Col>
-
               {room.room_description && (
                 <Col span={24}>
                   <Divider orientation="left">Description</Divider>
@@ -652,403 +630,71 @@ const Room = () => {
                   </Paragraph>
                 </Col>
               )}
-
               <Col span={24}>
                 <Divider orientation="left">Room Information</Divider>
                 <RoomInfoCards room={room} />
               </Col>
-
-              {(room.admin_user_ids || room.admins || room.admin_profiles) &&
-                ((room.admin_user_ids || room.admins || []).length > 0 ||
-                  (room.admin_profiles || []).length > 0) && (
-                  <Col span={24}>
-                    <Divider orientation="left">Room Admins</Divider>
-                    <Space wrap>
-                      {room.admin_profiles
-                        ? room.admin_profiles.map((admin, index) => (
-                            <Tag key={admin.user_id} color="blue">
-                              {admin.user_name}
-                            </Tag>
-                          ))
-                        : (room.admin_user_ids || room.admins).map(
-                            (adminId, index) => (
-                              <Tag key={adminId} color="blue">
-                                Admin {index + 1}: {adminId}
-                              </Tag>
-                            ),
-                          )}
-                    </Space>
-                  </Col>
-                )}
+              <Col span={24}>
+                <RoomAdmins room={room} />
+              </Col>
             </Row>
           </Card>
         </Col>
-
-        {/* Room Bets Display */}
         <Col span={24}>
           <RoomBetsDisplay roomId={roomId} />
         </Col>
-
-        {/* NFL Betting Odds Section */}
         <Col span={24}>
-          <Card
-            title={
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "8px" }}
-              >
-                <TrophyOutlined />
-                NFL Betting Odds
-                {selectedBetsCount > 0 && (
-                  <Tag color="blue">{selectedBetsCount}/3 games selected</Tag>
-                )}
-              </div>
-            }
-            extra={
-              <Space>
-                {selectedBetsCount > 0 && (isCurrentUserAdmin || isMember) && (
-                  <>
-                    <Button
-                      type="primary"
-                      onClick={handleSubmitBets}
-                      disabled={
-                        selectedBetsCount === 0 ||
-                        hasDuplicatePoints ||
-                        (!isCurrentUserAdmin && !isMember)
-                      }
-                    >
-                      Submit Bets ({totalPoints} pts)
-                    </Button>
-                    <Button onClick={handleClearBets}>Clear All</Button>
-                  </>
-                )}
-                <Button
-                  icon={<ReloadOutlined />}
-                  onClick={oddsRefetch}
-                  loading={isOddsFetching}
-                  size="small"
-                >
-                  Refresh
-                </Button>
-              </Space>
-            }
-          >
-            {/* Membership Status Alert for Non-Members */}
-            {!isMembershipFetching && !isCurrentUserAdmin && !isMember && (
-              <Alert
-                message={
-                  isDenied
-                    ? "Access Denied"
-                    : isPending
-                      ? "Membership Pending"
-                      : "Member Access Required"
-                }
-                description={
-                  isDenied
-                    ? "Your request to join this room was denied. You cannot place bets."
-                    : isPending
-                      ? "Your membership request is pending approval. You cannot place bets until approved."
-                      : "You must be a member of this room to place bets. Please request to join the room."
-                }
-                type={isDenied ? "error" : isPending ? "warning" : "info"}
-                showIcon
-                style={{ marginBottom: "16px" }}
-              />
+          <NFLOddsSection
+            selectedBetsCount={selectedBetsCount}
+            handleSubmitBets={handleSubmitBets}
+            totalPoints={totalPoints}
+            handleClearBets={handleClearBets}
+            oddsRefetch={oddsRefetch}
+            isOddsFetching={isOddsFetching}
+            isCurrentUserAdmin={isCurrentUserAdmin}
+            isMember={isMember}
+            hasDuplicatePoints={hasDuplicatePoints}
+            isMembershipFetching={isMembershipFetching}
+            isDenied={isDenied}
+            isPending={isPending}
+            selectedSeasonType={selectedSeasonType}
+            handleSeasonTypeChange={handlers.handleSeasonTypeChange}
+            selectedYear={selectedYear}
+            handleYearChange={handlers.handleYearChange}
+            selectedWeek={selectedWeek}
+            handleWeekChange={handlers.handleWeekChange}
+            weekOptions={weekOptions}
+            yearOptions={yearOptions}
+            seasonTypeOptions={seasonTypeOptions}
+            isValidCombination={isValidCombination}
+            currentWeekUserBets={currentWeekUserBets}
+            weeklyTakenPoints={weeklyTakenPoints}
+            isNFLWeeksError={isNFLWeeksError}
+            isOddsError={isOddsError}
+            oddsError={oddsError}
+            hasOdds={hasOdds}
+            memoizedNflOdds={memoizedNflOdds}
+            memoizedOddsCount={memoizedOddsCount}
+            isBetCreating={isBetCreating}
+            duplicatePointValues={duplicatePointValues}
+            handleGameSelect={handlers.handleGameSelect(
+              selectedBets,
+              setSelectedBets,
             )}
-
-            <WeekYearSelector
-              selectedSeasonType={selectedSeasonType}
-              setSelectedSeasonType={handleSeasonTypeChange}
-              selectedYear={selectedYear}
-              setSelectedYear={handleYearChange}
-              selectedWeek={selectedWeek}
-              setSelectedWeek={handleWeekChange}
-              weekOptions={weekOptions}
-              yearOptions={yearOptions}
-              seasonTypeOptions={seasonTypeOptions}
-              isValidCombination={isValidCombination}
-            />
-
-            {/* Current Week User Bets Display */}
-            {currentWeekUserBets.length > 0 && (
-              <Alert
-                message={`Your bets for Week ${selectedWeek} (${currentWeekUserBets.length}/3)`}
-                description={
-                  <div style={{ marginTop: "8px" }}>
-                    <Row gutter={[12, 12]}>
-                      {currentWeekUserBets.map((bet, index) => {
-                        // Extract team names from odds_snapshot
-                        let awayTeam = "Away Team";
-                        let homeTeam = "Home Team";
-
-                        if (bet.odds_snapshot?.teams) {
-                          const { home, away } = bet.odds_snapshot.teams;
-                          if (home?.name) homeTeam = home.name;
-                          if (away?.name) awayTeam = away.name;
-                        } else if (
-                          bet.odds_snapshot?.home_team &&
-                          bet.odds_snapshot?.away_team
-                        ) {
-                          homeTeam = bet.odds_snapshot.home_team;
-                          awayTeam = bet.odds_snapshot.away_team;
-                        }
-
-                        // Get spread and total values
-                        const spreadValue =
-                          bet.game_bet?.spread_value ||
-                          bet.odds_snapshot?.spread;
-                        const totalValue =
-                          bet.game_bet?.total_value ||
-                          bet.odds_snapshot?.overUnder ||
-                          bet.odds_snapshot?.total;
-
-                        // Format bet date
-                        const betDate = bet.event_datetime
-                          ? new Date(
-                              bet.event_datetime * 1000,
-                            ).toLocaleDateString("en-US", {
-                              month: "numeric",
-                              day: "numeric",
-                              year: "numeric",
-                            })
-                          : "";
-
-                        return (
-                          <Col
-                            key={bet.game_id || index}
-                            xs={24}
-                            sm={12}
-                            lg={8}
-                          >
-                            <Card
-                              size="small"
-                              style={{
-                                backgroundColor: "#f8f9fa",
-                                border: "1px solid #1890ff",
-                                borderRadius: "6px",
-                              }}
-                            >
-                              <Row align="middle">
-                                <Col span={16}>
-                                  <Space
-                                    direction="vertical"
-                                    size="small"
-                                    style={{ width: "100%" }}
-                                  >
-                                    <Text strong style={{ fontSize: "16px" }}>
-                                      {awayTeam} @ {homeTeam}
-                                    </Text>
-                                    <div
-                                      style={{
-                                        display: "flex",
-                                        justifyContent: "space-between",
-                                        alignItems: "center",
-                                      }}
-                                    >
-                                      <Text
-                                        type="secondary"
-                                        style={{ fontSize: "12px" }}
-                                      >
-                                        {betDate}
-                                      </Text>
-                                      <Tag color="green" size="small">
-                                        ACTIVE
-                                      </Tag>
-                                    </div>
-
-                                    {bet.game_bet && (
-                                      <div>
-                                        <Space size="small" wrap>
-                                          <Tag color="blue" size="small">
-                                            {bet.game_bet.bet_type === "spread"
-                                              ? "Spread"
-                                              : "Over/Under"}
-                                          </Tag>
-                                          <Text
-                                            style={{
-                                              fontSize: "13px",
-                                              color: "#52c41a",
-                                              fontWeight: "500",
-                                            }}
-                                          >
-                                            {bet.game_bet.bet_type === "spread"
-                                              ? `${bet.game_bet.team_choice?.toUpperCase()} ${spreadValue ? (spreadValue > 0 ? `+${spreadValue}` : spreadValue) : "TBD"}`
-                                              : `${bet.game_bet.over_under_choice?.toUpperCase()} ${totalValue || "TBD"}`}
-                                          </Text>
-                                        </Space>
-                                      </div>
-                                    )}
-                                  </Space>
-                                </Col>
-
-                                <Col span={8} style={{ textAlign: "right" }}>
-                                  <Space
-                                    direction="vertical"
-                                    size="small"
-                                    align="end"
-                                  >
-                                    <Text
-                                      strong
-                                      style={{
-                                        color: "#1890ff",
-                                        fontSize: "16px",
-                                      }}
-                                    >
-                                      {bet.points_wagered} pts
-                                    </Text>
-                                  </Space>
-                                </Col>
-                              </Row>
-                            </Card>
-                          </Col>
-                        );
-                      })}
-                    </Row>
-                    <div
-                      style={{
-                        marginTop: "12px",
-                        fontSize: "12px",
-                        color: "#666",
-                        fontStyle: "italic",
-                      }}
-                    >
-                      💡 Point values {weeklyTakenPoints.join(", ")} are
-                      unavailable for new bets this week.
-                    </div>
-                  </div>
-                }
-                type="info"
-                showIcon
-                style={{ marginBottom: "16px" }}
-              />
+            handleBetTypeChange={handlers.handleBetTypeChange(
+              selectedBets,
+              setSelectedBets,
             )}
-
-            {isNFLWeeksError && (
-              <Alert
-                message="Error Loading NFL Schedule"
-                description="Failed to load available NFL weeks for this room's date range. Using default options."
-                type="warning"
-                showIcon
-                style={{ marginBottom: "16px" }}
-              />
+            handleTeamChoiceChange={handlers.handleTeamChoiceChange(
+              selectedBets,
+              setSelectedBets,
             )}
-
-            {isOddsFetching && (
-              <div style={{ textAlign: "center", padding: "40px" }}>
-                <Spin size="large" />
-                <div style={{ marginTop: "16px" }}>
-                  <Text>Loading NFL odds...</Text>
-                </div>
-              </div>
+            handlePointsChange={handlers.handlePointsChange(
+              selectedBets,
+              setSelectedBets,
             )}
-
-            {isOddsError && (
-              <Alert
-                message="Error Loading Odds"
-                description={oddsError?.message || "Failed to load NFL odds"}
-                type="error"
-                showIcon
-                action={
-                  <Button size="small" onClick={oddsRefetch}>
-                    Retry
-                  </Button>
-                }
-                style={{ marginBottom: "16px" }}
-              />
-            )}
-
-            {!isOddsFetching && !isOddsError && !hasOdds && (
-              <Empty
-                description="No odds available for this week"
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-              />
-            )}
-
-            {!isOddsFetching && !isOddsError && hasOdds && (
-              <>
-                <BettingSummary
-                  selectedBets={selectedBets}
-                  nflOdds={memoizedNflOdds}
-                />
-
-                <StatusMessages
-                  oddsCount={memoizedOddsCount}
-                  selectedWeek={selectedWeek}
-                  selectedYear={selectedYear}
-                  selectedSeasonType={selectedSeasonType}
-                  selectedBetsCount={selectedBetsCount}
-                  hasDuplicatePoints={hasDuplicatePoints}
-                />
-
-                {/* Place Bets Button */}
-                {selectedBetsCount > 0 && (
-                  <div style={{ marginBottom: "16px", textAlign: "center" }}>
-                    <Space>
-                      <Button
-                        type="primary"
-                        size="large"
-                        onClick={handleSubmitBets}
-                        loading={isBetCreating}
-                        disabled={hasDuplicatePoints || selectedBetsCount === 0}
-                        style={{
-                          backgroundColor: hasDuplicatePoints
-                            ? undefined
-                            : "#52c41a",
-                          borderColor: hasDuplicatePoints
-                            ? undefined
-                            : "#52c41a",
-                        }}
-                      >
-                        {isBetCreating
-                          ? "Placing Bets..."
-                          : `Place ${selectedBetsCount} Bet${selectedBetsCount !== 1 ? "s" : ""}`}
-                      </Button>
-                      <Button
-                        type="default"
-                        size="large"
-                        onClick={handleClearBets}
-                        disabled={isBetCreating || selectedBetsCount === 0}
-                      >
-                        Clear All
-                      </Button>
-                    </Space>
-                  </div>
-                )}
-
-                <Row gutter={[16, 16]}>
-                  {memoizedNflOdds.map((game) => {
-                    const isSelected = selectedBets[game.game_id];
-                    const bet = selectedBets[game.game_id];
-                    const canSelect =
-                      (selectedBetsCount < 3 || isSelected) &&
-                      (isCurrentUserAdmin || isMember);
-                    const hasConflictingPoints =
-                      isSelected && duplicatePointValues.includes(bet.points);
-
-                    return (
-                      <Col xs={24} sm={12} lg={8} key={game.game_id}>
-                        <GameCard
-                          game={game}
-                          isSelected={isSelected}
-                          bet={bet}
-                          canSelect={canSelect}
-                          hasConflictingPoints={hasConflictingPoints}
-                          duplicatePointValues={duplicatePointValues}
-                          weeklyTakenPoints={weeklyTakenPoints}
-                          onGameSelect={handleGameSelect}
-                          onBetTypeChange={handleBetTypeChange}
-                          onTeamChoiceChange={handleTeamChoiceChange}
-                          onPointsChange={handlePointsChange}
-                        />
-                      </Col>
-                    );
-                  })}
-                </Row>
-              </>
-            )}
-          </Card>
+          />
         </Col>
-
-        {/* Membership Management - Only for Admins */}
         {isCurrentUserAdmin && (
           <Col span={24}>
             <MembershipManagement roomId={roomId} idToken={idToken} />
