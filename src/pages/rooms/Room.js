@@ -8,19 +8,11 @@ import {
   Spin,
   Alert,
   Button,
-  Tag,
   Space,
   Divider,
-  Empty,
   message,
 } from "antd";
-import {
-  ArrowLeftOutlined,
-  LockOutlined,
-  UnlockOutlined,
-  TrophyOutlined,
-  ReloadOutlined,
-} from "@ant-design/icons";
+
 import { jwtDecode } from "jwt-decode";
 import { UserAuthenticationContext } from "../../provider/UserAuthenticationProvider";
 import useGetRoom from "../../hooks/room/useGetRoom";
@@ -30,17 +22,16 @@ import useCreateBet from "../../hooks/bet/useCreateBet";
 import useGetBetsForRoom from "../../hooks/bet/useGetBetsForRoom";
 import { getSeasonTypeOptions } from "../../configs/nflSeasonTypes";
 import { getDefaultNFLSelection } from "../../configs/nflCurrentWeek";
-import RoomInfoCards from "../../components/room/RoomInfoCards";
+import RoomInfoSection from "./Room/RoomInfoSection";
 import RoomHeader from "./Room/RoomHeader";
 import RoomAdmins from "./Room/RoomAdmins";
 import NFLOddsSection from "./Room/NFLOddsSection";
-import CurrentWeekUserBetsAlert from "./Room/CurrentWeekUserBetsAlert";
 import { createHandlers } from "./Room/roomUtils";
 import RoomBetsDisplay from "../../components/room/RoomBetsDisplay";
 import MembershipManagement from "../../components/room/MembershipManagement";
 import useGetRoomMembers from "../../hooks/membership/useGetRoomMembers";
 
-const { Title, Text, Paragraph } = Typography;
+const { Text, Paragraph } = Typography;
 
 const Room = () => {
   const { roomId } = useParams();
@@ -82,23 +73,13 @@ const Room = () => {
     return isAdmin;
   }, [room, currentUserId, roomId]);
 
-  // Get room members and check if current user is a member
-  const {
-    members,
-    memberCount,
-    isMembersFetching,
-    isMembersError,
-    membersStatus,
-    membersError,
-    membersRefetch,
-  } = useGetRoomMembers(roomId);
+  const { members, isMembersFetching } = useGetRoomMembers(roomId);
 
   const isMember = useMemo(() => {
     if (!currentUserId || !Array.isArray(members)) return false;
     return members.some((m) => m.user_id === currentUserId);
   }, [members, currentUserId]);
 
-  // For compatibility, keep isMembershipFetching for UI
   const isMembershipFetching = isMembersFetching;
 
   // Bet creation hook
@@ -246,111 +227,6 @@ const Room = () => {
     setSelectedBets,
     seasonTypeOptions,
   });
-
-  // Enhanced handlers for selection changes with immediate feedback
-  const handleWeekChange = useMemo(
-    () => (newWeek) => {
-      setSelectedWeek(newWeek);
-      // Clear previous bets when changing week
-      setSelectedBets({});
-      message.info(`Loading games for Week ${newWeek}...`);
-    },
-    [],
-  );
-
-  const handleYearChange = useMemo(
-    () => (newYear) => {
-      setSelectedYear(newYear);
-      // Clear previous bets when changing year
-      setSelectedBets({});
-      message.info(`Loading games for ${newYear}...`);
-    },
-    [],
-  );
-
-  const handleSeasonTypeChange = useMemo(
-    () => (newSeasonType) => {
-      setSelectedSeasonType(newSeasonType);
-      // Clear previous bets when changing season type
-      setSelectedBets({});
-      const seasonName =
-        seasonTypeOptions.find((opt) => opt.value === newSeasonType)?.label ||
-        "season";
-      message.info(`Loading ${seasonName} games...`);
-    },
-    [seasonTypeOptions],
-  );
-
-  // Betting selection functions (memoized to prevent re-renders)
-  const handleGameSelect = useMemo(
-    () => (gameId) => {
-      if (selectedBets[gameId]) {
-        // Deselect the game
-        const newBets = { ...selectedBets };
-        delete newBets[gameId];
-        setSelectedBets(newBets);
-      } else {
-        // Check if we already have 3 games selected
-        if (Object.keys(selectedBets).length >= 3) {
-          message.warning("You can only select up to 3 games for betting");
-          return;
-        }
-
-        // Select the game with default values
-        setSelectedBets({
-          ...selectedBets,
-          [gameId]: {
-            betType: "spread", // 'spread' or 'overUnder'
-            teamChoice: "home", // 'home' or 'away' for spread, 'over' or 'under' for overUnder
-            points: 1,
-          },
-        });
-      }
-    },
-    [selectedBets],
-  );
-
-  const handleBetTypeChange = useMemo(
-    () => (gameId, betType) => {
-      setSelectedBets({
-        ...selectedBets,
-        [gameId]: {
-          ...selectedBets[gameId],
-          betType,
-          teamChoice: betType === "spread" ? "home" : "over", // Reset team choice when bet type changes
-        },
-      });
-    },
-    [selectedBets],
-  );
-
-  const handleTeamChoiceChange = useMemo(
-    () => (gameId, teamChoice) => {
-      setSelectedBets({
-        ...selectedBets,
-        [gameId]: {
-          ...selectedBets[gameId],
-          teamChoice,
-        },
-      });
-    },
-    [selectedBets],
-  );
-
-  const handlePointsChange = useMemo(
-    () => (gameId, points) => {
-      if (points >= 1 && points <= 3) {
-        setSelectedBets({
-          ...selectedBets,
-          [gameId]: {
-            ...selectedBets[gameId],
-            points,
-          },
-        });
-      }
-    },
-    [selectedBets],
-  );
 
   const handleClearBets = useMemo(
     () => () => {
@@ -640,21 +516,7 @@ const Room = () => {
         <Col span={24}>
           <Card>
             <Row gutter={[24, 24]}>
-              {room.room_description && (
-                <Col span={24}>
-                  <Divider orientation="left">Description</Divider>
-                  <Paragraph style={{ fontSize: "16px" }}>
-                    {room.room_description}
-                  </Paragraph>
-                </Col>
-              )}
-              <Col span={24}>
-                <Divider orientation="left">Room Information</Divider>
-                <RoomInfoCards room={room} />
-              </Col>
-              <Col span={24}>
-                <RoomAdmins room={room} />
-              </Col>
+              <RoomInfoSection room={room} />
             </Row>
           </Card>
         </Col>

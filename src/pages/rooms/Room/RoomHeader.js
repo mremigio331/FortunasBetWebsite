@@ -56,29 +56,34 @@ const RoomHeader = ({
   return (
     <div
       style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
         marginBottom: "16px",
       }}
     >
-      <div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
         <Title level={2} style={{ margin: 0 }}>
           {room.room_name}
         </Title>
         <Text type="secondary">Room ID: {room.room_id}</Text>
-      </div>
-      <Space>
-        <Tag
-          icon={room.is_private ? <LockOutlined /> : <UnlockOutlined />}
-          color={room.is_private ? "red" : "green"}
-          style={{ fontSize: "14px", padding: "4px 8px" }}
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 8,
+            marginTop: 8,
+            alignItems: "center",
+          }}
         >
-          {room.is_private ? "Private" : "Public"}
-        </Tag>
-        {membershipTag}
-        {requestButton}
-      </Space>
+          <Tag
+            icon={room.is_private ? <LockOutlined /> : <UnlockOutlined />}
+            color={room.is_private ? "red" : "green"}
+            style={{ fontSize: "14px", padding: "4px 8px" }}
+          >
+            {room.is_private ? "Private" : "Public"}
+          </Tag>
+          {membershipTag}
+          {requestButton}
+        </div>
+      </div>
     </div>
   );
 };
