@@ -30,7 +30,8 @@ const useGetUserMembershipRequests = (enabled = true) => {
 
   // Helper functions to process the membership requests
   const memoizedValues = useMemo(() => {
-    const requests = data?.data?.membership_requests || [];
+    // Handle nested data structure: data.data.membership_requests
+    const requests = data?.data?.data?.membership_requests || [];
 
     // Group requests by status for easier access
     const requestsByStatus = {

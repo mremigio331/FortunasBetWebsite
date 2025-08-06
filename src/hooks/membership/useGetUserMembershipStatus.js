@@ -29,7 +29,8 @@ const useGetUserMembershipStatus = (roomId, enabled = true) => {
       );
 
       // Find membership for this specific room
-      const roomMembership = response.data.find(
+      const membershipRequests = response.data?.membership_requests || [];
+      const roomMembership = membershipRequests.find(
         (membership) => membership.room_id === roomId,
       );
 
