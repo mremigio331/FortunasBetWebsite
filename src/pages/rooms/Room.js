@@ -503,6 +503,38 @@ const Room = () => {
     );
   }
 
+  // If the room is private and the user is not a member, show only the header and a message
+  if (room && !room.is_public && !isMember) {
+    return (
+      <div style={{ padding: "24px", maxWidth: "1200px", margin: "0 auto" }}>
+        <Row gutter={[24, 24]}>
+          <Col span={24}>
+            <Card style={{ marginBottom: 24, boxShadow: "0 2px 8px #f0f1f2" }}>
+              <RoomHeader
+                room={room}
+                isMember={isMember}
+                isMembershipFetching={isMembershipFetching}
+                currentUserId={currentUserId}
+                members={members}
+              />
+            </Card>
+          </Col>
+          <Col span={24}>
+            <Card>
+              <div
+                style={{ textAlign: "center", padding: "40px 0", fontSize: 18 }}
+              >
+                This is a private room. You must join and be accepted in the
+                room to view more details.
+              </div>
+            </Card>
+          </Col>
+        </Row>
+      </div>
+    );
+  }
+
+  // Otherwise, render the full room content
   return (
     <div style={{ padding: "24px", maxWidth: "1200px", margin: "0 auto" }}>
       <Row gutter={[24, 24]}>

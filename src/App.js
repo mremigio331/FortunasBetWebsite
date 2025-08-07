@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Layout, Alert } from "antd";
+import { Layout, Alert, ConfigProvider } from "antd";
 import {
   BrowserRouter as Router,
   Routes,
@@ -16,6 +16,14 @@ import CreateRoom from "./pages/rooms/CreateRoom";
 import { UserAuthenticationContext } from "./provider/UserAuthenticationProvider";
 import PageNavigationBar from "./components/PageNavigationBar";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import { fortunasTheme } from "./fortunasTheme";
+
+// Import Google Fonts for modern/classical look
+const fontLink = document.createElement("link");
+fontLink.href =
+  "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;600&display=swap";
+fontLink.rel = "stylesheet";
+document.head.appendChild(fontLink);
 
 const { Header, Content } = Layout;
 
@@ -97,60 +105,62 @@ const App = () => {
   };
 
   return (
-    <Router>
-      <Layout style={{ minHeight: "100vh" }}>
-        {isAuthenticated && !sideHidden && !isMobile && (
-          <PageNavigationBar
-            collapsed={sideCollapsed}
-            setCollapsed={setSideCollapsed}
-          />
-        )}
-        <Layout>
-          <Header
-            style={{
-              position: "sticky",
-              top: 0,
-              zIndex: 1001,
-              width: "100%",
-              height: 64,
-              padding: 0,
-              margin: 0,
-              background: "#001529",
-              display: "flex",
-              alignItems: "center",
-              border: "none",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-              boxSizing: "border-box",
-            }}
-          >
-            <Navbar />
-          </Header>
-          <NotificationBar notifications={notifications} />
-          <Content
-            style={{
-              padding: 0,
-              paddingBottom: getContentPaddingBottom(),
-              margin: 0,
-              marginLeft: getContentMarginLeft(),
-              boxSizing: "border-box",
-              width: `calc(100% - ${getContentMarginLeft()}px)`,
-              maxWidth: `calc(100vw - ${getContentMarginLeft()}px)`,
-              overflowX: "hidden",
-              minHeight: `calc(100vh - 64px - ${getContentPaddingBottom()}px)`,
-              transition: "all 0.2s",
-            }}
-          >
-            <PageRoutes />
-          </Content>
+    <ConfigProvider theme={fortunasTheme.light}>
+      <Router>
+        <Layout style={{ minHeight: "100vh" }}>
+          {isAuthenticated && !sideHidden && !isMobile && (
+            <PageNavigationBar
+              collapsed={sideCollapsed}
+              setCollapsed={setSideCollapsed}
+            />
+          )}
+          <Layout>
+            <Header
+              style={{
+                position: "sticky",
+                top: 0,
+                zIndex: 1001,
+                width: "100%",
+                height: 64,
+                padding: 0,
+                margin: 0,
+                background: "#001529",
+                display: "flex",
+                alignItems: "center",
+                border: "none",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                boxSizing: "border-box",
+              }}
+            >
+              <Navbar />
+            </Header>
+            <NotificationBar notifications={notifications} />
+            <Content
+              style={{
+                padding: 0,
+                paddingBottom: getContentPaddingBottom(),
+                margin: 0,
+                marginLeft: getContentMarginLeft(),
+                boxSizing: "border-box",
+                width: `calc(100% - ${getContentMarginLeft()}px)`,
+                maxWidth: `calc(100vw - ${getContentMarginLeft()}px)`,
+                overflowX: "hidden",
+                minHeight: `calc(100vh - 64px - ${getContentPaddingBottom()}px)`,
+                transition: "all 0.2s",
+              }}
+            >
+              <PageRoutes />
+            </Content>
+          </Layout>
+          {isAuthenticated && !sideHidden && isMobile && (
+            <PageNavigationBar
+              collapsed={sideCollapsed}
+              setCollapsed={setSideCollapsed}
+            />
+          )}
         </Layout>
-        {isAuthenticated && !sideHidden && isMobile && (
-          <PageNavigationBar
-            collapsed={sideCollapsed}
-            setCollapsed={setSideCollapsed}
-          />
-        )}
-      </Layout>
-    </Router>
+      </Router>
+    </ConfigProvider>
   );
 };
 

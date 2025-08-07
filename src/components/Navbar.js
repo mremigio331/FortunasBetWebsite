@@ -85,23 +85,27 @@ const Navbar = () => {
     <div
       style={{
         width: "100%",
-        backgroundColor: "#001529",
+        backgroundColor: "#234537", // Deep modern green
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
         padding: "0 24px",
         height: "100%",
+        borderBottom: "2px solid #C4A651", // Gold accent underline
+        boxShadow: "0 2px 8px rgba(31,60,45,0.08)",
       }}
     >
       <div
         style={{
-          color: "white",
-          fontSize: "20px",
+          color: "#C4A651",
+          fontSize: "24px",
           fontWeight: "bold",
+          fontFamily: "'Playfair Display', serif",
           backgroundColor: "transparent",
+          letterSpacing: "0.02em",
         }}
       >
-        <Link to="/" style={{ color: "white", textDecoration: "none" }}>
+        <Link to="/" style={{ color: "#C4A651", textDecoration: "none" }}>
           Fortunas Bets
         </Link>
       </div>

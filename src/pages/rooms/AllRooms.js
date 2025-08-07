@@ -126,6 +126,13 @@ const AllRooms = () => {
   const RoomCard = ({ room }) => {
     const status = getRoomMembershipStatus(room);
 
+    // Tag for public/private
+    const publicTag = (
+      <Tag color={room.public ? "green" : "red"} style={{ marginRight: 4 }}>
+        {room.public ? "Public" : "Private"}
+      </Tag>
+    );
+
     const renderMembershipStatus = () => {
       if (status === "admin") {
         return (
@@ -202,8 +209,18 @@ const AllRooms = () => {
           >
             {room.room_name || "Unnamed Room"}
           </div>
-          <div style={{ color: "#666", fontSize: "12px", marginBottom: 8 }}>
-            ID: {room.room_id}
+          <div
+            style={{
+              color: "#666",
+              fontSize: "12px",
+              marginBottom: 8,
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+            }}
+          >
+            {publicTag}
+            <span>ID: {room.room_id}</span>
           </div>
         </div>
 
@@ -260,8 +277,22 @@ const AllRooms = () => {
           >
             {text || "Unnamed Room"}
           </div>
-          <div style={{ color: "#666", fontSize: "12px" }}>
-            ID: {record.room_id}
+          <div
+            style={{
+              color: "#666",
+              fontSize: "12px",
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+            }}
+          >
+            <Tag
+              color={record.public ? "green" : "red"}
+              style={{ marginRight: 4 }}
+            >
+              {record.public ? "Public" : "Private"}
+            </Tag>
+            <span>ID: {record.room_id}</span>
           </div>
         </div>
       ),
