@@ -514,9 +514,6 @@ const Room = () => {
               isMembershipFetching={isMembershipFetching}
               currentUserId={currentUserId}
               members={members}
-              onRequestMembership={() => {
-                /* TODO: implement request membership logic */
-              }}
             />
           </Card>
         </Col>
@@ -582,7 +579,6 @@ const Room = () => {
               selectedBets,
               setSelectedBets,
             )}
-            memberships={members}
           />
         </Col>
         {isCurrentUserAdmin && (

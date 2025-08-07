@@ -1,4 +1,5 @@
 import React from "react";
+import { message } from "antd";
 import { Button, Tag, Typography, Space } from "antd";
 import {
   LockOutlined,
@@ -6,6 +7,8 @@ import {
   UserOutlined,
   HourglassOutlined,
 } from "@ant-design/icons";
+import useCreateMembershipRequest from "../../../hooks/membership/useCreateMembershipRequest";
+
 const { Title, Text } = Typography;
 
 const RoomHeader = ({
@@ -14,11 +17,24 @@ const RoomHeader = ({
   isMembershipFetching,
   currentUserId,
   members,
-  onRequestMembership,
 }) => {
   // Membership status logic
+
   let membershipTag = null;
   let requestButton = null;
+
+  const { createMembershipRequest, createMembershipRequestLoading } =
+    useCreateMembershipRequest();
+
+  // Handler for membership request
+  const onRequestMembership = async () => {
+    try {
+      await createMembershipRequest({ room_id: room.room_id });
+      message.success("Membership request sent!");
+    } catch (error) {
+      message.error("Failed to send membership request. Please try again.");
+    }
+  };
 
   if (isMembershipFetching) {
     membershipTag = (
@@ -46,7 +62,12 @@ const RoomHeader = ({
       );
     } else {
       requestButton = (
-        <Button type="primary" size="small" onClick={onRequestMembership}>
+        <Button
+          type="primary"
+          size="small"
+          onClick={onRequestMembership}
+          loading={createMembershipRequestLoading}
+        >
           Request Membership
         </Button>
       );
