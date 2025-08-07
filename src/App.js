@@ -18,7 +18,6 @@ import PageNavigationBar from "./components/PageNavigationBar";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { fortunasTheme } from "./fortunasTheme";
 
-// Import Google Fonts for modern/classical look
 const fontLink = document.createElement("link");
 fontLink.href =
   "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;600&display=swap";

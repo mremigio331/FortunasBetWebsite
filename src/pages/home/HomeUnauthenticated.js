@@ -2,6 +2,7 @@ import React, { useContext } from "react";
 import { Button, Layout, Typography } from "antd";
 import { useNavigate } from "react-router-dom";
 import { UserAuthenticationContext } from "../../provider/UserAuthenticationProvider";
+import fortunaFull from "../../assets/fortuna_full.png";
 const { Content } = Layout;
 const { Title, Text } = Typography;
 
@@ -32,6 +33,11 @@ const HomeUnauthenticated = () => {
               Sign Up
             </Button>
           </div>
+          <img
+            src={fortunaFull}
+            alt="Fortunas Bet Full Logo"
+            style={{ maxWidth: 400, width: "100%", marginBottom: 32 }}
+          />
         </div>
       </Content>
     </Layout>

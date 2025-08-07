@@ -1,4 +1,5 @@
 import React, { useContext, useState } from "react";
+import fortunasLogo from "../assets/fortunasbet.png";
 import { Menu, Button, Avatar, Dropdown } from "antd";
 import { Link } from "react-router-dom";
 import { UserAuthenticationContext } from "../provider/UserAuthenticationProvider";
@@ -97,14 +98,22 @@ const Navbar = () => {
     >
       <div
         style={{
+          display: "flex",
+          alignItems: "center",
           color: "#C4A651",
           fontSize: "24px",
           fontWeight: "bold",
           fontFamily: "'Playfair Display', serif",
           backgroundColor: "transparent",
           letterSpacing: "0.02em",
+          gap: "12px",
         }}
       >
+        <img
+          src={fortunasLogo}
+          alt="Fortunas Bet Logo"
+          style={{ height: 36, width: 36, objectFit: "contain" }}
+        />
         <Link to="/" style={{ color: "#C4A651", textDecoration: "none" }}>
           Fortunas Bets
         </Link>
