@@ -87,7 +87,9 @@ const Room = () => {
 
   const isMember = useMemo(() => {
     if (!currentUserId || !Array.isArray(members)) return false;
-    return members.some((m) => m.user_id === currentUserId);
+    return members.some(
+      (m) => m.user_id === currentUserId && m.status === "approved",
+    );
   }, [members, currentUserId]);
 
   const isMembershipFetching = isMembersFetching;
@@ -580,6 +582,7 @@ const Room = () => {
               selectedBets,
               setSelectedBets,
             )}
+            memberships={members}
           />
         </Col>
         {isCurrentUserAdmin && (

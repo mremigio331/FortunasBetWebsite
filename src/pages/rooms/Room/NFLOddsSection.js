@@ -60,6 +60,7 @@ const NFLOddsSection = ({
   handleBetTypeChange,
   handleTeamChoiceChange,
   handlePointsChange,
+  members,
 }) => (
   <Card
     title={
