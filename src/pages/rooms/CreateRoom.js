@@ -55,7 +55,7 @@ const CreateRoom = () => {
         room_name: values.room_name,
         description: values.description || null,
         leagues: values.leagues,
-        public: values.public || false,
+        public: !values.public,
         start_date: values.start_date ? dayjs(values.start_date).unix() : null,
         end_date: values.end_date ? dayjs(values.end_date).unix() : null,
       };

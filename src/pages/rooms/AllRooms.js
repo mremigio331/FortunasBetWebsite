@@ -85,7 +85,7 @@ const AllRooms = () => {
     }
   };
 
-  // Sort rooms alphabetically and filter by search text
+  // Sort rooms: members first, then requested, then others, each group alphabetically
   const sortedAndFilteredRooms = useMemo(() => {
     if (!allRooms || allRooms.length === 0) return [];
 
@@ -102,12 +102,34 @@ const AllRooms = () => {
       );
     }
 
-    // Sort alphabetically by room name
-    return filtered.sort((a, b) => {
+    // Partition rooms by membership status
+    const memberStatuses = ["admin", "approved", "member"];
+    const requestedStatuses = ["pending"];
+
+    const memberRooms = filtered.filter((room) =>
+      memberStatuses.includes(getRoomMembershipStatus(room)),
+    );
+    const requestedRooms = filtered.filter((room) =>
+      requestedStatuses.includes(getRoomMembershipStatus(room)),
+    );
+    const otherRooms = filtered.filter(
+      (room) =>
+        !memberStatuses.includes(getRoomMembershipStatus(room)) &&
+        !requestedStatuses.includes(getRoomMembershipStatus(room)),
+    );
+
+    // Sort each group alphabetically by room name
+    const sortByName = (a, b) => {
       const nameA = a.room_name?.toLowerCase() || "";
       const nameB = b.room_name?.toLowerCase() || "";
       return nameA.localeCompare(nameB);
-    });
+    };
+
+    memberRooms.sort(sortByName);
+    requestedRooms.sort(sortByName);
+    otherRooms.sort(sortByName);
+
+    return [...memberRooms, ...requestedRooms, ...otherRooms];
   }, [allRooms, searchText]);
 
   const handleViewRoom = (roomId) => {

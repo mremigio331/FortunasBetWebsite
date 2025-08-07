@@ -18,6 +18,7 @@ const RoomHeader = ({
   currentUserId,
   members,
 }) => {
+  console.log("room public", room.public);
   // Membership status logic
 
   let membershipTag = null;
@@ -95,11 +96,11 @@ const RoomHeader = ({
           }}
         >
           <Tag
-            icon={room.is_private ? <LockOutlined /> : <UnlockOutlined />}
-            color={room.is_private ? "red" : "green"}
+            icon={room.public ? <UnlockOutlined /> : <LockOutlined />}
+            color={room.public ? "green" : "red"}
             style={{ fontSize: "14px", padding: "4px 8px" }}
           >
-            {room.is_private ? "Private" : "Public"}
+            {room.public ? "Public" : "Private"}
           </Tag>
           {membershipTag}
           {requestButton}

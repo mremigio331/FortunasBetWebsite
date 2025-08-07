@@ -504,7 +504,7 @@ const Room = () => {
   }
 
   // If the room is private and the user is not a member, show only the header and a message
-  if (room && !room.is_public && !isMember) {
+  if (room && !room.public && !isMember) {
     return (
       <div style={{ padding: "24px", maxWidth: "1200px", margin: "0 auto" }}>
         <Row gutter={[24, 24]}>

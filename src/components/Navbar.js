@@ -1,7 +1,7 @@
 import React, { useContext, useState } from "react";
 import fortunasLogo from "../assets/fortunasbet.png";
 import { Menu, Button, Avatar, Dropdown } from "antd";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { UserAuthenticationContext } from "../provider/UserAuthenticationProvider";
 import { useUserProfile } from "../provider/UserProfileProvider";
 
@@ -32,6 +32,7 @@ const UserDropdown = ({ avatarStyle, avatarText, onProfile, onLogout }) => {
 };
 
 const Navbar = () => {
+  const navigate = useNavigate();
   const {
     user,
     nickname,
@@ -74,9 +75,12 @@ const Navbar = () => {
   const items = [
     {
       label: (
-        <Link to="/" style={{ color: "white", textDecoration: "none" }}>
+        <span
+          style={{ color: "white", textDecoration: "none", cursor: "pointer" }}
+          onClick={() => navigate("/")}
+        >
           Fortunas Bet
-        </Link>
+        </span>
       ),
       key: "home",
     },
@@ -114,9 +118,16 @@ const Navbar = () => {
           alt="Fortunas Bet Logo"
           style={{ height: 36, width: 36, objectFit: "contain" }}
         />
-        <Link to="/" style={{ color: "#C4A651", textDecoration: "none" }}>
+        <span
+          style={{
+            color: "#C4A651",
+            textDecoration: "none",
+            cursor: "pointer",
+          }}
+          onClick={() => navigate("/")}
+        >
           Fortunas Bets
-        </Link>
+        </span>
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
@@ -139,7 +150,7 @@ const Navbar = () => {
                 ? userProfile.name.charAt(0).toUpperCase()
                 : nickname?.charAt(0)?.toUpperCase() || "U"
             }
-            onProfile={() => (window.location.href = "/user/profile")}
+            onProfile={() => navigate("/user/profile")}
             onLogout={logoutUser}
           />
         ) : (
