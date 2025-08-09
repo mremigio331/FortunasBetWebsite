@@ -516,6 +516,7 @@ const Room = () => {
                 isMembershipFetching={isMembershipFetching}
                 currentUserId={currentUserId}
                 members={members}
+                isCurrentUserAdmin={isCurrentUserAdmin}
               />
             </Card>
           </Col>

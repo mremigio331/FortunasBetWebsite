@@ -423,14 +423,14 @@ const RoomBetsDisplay = ({ roomId }) => {
                       <Space size={4}>
                         <Text style={{ fontSize: "12px", fontWeight: "500" }}>
                           {bet.odds_snapshot.teams.away.abbreviation}:{" "}
-                          {bet.odds_snapshot.teams.away.score || 0}
+                          {bet.odds_snapshot.status.away_score || 0}
                         </Text>
                         <Text style={{ fontSize: "12px", color: "#8c8c8c" }}>
                           -
                         </Text>
                         <Text style={{ fontSize: "12px", fontWeight: "500" }}>
                           {bet.odds_snapshot.teams.home.abbreviation}:{" "}
-                          {bet.odds_snapshot.teams.home.score || 0}
+                          {bet.odds_snapshot.status.home_score || 0}
                         </Text>
                         {(bet.odds_snapshot.status?.state === "in" ||
                           bet.odds_snapshot.status?.state === "post" ||

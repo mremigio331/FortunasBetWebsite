@@ -1,6 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
 import { message } from "antd";
-import { Button, Tag, Typography, Space } from "antd";
+import {
+  Button,
+  Tag,
+  Typography,
+  Space,
+  Modal,
+  Form,
+  Input,
+  Switch,
+} from "antd";
 import {
   LockOutlined,
   UnlockOutlined,
@@ -8,6 +17,7 @@ import {
   HourglassOutlined,
 } from "@ant-design/icons";
 import useCreateMembershipRequest from "../../../hooks/membership/useCreateMembershipRequest";
+import useEditRoom from "../../../hooks/room/useEditRoom";
 
 const { Title, Text } = Typography;
 
@@ -17,9 +27,12 @@ const RoomHeader = ({
   isMembershipFetching,
   currentUserId,
   members,
+  isCurrentUserAdmin,
 }) => {
-  console.log("room public", room.public);
-  // Membership status logic
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [form] = Form.useForm();
+  const { editRoomAsync, editRoomLoading } = useEditRoom();
+  console.log("isCurrentUserAdmin", isCurrentUserAdmin);
 
   let membershipTag = null;
   let requestButton = null;
@@ -84,6 +97,20 @@ const RoomHeader = ({
       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
         <Title level={2} style={{ margin: 0 }}>
           {room.room_name}
+          {isCurrentUserAdmin && (
+            <Button
+              size="small"
+              onClick={() => {
+                form.setFieldsValue({
+                  room_name: room.room_name,
+                  public: room.public,
+                });
+                setEditModalVisible(true);
+              }}
+            >
+              Edit
+            </Button>
+          )}
         </Title>
         <Text type="secondary">Room ID: {room.room_id}</Text>
         <div
@@ -106,6 +133,58 @@ const RoomHeader = ({
           {requestButton}
         </div>
       </div>
+
+      <Modal
+        title="Edit Room"
+        open={editModalVisible}
+        onCancel={() => setEditModalVisible(false)}
+        onOk={async () => {
+          try {
+            const values = await form.validateFields();
+            await editRoomAsync({
+              roomId: room.room_id,
+              roomData: {
+                room_name: values.room_name,
+                public: values.public,
+              },
+            });
+            setEditModalVisible(false);
+          } catch (err) {
+            // Validation or mutation error
+          }
+        }}
+        confirmLoading={editRoomLoading}
+        okText="Save"
+        destroyOnClose
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          initialValues={{
+            room_name: room.room_name,
+            public: room.public,
+          }}
+        >
+          <Form.Item
+            name="room_name"
+            label="Room Name"
+            rules={[
+              { required: true, message: "Please enter a room name" },
+              { min: 3, message: "Room name must be at least 3 characters" },
+              { max: 50, message: "Room name cannot exceed 50 characters" },
+            ]}
+          >
+            <Input placeholder="Enter room name" />
+          </Form.Item>
+          <Form.Item
+            name="public"
+            label="Room is Public"
+            valuePropName="checked"
+          >
+            <Switch checkedChildren="Public" unCheckedChildren="Private" />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };
