@@ -28,6 +28,7 @@ import RoomAdmins from "./Room/RoomAdmins";
 import NFLOddsSection from "./Room/NFLOddsSection";
 import { createHandlers } from "./Room/roomUtils";
 import RoomBetsDisplay from "../../components/room/RoomBetsDisplay";
+import RoomLeaderboard from "../../components/room/RoomLeaderboard";
 import MembershipManagement from "../../components/room/MembershipManagement";
 import useGetRoomMembers from "../../hooks/membership/useGetRoomMembers";
 
@@ -556,6 +557,17 @@ const Room = () => {
               <RoomInfoSection room={room} />
             </Row>
           </Card>
+        </Col>
+        <Col span={24}>
+          {/* Leaderboard above Room Bets */}
+          <RoomLeaderboard
+            users={Object.entries(existingBetsUsers || {})
+              .map(([userId, user]) => ({
+                name: user.name,
+                totalPoints: user.total_points_awarded || 0,
+              }))
+              .sort((a, b) => b.totalPoints - a.totalPoints)}
+          />
         </Col>
         <Col span={24}>
           <RoomBetsDisplay roomId={roomId} />
