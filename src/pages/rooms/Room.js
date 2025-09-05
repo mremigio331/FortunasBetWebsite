@@ -186,8 +186,15 @@ const Room = () => {
     hasOdds,
   } = useGetNFLOdds(selectedWeek, selectedYear, selectedSeasonType);
 
-  // Memoize the odds data to prevent unnecessary re-renders
-  const memoizedNflOdds = useMemo(() => nflOdds, [nflOdds]);
+  // Memoize the odds data to prevent unnecessary re-renders and sort by date
+  const memoizedNflOdds = useMemo(() => {
+    if (!nflOdds) return [];
+    return [...nflOdds].sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      return dateA - dateB;
+    });
+  }, [nflOdds]);
   const memoizedOddsCount = useMemo(() => oddsCount, [oddsCount]);
 
   // Generate dynamic options based on room's NFL weeks
