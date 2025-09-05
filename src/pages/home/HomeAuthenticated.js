@@ -155,9 +155,7 @@ const HomeAuthenticated = () => {
                 <div>
                   <Space size="small" wrap>
                     <Tag color="blue" size="small">
-                      {bet.game_bet.bet_type === "spread"
-                        ? "Spread"
-                        : "Over/Under"}
+                      {bet.game_bet.bet_type === "spread" ? "Spread" : "Total"}
                     </Tag>
                     <Text
                       style={{

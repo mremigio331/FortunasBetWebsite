@@ -121,7 +121,7 @@ const ScoreDisplay = ({ bet, isCompact = false, showBetResult = false }) => {
             </Text>
           )}
 
-          {/* Show total for over/under bets */}
+          {/* Show total for Total bets */}
           {bet.game_bet?.bet_type === "over_under" && (
             <Text style={{ fontSize: "11px", color: "#8c8c8c" }}>
               Total: {totalScore}
@@ -200,7 +200,7 @@ const ScoreDisplay = ({ bet, isCompact = false, showBetResult = false }) => {
         )}
       </div>
 
-      {/* Show total score for over/under bets */}
+      {/* Show total score for Total bets */}
       {bet.game_bet?.bet_type === "over_under" && (
         <div
           style={{

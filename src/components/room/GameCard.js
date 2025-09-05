@@ -493,7 +493,7 @@ const GameCard = ({
             {game.overUnder && (
               <div style={{ marginBottom: "12px" }}>
                 <Text strong style={{ fontSize: "12px" }}>
-                  Over/Under:
+                  Total:
                 </Text>
                 <div style={{ fontSize: "14px", fontWeight: "600" }}>
                   {game.overUnder}
@@ -552,7 +552,7 @@ const GameCard = ({
             >
               <Radio.Button value="spread">Spread</Radio.Button>
               <Radio.Button value="overUnder" disabled={!game.overUnder}>
-                Over/Under
+                Total
               </Radio.Button>
             </Radio.Group>
           </div>

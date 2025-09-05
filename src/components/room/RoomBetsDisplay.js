@@ -385,9 +385,7 @@ const RoomBetsDisplay = ({ roomId }) => {
                 <div>
                   <Space size="small" wrap>
                     <Tag color="blue" size="small">
-                      {bet.game_bet.bet_type === "spread"
-                        ? "Spread"
-                        : "Over/Under"}
+                      {bet.game_bet.bet_type === "spread" ? "Spread" : "Total"}
                     </Tag>
                     <Text
                       style={{
@@ -451,7 +449,7 @@ const RoomBetsDisplay = ({ roomId }) => {
                         )}
                       </Space>
 
-                      {/* Show total for over/under bets */}
+                      {/* Show total for Total bets */}
                       {bet.game_bet?.bet_type === "over_under" && (
                         <Text style={{ fontSize: "11px", color: "#8c8c8c" }}>
                           Total:{" "}

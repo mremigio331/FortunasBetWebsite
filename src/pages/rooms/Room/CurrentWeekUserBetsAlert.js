@@ -80,7 +80,7 @@ const CurrentWeekUserBetsAlert = ({
                                 <Tag color="blue" size="small">
                                   {bet.game_bet.bet_type === "spread"
                                     ? "Spread"
-                                    : "Over/Under"}
+                                    : "Total"}
                                 </Tag>
                                 <Text
                                   style={{
