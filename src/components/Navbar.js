@@ -1,9 +1,11 @@
 import React, { useContext, useState } from "react";
 import fortunasLogo from "../assets/fortunasbet.png";
-import { Menu, Button, Avatar, Dropdown } from "antd";
+import { Menu, Button, Avatar, Dropdown, Badge, Tooltip } from "antd";
+import { BellOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { UserAuthenticationContext } from "../provider/UserAuthenticationProvider";
 import { useUserProfile } from "../provider/UserProfileProvider";
+import { useNotifications } from "../provider/NotificationsProvider";
 
 // UserDropdown component for avatar dropdown menu
 const UserDropdown = ({ avatarStyle, avatarText, onProfile, onLogout }) => {
@@ -143,16 +145,53 @@ const Navbar = () => {
 
         {/* User section */}
         {isAuthenticated ? (
-          <UserDropdown
-            avatarStyle={getAvatarStyle(userProfile?.color)}
-            avatarText={
-              userProfile?.name
-                ? userProfile.name.charAt(0).toUpperCase()
-                : nickname?.charAt(0)?.toUpperCase() || "U"
-            }
-            onProfile={() => navigate("/user/profile")}
-            onLogout={logoutUser}
-          />
+          (() => {
+            const { notifications = [] } = useNotifications();
+            // Flatten notifications if nested
+            const flatNotifications = Array.isArray(notifications[0])
+              ? notifications.flat()
+              : notifications;
+            const unreadCount = flatNotifications.filter(
+              (n) => n.view === false,
+            ).length;
+            return (
+              <span
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  position: "relative",
+                }}
+              >
+                {unreadCount > 0 && (
+                  <Tooltip title="Notifications">
+                    <Badge count={unreadCount} size="small">
+                      <Button
+                        type="text"
+                        style={{
+                          padding: 0,
+                          marginRight: 20,
+                          height: 32,
+                          display: "flex",
+                          alignItems: "center",
+                        }}
+                        onClick={() => navigate("/user/profile")}
+                      ></Button>
+                    </Badge>
+                  </Tooltip>
+                )}
+                <UserDropdown
+                  avatarStyle={getAvatarStyle(userProfile?.color)}
+                  avatarText={
+                    userProfile?.name
+                      ? userProfile.name.charAt(0).toUpperCase()
+                      : nickname?.charAt(0)?.toUpperCase() || "U"
+                  }
+                  onProfile={() => navigate("/user/profile")}
+                  onLogout={logoutUser}
+                />
+              </span>
+            );
+          })()
         ) : (
           <div style={{ display: "flex", gap: "8px" }}>
             <Button type="primary" onClick={initiateSignIn} size="small">

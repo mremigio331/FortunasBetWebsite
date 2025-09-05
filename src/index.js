@@ -5,6 +5,7 @@ import AWS from "aws-sdk";
 import App from "./App";
 import UserAuthenticationProvider from "./provider/UserAuthenticationProvider";
 import { UserProfileProvider } from "./provider/UserProfileProvider";
+import { NotificationsProvider } from "./provider/NotificationsProvider";
 
 import ApiProvider from "./provider/ApiProvider";
 
@@ -33,7 +34,9 @@ createRoot(document.getElementById("app")).render(
     <ApiProvider>
       <UserAuthenticationProvider>
         <UserProfileProvider>
-          <App />
+          <NotificationsProvider>
+            <App />
+          </NotificationsProvider>
         </UserProfileProvider>
       </UserAuthenticationProvider>
     </ApiProvider>

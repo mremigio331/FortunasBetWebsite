@@ -4,7 +4,12 @@ import { useNavigate, Link } from "react-router-dom";
 import { useUserProfile } from "../../provider/UserProfileProvider";
 import useGetUserMembershipRequests from "../../hooks/membership/useGetUserMembershipRequests";
 import useGetUserBetsForCurrentWeek from "../../hooks/bet/useGetUserBetsForCurrentWeek";
-import { DownOutlined, RightOutlined } from "@ant-design/icons";
+import {
+  DownOutlined,
+  RightOutlined,
+  EyeInvisibleOutlined,
+  TrophyFilled,
+} from "@ant-design/icons";
 import { Collapse, Row, Col } from "antd";
 const { Content } = Layout;
 const { Title, Text } = Typography;
@@ -28,7 +33,7 @@ const HomeAuthenticated = () => {
     refetch: refetchUserBets,
   } = useGetUserBetsForCurrentWeek(true);
 
-  // Helper to render a bet card or orange card if null
+  // Helper to render a bet card or orange card if null, using RoomBetsDisplay logic
   const renderBetCardOrPrompt = (bet, pointLabel) => {
     if (!bet) {
       return (
@@ -44,24 +49,157 @@ const HomeAuthenticated = () => {
         </Card>
       );
     }
-    // Reuse the RoomBetsDisplay renderBetCard logic here if possible, else show summary
-    // For brevity, show a simple summary:
-    const matchup = bet.odds_snapshot?.matchup || "Game";
-    const betType =
-      bet.game_bet?.bet_type === "spread" ? "Spread" : "Over/Under";
-    const betDesc =
-      bet.game_bet?.bet_type === "spread"
-        ? `${bet.game_bet.team_choice?.toUpperCase()} ${bet.game_bet.spread_value ?? bet.odds_snapshot?.spread ?? ""}`
-        : `${bet.game_bet.over_under_choice?.toUpperCase()} ${bet.game_bet.total_value ?? bet.odds_snapshot?.overUnder ?? ""}`;
+    // --- RoomBetsDisplay renderBetCard logic ---
+    const isPrivate = !bet.game_bet;
+    const betDate = bet.event_datetime
+      ? new Date(bet.event_datetime * 1000).toLocaleDateString()
+      : "Unknown";
+    let homeTeam = "Home Team";
+    let awayTeam = "Away Team";
+    if (bet.odds_snapshot?.teams) {
+      const { home, away } = bet.odds_snapshot.teams;
+      if (home?.name) homeTeam = home.name;
+      if (away?.name) awayTeam = away.name;
+    }
+    const spreadValue = bet.game_bet?.spread_value || bet.odds_snapshot?.spread;
+    const totalValue =
+      bet.game_bet?.total_value || bet.odds_snapshot?.overUnder;
+    const getBetStatusInfo = () => {
+      if (isPrivate) {
+        return {
+          color: "#8c8c8c",
+          borderColor: "#d9d9d9",
+          tagColor: "default",
+          statusText: "HIDDEN",
+          statusIcon: <EyeInvisibleOutlined />,
+        };
+      }
+      if (!bet.game_bet?.result) {
+        return {
+          color: "#1890ff",
+          borderColor: "#1890ff",
+          tagColor: "blue",
+          statusText: "ACTIVE",
+          statusIcon: null,
+        };
+      }
+      switch (bet.game_bet.result) {
+        case "win":
+          return {
+            color: "#52c41a",
+            borderColor: "#52c41a",
+            tagColor: "green",
+            statusText: "WIN",
+            statusIcon: null,
+          };
+        case "loss":
+          return {
+            color: "#ff4d4f",
+            borderColor: "#ff4d4f",
+            tagColor: "red",
+            statusText: "LOSS",
+            statusIcon: null,
+          };
+        case "push":
+          return {
+            color: "#faad14",
+            borderColor: "#faad14",
+            tagColor: "orange",
+            statusText: "PUSH",
+            statusIcon: null,
+          };
+        default:
+          return {
+            color: "#1890ff",
+            borderColor: "#1890ff",
+            tagColor: "blue",
+            statusText: "PENDING",
+            statusIcon: null,
+          };
+      }
+    };
+    const statusInfo = getBetStatusInfo();
     return (
-      <Card size="small" style={{ marginBottom: 8 }}>
-        <Space direction="vertical">
-          <Text strong>{matchup}</Text>
-          <Text type="secondary">
-            {betType}: {betDesc}
-          </Text>
-          <Tag color="blue">{bet.points_wagered} pt</Tag>
-        </Space>
+      <Card
+        key={`${bet.user_id}-${bet.game_id}-${bet.points_wagered}`}
+        size="small"
+        style={{
+          marginBottom: "8px",
+          border: `2px solid ${statusInfo.borderColor}`,
+          borderRadius: "8px",
+          backgroundColor: isPrivate ? "#fafafa" : "white",
+        }}
+        bodyStyle={{ padding: "12px" }}
+      >
+        <Row justify="space-between" align="middle">
+          <Col span={16}>
+            <Space direction="vertical" size="small" style={{ width: "100%" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <Text strong style={{ fontSize: "16px" }}>
+                  {awayTeam} @ {homeTeam}
+                </Text>
+                <Tag color={statusInfo.tagColor} size="small">
+                  {statusInfo.statusIcon} {statusInfo.statusText}
+                </Tag>
+              </div>
+              <Text type="secondary" style={{ fontSize: "12px" }}>
+                {betDate}
+              </Text>
+              {bet.game_bet && (
+                <div>
+                  <Space size="small" wrap>
+                    <Tag color="blue" size="small">
+                      {bet.game_bet.bet_type === "spread"
+                        ? "Spread"
+                        : "Over/Under"}
+                    </Tag>
+                    <Text
+                      style={{
+                        fontSize: "13px",
+                        color: statusInfo.color,
+                        fontWeight: "500",
+                      }}
+                    >
+                      {bet.game_bet.bet_type === "spread"
+                        ? `${bet.game_bet.team_choice?.toUpperCase()} ${spreadValue ? (spreadValue > 0 ? `+${spreadValue}` : spreadValue) : "TBD"}`
+                        : `${bet.game_bet.over_under_choice?.toUpperCase()} ${totalValue || "TBD"}`}
+                    </Text>
+                  </Space>
+                </div>
+              )}
+            </Space>
+          </Col>
+          <Col span={8} style={{ textAlign: "right" }}>
+            <Space direction="vertical" size="small" align="end">
+              <Text
+                strong
+                style={{ color: statusInfo.color, fontSize: "16px" }}
+              >
+                {bet.points_wagered} pts
+              </Text>
+              {bet.total_points_earned !== undefined &&
+                bet.total_points_earned !== null && (
+                  <Text
+                    style={{
+                      fontSize: "12px",
+                      color:
+                        bet.total_points_earned > 0 ? "#52c41a" : "#ff4d4f",
+                      fontWeight: "500",
+                    }}
+                  >
+                    Earned: {bet.total_points_earned > 0 ? "+" : ""}
+                    {bet.total_points_earned}
+                  </Text>
+                )}
+            </Space>
+          </Col>
+        </Row>
       </Card>
     );
   };
@@ -124,7 +262,58 @@ const HomeAuthenticated = () => {
                         style={{ background: "#f6faff" }}
                       >
                         <Collapse.Panel
-                          header="Your Bets for This Week"
+                          header={
+                            <span
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 12,
+                              }}
+                            >
+                              Your Bets for This Week
+                              {["one_point", "two_point", "three_point"].map(
+                                (pt, idx) => {
+                                  const bet = roomBets[pt];
+                                  let color = "#d9d9d9"; // default gray
+                                  if (bet && bet.game_bet?.result === "win")
+                                    color = "#52c41a";
+                                  else if (
+                                    bet &&
+                                    bet.game_bet?.result === "loss"
+                                  )
+                                    color = "#ff4d4f";
+                                  else if (
+                                    bet &&
+                                    bet.game_bet?.result === "push"
+                                  )
+                                    color = "#faad14";
+                                  else if (bet && !bet.game_bet?.result)
+                                    color = "#8c8c8c";
+                                  return (
+                                    <span
+                                      key={pt}
+                                      style={{
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        marginLeft: 4,
+                                      }}
+                                    >
+                                      <TrophyFilled
+                                        style={{
+                                          color,
+                                          fontSize: 18,
+                                          marginRight: 2,
+                                        }}
+                                      />
+                                      <span style={{ fontWeight: 600, color }}>
+                                        {idx + 1}
+                                      </span>
+                                    </span>
+                                  );
+                                },
+                              )}
+                            </span>
+                          }
                           key="bets"
                         >
                           <div style={{ marginBottom: 8 }}>
@@ -140,6 +329,27 @@ const HomeAuthenticated = () => {
                               roomBets.three_point,
                               "three point",
                             )}
+                          </div>
+                          {/* Total points for the week */}
+                          <div style={{ textAlign: "right", marginTop: 8 }}>
+                            <Tag
+                              color="#52c41a"
+                              style={{ fontSize: 15, fontWeight: 600 }}
+                            >
+                              Total Points Won:{" "}
+                              {["one_point", "two_point", "three_point"].reduce(
+                                (sum, pt) => {
+                                  const bet = roomBets[pt];
+                                  return (
+                                    sum +
+                                    (bet && bet.total_points_earned
+                                      ? bet.total_points_earned
+                                      : 0)
+                                  );
+                                },
+                                0,
+                              )}
+                            </Tag>
                           </div>
                         </Collapse.Panel>
                       </Collapse>

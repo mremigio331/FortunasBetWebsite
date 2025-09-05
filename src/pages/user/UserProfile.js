@@ -14,6 +14,8 @@ import {
   Space,
 } from "antd";
 import usePutProfile from "../../hooks/user/usePutProfile";
+import NotificationsList from "../../components/NotificationsList";
+import { useNotifications } from "../../provider/NotificationsProvider";
 import { UserAuthenticationContext } from "../../provider/UserAuthenticationProvider";
 
 const { Title, Text } = Typography;
@@ -276,28 +278,39 @@ const UserProfile = () => {
     }
   };
 
+  // Notifications context
+  const { notifications = [] } = useNotifications();
+
   return (
-    <Row gutter={32} justify="center" style={{ marginTop: 40 }}>
-      <Col xs={24} md={12}>
-        <UserProfileCard
-          userProfile={userProfile}
-          isUserFetching={isUserFetching}
-          onNameSave={handleNameSave}
-          nameEditLoading={nameEditLoading}
-          onColorSave={handleColorSave}
-          colorEditLoading={colorEditLoading}
-        />
-        {updateUserProfileError && (
-          <Alert
-            message="Failed to update profile."
-            description={updateUserProfileError.message}
-            type="error"
-            showIcon
-            style={{ marginTop: 16 }}
+    <>
+      <Row gutter={32} justify="center" style={{ marginTop: 40 }}>
+        <Col xs={24} md={12}>
+          <UserProfileCard
+            userProfile={userProfile}
+            isUserFetching={isUserFetching}
+            onNameSave={handleNameSave}
+            nameEditLoading={nameEditLoading}
+            onColorSave={handleColorSave}
+            colorEditLoading={colorEditLoading}
           />
-        )}
-      </Col>
-    </Row>
+          {updateUserProfileError && (
+            <Alert
+              message="Failed to update profile."
+              description={updateUserProfileError.message}
+              type="error"
+              showIcon
+              style={{ marginTop: 16 }}
+            />
+          )}
+        </Col>
+      </Row>
+      {/* Notifications section */}
+      <Row gutter={32} justify="center" style={{ marginTop: 40 }}>
+        <Col xs={24} md={12}>
+          <NotificationsList notifications={notifications} />
+        </Col>
+      </Row>
+    </>
   );
 };
 
