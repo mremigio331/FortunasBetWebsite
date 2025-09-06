@@ -1,19 +1,50 @@
 import React from "react";
-import { Card, Typography, Divider, Row, Col } from "antd";
+import { Card, Typography, Divider, Row, Col, Avatar } from "antd";
 
 /**
  * Props:
- * - users: Array<{ name: string, totalPoints: number }>
+ * - bets: Array<bet>
+ * - members: Array<member>
  */
-const RoomLeaderboard = ({ users }) => {
-  // Sort users by totalPoints descending
-  const sortedUsers = [...users].sort((a, b) => b.totalPoints - a.totalPoints);
+const RoomLeaderboard = ({ bets = [], members = [] }) => {
+  // Map user_id to member info
+  const memberMap = {};
+  members.forEach((m) => {
+    memberMap[m.user_id] = m;
+  });
+
+  // Calculate total points for each user
+  const userPointsMap = {};
+  bets.forEach((bet) => {
+    const userId = bet.user_id;
+    // Only count points that are actually earned (not null)
+    let points = 0;
+    if (typeof bet.total_points_earned === "number") {
+      points = bet.total_points_earned;
+    } else if (bet.game_bet && typeof bet.game_bet.points_earned === "number") {
+      points = bet.game_bet.points_earned;
+    }
+    if (!userPointsMap[userId]) {
+      userPointsMap[userId] = 0;
+    }
+    userPointsMap[userId] += points;
+  });
+
+  // Build leaderboard array from members (approved only)
+  const leaderboard = members
+    .filter((m) => m.status === "approved")
+    .map((m) => ({
+      name: m.user_name || m.user_id,
+      color: m.user_color,
+      totalPoints: userPointsMap[m.user_id] || 0,
+    }))
+    .sort((a, b) => b.totalPoints - a.totalPoints);
 
   // Calculate places with ties
   let place = 1;
   let lastPoints = null;
   const places = [];
-  sortedUsers.forEach((user, idx) => {
+  leaderboard.forEach((user, idx) => {
     if (lastPoints === null || user.totalPoints !== lastPoints) {
       place = idx + 1;
       places.push({ place, tied: false });
@@ -44,14 +75,32 @@ const RoomLeaderboard = ({ users }) => {
           </tr>
         </thead>
         <tbody>
-          {sortedUsers.map((user, idx) => (
+          {leaderboard.map((user, idx) => (
             <tr key={user.name}>
               <td style={{ padding: "6px 0" }}>
                 {places[idx].tied
                   ? `Tied for ${places[idx].place}`
                   : places[idx].place}
               </td>
-              <td style={{ padding: "6px 0" }}>{user.name}</td>
+              <td
+                style={{
+                  padding: "6px 0",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                <Avatar
+                  size="small"
+                  style={{
+                    backgroundColor: user.color || "#1890ff",
+                    verticalAlign: "middle",
+                  }}
+                >
+                  {user.name.charAt(0).toUpperCase()}
+                </Avatar>
+                {user.name}
+              </td>
               <td style={{ padding: "6px 0" }}>{user.totalPoints}</td>
             </tr>
           ))}

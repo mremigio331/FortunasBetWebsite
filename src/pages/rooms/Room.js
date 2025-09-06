@@ -85,6 +85,7 @@ const Room = () => {
   }, [room, currentUserId, roomId]);
 
   const { members, isMembersFetching } = useGetRoomMembers(roomId);
+  console.log("Room Members:", members);
 
   const isMember = useMemo(() => {
     if (!currentUserId || !Array.isArray(members)) return false;
@@ -107,6 +108,8 @@ const Room = () => {
     isError: isBetsError,
     refetch: refetchBets,
   } = useGetBetsForRoom(roomId);
+
+  console.log("bets:", existingBets);
 
   // Get NFL weeks available in the room's date range
   const {
@@ -567,14 +570,7 @@ const Room = () => {
         </Col>
         <Col span={24}>
           {/* Leaderboard above Room Bets */}
-          <RoomLeaderboard
-            users={Object.entries(existingBetsUsers || {})
-              .map(([userId, user]) => ({
-                name: user.name,
-                totalPoints: user.total_points_awarded || 0,
-              }))
-              .sort((a, b) => b.totalPoints - a.totalPoints)}
-          />
+          <RoomLeaderboard bets={existingBets || []} members={members || []} />
         </Col>
         <Col span={24}>
           <RoomBetsDisplay roomId={roomId} />
