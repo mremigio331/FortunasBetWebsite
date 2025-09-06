@@ -44,6 +44,7 @@ const UserProfileCard = ({
   nameEditLoading,
   onColorSave,
   colorEditLoading,
+  nameErrorMsg,
 }) => {
   const [editing, setEditing] = useState(false);
   const [nameValue, setNameValue] = useState(userProfile?.name || "");
@@ -137,6 +138,16 @@ const UserProfileCard = ({
               </Space>
             )}
           </div>
+
+          {/* Error message for name validation */}
+          {nameEditLoading === false && nameErrorMsg && (
+            <Alert
+              message={nameErrorMsg}
+              type="error"
+              showIcon
+              style={{ marginTop: 8 }}
+            />
+          )}
 
           {/* Email Section */}
           <div>
@@ -247,8 +258,10 @@ const UserProfile = () => {
   const [colorEditLoading, setColorEditLoading] = useState(false);
 
   // Handle name save
+  const [nameErrorMsg, setNameErrorMsg] = useState("");
   const handleNameSave = async (newName) => {
     setNameEditLoading(true);
+    setNameErrorMsg("");
     try {
       await updateUserProfileAsync({ name: newName });
       message.success("Name updated!");
@@ -256,7 +269,19 @@ const UserProfile = () => {
         userRefetch();
       }
     } catch (err) {
-      message.error("Failed to update name.");
+      let errorMsg = "Failed to update name.";
+      if (
+        err &&
+        err.response &&
+        err.response.data &&
+        err.response.data.message
+      ) {
+        errorMsg = err.response.data.message;
+      } else if (err && err.message) {
+        errorMsg = err.message;
+      }
+      setNameErrorMsg(errorMsg);
+      message.error(errorMsg);
     } finally {
       setNameEditLoading(false);
     }
@@ -272,14 +297,22 @@ const UserProfile = () => {
         userRefetch();
       }
     } catch (err) {
-      message.error("Failed to update avatar color.");
+      let errorMsg = "Failed to update avatar color.";
+      if (
+        err &&
+        err.response &&
+        err.response.data &&
+        err.response.data.message
+      ) {
+        errorMsg = err.response.data.message;
+      } else if (err && err.message) {
+        errorMsg = err.message;
+      }
+      message.error(errorMsg);
     } finally {
       setColorEditLoading(false);
     }
   };
-
-  // Notifications context
-  const { notifications = [] } = useNotifications();
 
   return (
     <>
@@ -292,22 +325,13 @@ const UserProfile = () => {
             nameEditLoading={nameEditLoading}
             onColorSave={handleColorSave}
             colorEditLoading={colorEditLoading}
+            nameErrorMsg={nameErrorMsg}
           />
-          {updateUserProfileError && (
-            <Alert
-              message="Failed to update profile."
-              description={updateUserProfileError.message}
-              type="error"
-              showIcon
-              style={{ marginTop: 16 }}
-            />
-          )}
         </Col>
       </Row>
-      {/* Notifications section */}
       <Row gutter={32} justify="center" style={{ marginTop: 40 }}>
         <Col xs={24} md={12}>
-          <NotificationsList notifications={notifications} />
+          <NotificationsList />
         </Col>
       </Row>
     </>
