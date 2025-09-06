@@ -38,9 +38,6 @@ const useGetNFLOdds = (week, year, seasonType = 2, enabled = true) => {
   const { data, isFetching, isError, status, error, refetch } = useQuery({
     queryKey: ["nflOdds", week, year, seasonType],
     queryFn: () => {
-      console.log(
-        `Fetching NFL odds for: Week ${week}, Year ${year}, Season Type ${seasonType}`,
-      );
       return apiRequestGet(
         apiEndpoint,
         `/odds/get_nfl_odds?${queryParams}`,

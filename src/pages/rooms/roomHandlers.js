@@ -38,12 +38,10 @@ export function createRoomHandlers({
 
   // Game select handler
   const handleGameSelect = (selectedBets, setSelectedBets) => (gameId) => {
-    console.log("handleGameSelect called", { gameId, selectedBets });
     if (selectedBets[gameId]) {
       const newBets = { ...selectedBets };
       delete newBets[gameId];
       setSelectedBets(newBets);
-      console.log(`Deselected game: ${gameId}`, newBets);
     } else {
       if (Object.keys(selectedBets).length >= 3) {
         message.warning("You can only select up to 3 games for betting");
@@ -58,7 +56,6 @@ export function createRoomHandlers({
         },
       };
       setSelectedBets(updatedBets);
-      console.log(`Selected game: ${gameId}`, updatedBets);
     }
   };
 

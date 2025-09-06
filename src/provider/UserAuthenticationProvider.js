@@ -185,7 +185,6 @@ const UserAuthenticationProvider = ({ children }) => {
             isTokenExpired(idToken) ||
             isTokenExpired(accessToken)
           ) {
-            console.log("Tokens expired during session, logging out user");
             dispatch({ type: "LOGOUT" });
             Cookies.remove("idToken");
             Cookies.remove("accessToken");

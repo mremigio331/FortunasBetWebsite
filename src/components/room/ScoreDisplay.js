@@ -4,20 +4,14 @@ import { Typography, Space, Tag } from "antd";
 const { Text } = Typography;
 
 const ScoreDisplay = ({ bet, isCompact = false, showBetResult = false }) => {
-  // Debug logging
-  console.log("ScoreDisplay received bet:", bet);
-  console.log("ScoreDisplay game_status:", bet?.game_status);
 
-  // Use the game_status data that comes directly from the bet API response
+
   const gameStatus = bet.game_status;
 
-  // Don't show anything if we don't have game status data
   if (!gameStatus || !gameStatus.home_team || !gameStatus.away_team) {
-    console.log("ScoreDisplay: No game status data, returning null");
     return null;
   }
 
-  console.log("ScoreDisplay: Game status found, rendering scores");
   const { status, home_team, away_team } = gameStatus;
   const isLive = status.state === "in";
   const isCompleted = status.state === "post" || status.completed;

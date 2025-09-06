@@ -72,20 +72,10 @@ const Room = () => {
     const adminIds = room.admin_user_ids || room.admins || [];
     const isAdmin = adminIds.includes(currentUserId);
 
-    console.log("Admin Check Debug:", {
-      roomId,
-      currentUserId,
-      adminIds,
-      isAdmin,
-      room_admin_user_ids: room.admin_user_ids,
-      room_admins: room.admins,
-    });
-
     return isAdmin;
   }, [room, currentUserId, roomId]);
 
   const { members, isMembersFetching } = useGetRoomMembers(roomId);
-  console.log("Room Members:", members);
 
   const isMember = useMemo(() => {
     if (!currentUserId || !Array.isArray(members)) return false;
@@ -108,8 +98,6 @@ const Room = () => {
     isError: isBetsError,
     refetch: refetchBets,
   } = useGetBetsForRoom(roomId);
-
-  console.log("bets:", existingBets);
 
   // Get NFL weeks available in the room's date range
   const {

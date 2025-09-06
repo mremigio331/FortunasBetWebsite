@@ -58,7 +58,6 @@ const useGetNFLWeeksInRange = (startDate, endDate, options = {}) => {
         throw new Error("Invalid date range");
       }
 
-      console.log(`Fetching NFL weeks for range: ${startEpoch} to ${endEpoch}`);
 
       const response = await apiRequestGet(
         apiEndpoint,
