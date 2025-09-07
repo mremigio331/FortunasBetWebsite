@@ -50,6 +50,7 @@ const HomeAuthenticated = () => {
       );
     }
     // --- RoomBetsDisplay renderBetCard logic ---
+    console.log("Rendering bet card for bet:", bet);
     const isPrivate = !bet.game_bet;
     const betDate = bet.event_datetime
       ? new Date(bet.event_datetime * 1000).toLocaleDateString()
@@ -165,7 +166,13 @@ const HomeAuthenticated = () => {
                       }}
                     >
                       {bet.game_bet.bet_type === "spread"
-                        ? `${bet.game_bet.team_choice?.toUpperCase()} ${spreadValue ? (spreadValue > 0 ? `+${spreadValue}` : spreadValue) : "TBD"}`
+                        ? (() => {
+                            const teamChoice = bet.game_bet.team_choice;
+                            let teamName = teamChoice;
+                            if (teamChoice === "home") teamName = homeTeam;
+                            else if (teamChoice === "away") teamName = awayTeam;
+                            return `${teamName} ${spreadValue ? (spreadValue > 0 ? `+${spreadValue}` : spreadValue) : "TBD"}`;
+                          })()
                         : `${bet.game_bet.over_under_choice?.toUpperCase()} ${totalValue || "TBD"}`}
                     </Text>
                   </Space>
@@ -207,7 +214,7 @@ const HomeAuthenticated = () => {
       <Content style={{ padding: "32px 16px 0 16px" }}>
         <div style={{ textAlign: "center", marginTop: "16px" }}>
           <Title level={2} style={{ marginBottom: 8 }}>
-            Welcome to Fortunas Bets
+            Welcome to Fortunas
           </Title>
           <Text>{`You have signed in as ${userProfile?.name || "User"}`}</Text>
         </div>

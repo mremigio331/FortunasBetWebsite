@@ -45,6 +45,7 @@ const Navbar = () => {
   } = useContext(UserAuthenticationContext);
   const { userProfile } = useUserProfile();
   const [current, setCurrent] = useState("home");
+  const { notifications = [] } = useNotifications();
 
   // Get color style for avatar
   const getAvatarStyle = (color = "blue") => {
@@ -81,7 +82,7 @@ const Navbar = () => {
           style={{ color: "white", textDecoration: "none", cursor: "pointer" }}
           onClick={() => navigate("/")}
         >
-          Fortunas Bet
+          Fortunas
         </span>
       ),
       key: "home",
@@ -128,7 +129,7 @@ const Navbar = () => {
           }}
           onClick={() => navigate("/")}
         >
-          Fortunas Bets
+          Fortunas
         </span>
       </div>
 
@@ -146,7 +147,6 @@ const Navbar = () => {
         {/* User section */}
         {isAuthenticated ? (
           (() => {
-            const { notifications = [] } = useNotifications();
             // Flatten notifications if nested
             const flatNotifications = Array.isArray(notifications[0])
               ? notifications.flat()

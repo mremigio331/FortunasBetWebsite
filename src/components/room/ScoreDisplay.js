@@ -4,8 +4,6 @@ import { Typography, Space, Tag } from "antd";
 const { Text } = Typography;
 
 const ScoreDisplay = ({ bet, isCompact = false, showBetResult = false }) => {
-
-
   const gameStatus = bet.game_status;
 
   if (!gameStatus || !gameStatus.home_team || !gameStatus.away_team) {

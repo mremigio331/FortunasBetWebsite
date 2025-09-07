@@ -19,6 +19,7 @@ import StatusMessages from "../../../components/room/StatusMessages";
 import GameCard from "../../../components/room/GameCard";
 import CurrentWeekUserBetsAlert from "./CurrentWeekUserBetsAlert";
 import useGetCurrentNflWeek from "../../../hooks/bet/useGetCurrentNflWeek";
+import RoomBetsDisplay from "../../../components/room/RoomBetsDisplay";
 
 const NFLOddsSection = ({
   selectedBets,
@@ -61,6 +62,7 @@ const NFLOddsSection = ({
   handleBetTypeChange,
   handleTeamChoiceChange,
   handlePointsChange,
+  roomId, // <-- make sure this is passed in
 }) => {
   const {
     currentWeekInfo,
@@ -281,6 +283,10 @@ const NFLOddsSection = ({
           </Row>
         </>
       )}
+      {/* Add RoomBetsDisplay below odds section */}
+      <div style={{ marginTop: 32 }}>
+        <RoomBetsDisplay roomId={roomId} />
+      </div>
     </Card>
   );
 };

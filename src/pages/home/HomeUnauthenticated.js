@@ -15,7 +15,7 @@ const HomeUnauthenticated = () => {
     <Layout style={{ minHeight: "100vh" }}>
       <Content style={{ padding: "50px" }}>
         <div style={{ textAlign: "center", marginTop: "50px" }}>
-          <Title level={2}>Welcome to the Fortunas Bets</Title>
+          <Title level={2}>Welcome to the Fortunas</Title>
           <Text>Let's get you signed in</Text>
           <div
             style={{
@@ -35,7 +35,7 @@ const HomeUnauthenticated = () => {
           </div>
           <img
             src={fortunaFull}
-            alt="Fortunas Bet Full Logo"
+            alt="Fortunas Full Logo"
             style={{ maxWidth: 400, width: "100%", marginBottom: 32 }}
           />
         </div>

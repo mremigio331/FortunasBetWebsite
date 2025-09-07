@@ -58,7 +58,6 @@ const useGetNFLWeeksInRange = (startDate, endDate, options = {}) => {
         throw new Error("Invalid date range");
       }
 
-
       const response = await apiRequestGet(
         apiEndpoint,
         `/odds/get_nfl_weeks_in_range?${queryParams}`,
