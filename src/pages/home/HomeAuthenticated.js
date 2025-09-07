@@ -50,7 +50,6 @@ const HomeAuthenticated = () => {
       );
     }
     // --- RoomBetsDisplay renderBetCard logic ---
-    console.log("Rendering bet card for bet:", bet);
     const isPrivate = !bet.game_bet;
     const betDate = bet.event_datetime
       ? new Date(bet.event_datetime * 1000).toLocaleDateString()

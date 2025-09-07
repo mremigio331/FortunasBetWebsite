@@ -33,12 +33,6 @@ const MembershipManagement = ({ roomId, idToken }) => {
   // Get current user ID from token
   const currentUserId = idToken ? jwtDecode(idToken).sub : null;
 
-  console.log("MembershipManagement Debug:", {
-    roomId,
-    currentUserId,
-    hasIdToken: !!idToken,
-  });
-
   const {
     members,
     memberCount,
@@ -76,9 +70,7 @@ const MembershipManagement = ({ roomId, idToken }) => {
         approve: approve,
       };
 
-      console.log("Calling editMembershipRequestAsync with:", requestData);
       const result = await editMembershipRequestAsync(requestData);
-      console.log("editMembershipRequestAsync result:", result);
 
       // Refresh the members list
       membersRefetch();
@@ -139,7 +131,6 @@ const MembershipManagement = ({ roomId, idToken }) => {
           label: "Approve Request",
           icon: <CheckOutlined />,
           onClick: () => {
-            console.log("Approve Request clicked for user:", member.user_id);
             handleStatusChange(member.user_id, "APPROVED");
           },
         },
@@ -149,7 +140,6 @@ const MembershipManagement = ({ roomId, idToken }) => {
           icon: <CloseOutlined />,
           danger: true,
           onClick: () => {
-            console.log("Deny Request clicked for user:", member.user_id);
             handleStatusChange(member.user_id, "DENIED");
           },
         },

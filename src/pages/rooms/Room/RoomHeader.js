@@ -32,7 +32,6 @@ const RoomHeader = ({
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [form] = Form.useForm();
   const { editRoomAsync, editRoomLoading } = useEditRoom();
-  console.log("isCurrentUserAdmin", isCurrentUserAdmin);
 
   let membershipTag = null;
   let requestButton = null;

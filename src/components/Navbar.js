@@ -71,7 +71,6 @@ const Navbar = () => {
   };
 
   const onClick = (e) => {
-    console.log("click ", e);
     setCurrent(e.key);
   };
 

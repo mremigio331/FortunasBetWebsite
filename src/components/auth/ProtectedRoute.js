@@ -10,7 +10,6 @@ const ProtectedRoute = ({ children }) => {
   useEffect(() => {
     // If authentication state has been determined and user is not authenticated
     if (isAuthenticated === false || (isAuthenticated !== null && !idToken)) {
-      console.log("User not authenticated, redirecting to homepage");
       navigate("/", { replace: true });
     }
   }, [isAuthenticated, idToken, navigate]);
