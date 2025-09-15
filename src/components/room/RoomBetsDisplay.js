@@ -160,7 +160,10 @@ const RoomBetsDisplay = ({ roomId }) => {
             size="small"
             style={getAvatarStyle(record.user_color)}
           />
-          <Text strong={record.user_id === user?.user_id}>
+          <Text
+            strong={record.user_id === user?.user_id}
+            style={{ wordBreak: "break-word" }} // Ensure long names wrap to a new line
+          >
             {record.user_id === user?.user_id ? "You" : text}
           </Text>
           {record.user_id === user?.user_id && (

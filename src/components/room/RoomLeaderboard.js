@@ -67,29 +67,29 @@ const RoomLeaderboard = ({ bets = [], members = [] }) => {
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
           <tr>
-            <th style={{ textAlign: "left", padding: "8px 0" }}>Place</th>
-            <th style={{ textAlign: "left", padding: "8px 0" }}>User</th>
-            <th style={{ textAlign: "left", padding: "8px 0" }}>
+            <th style={{ textAlign: "left", padding: "20px 0" }}>Place</th>{" "}
+            {/* Increased padding */}
+            <th style={{ textAlign: "left", padding: "20px 0" }}></th>{" "}
+            {/* Avatar column */}
+            <th style={{ textAlign: "left", padding: "20px 0" }}>User</th>
+            <th style={{ textAlign: "left", padding: "20px 0" }}>
               Total Points
             </th>
           </tr>
         </thead>
         <tbody>
           {leaderboard.map((user, idx) => (
-            <tr key={user.name}>
-              <td style={{ padding: "6px 0" }}>
+            <tr key={user.name} style={{ marginBottom: "10px" }}>
+              {" "}
+              {/* Added margin */}
+              <td style={{ padding: "18px 0" }}>
+                {/* Increased padding */}
                 {places[idx].tied
                   ? `Tied for ${places[idx].place}`
                   : places[idx].place}
               </td>
-              <td
-                style={{
-                  padding: "6px 0",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                }}
-              >
+              <td style={{ padding: "18px 0" }}>
+                {/* Avatar column with more spacing */}
                 <Avatar
                   size="small"
                   style={{
@@ -99,9 +99,17 @@ const RoomLeaderboard = ({ bets = [], members = [] }) => {
                 >
                   {user.name.charAt(0).toUpperCase()}
                 </Avatar>
+              </td>
+              <td
+                style={{
+                  padding: "18px 0", // Increased padding
+                  wordBreak: "break-word", // Ensure long names wrap to a new line
+                }}
+              >
                 {user.name}
               </td>
-              <td style={{ padding: "6px 0" }}>{user.totalPoints}</td>
+              <td style={{ padding: "18px 0" }}>{user.totalPoints}</td>{" "}
+              {/* Increased padding */}
             </tr>
           ))}
         </tbody>

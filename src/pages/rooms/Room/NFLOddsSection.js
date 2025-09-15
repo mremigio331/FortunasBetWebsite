@@ -283,10 +283,6 @@ const NFLOddsSection = ({
           </Row>
         </>
       )}
-      {/* Add RoomBetsDisplay below odds section */}
-      <div style={{ marginTop: 32 }}>
-        <RoomBetsDisplay roomId={roomId} />
-      </div>
     </Card>
   );
 };

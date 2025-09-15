@@ -30,7 +30,10 @@ const RoomBetsCards = ({ userStats, getAvatarStyle, user, renderBetCard }) => {
                 size="small"
                 style={getAvatarStyle(userStat.user_color)}
               />
-              <Text strong={userStat.user_id === user?.user_id}>
+              <Text
+                strong={userStat.user_id === user?.user_id}
+                style={{ wordBreak: "break-word" }} // Ensure long names wrap to a new line
+              >
                 {userStat.user_id === user?.user_id
                   ? "You"
                   : userStat.user_name}
