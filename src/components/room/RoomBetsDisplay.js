@@ -358,9 +358,26 @@ const RoomBetsDisplay = ({ roomId }) => {
                       {statusInfo.statusIcon} {statusInfo.statusText}
                     </Tag>
                   </div>
-                  <Text type="secondary" style={{ fontSize: "12px" }}>
-                    {betDate}
-                  </Text>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Text type="secondary" style={{ fontSize: "12px" }}>
+                      {betDate}
+                    </Text>
+                    {bet.bet_id && (
+                      <Button
+                        size="small"
+                        type="link"
+                        onClick={() => alert(`Bet ID: ${bet.bet_id}`)}
+                      >
+                        View Bet ID
+                      </Button>
+                    )}
+                  </div>
                 </>
               )}
 
@@ -507,6 +524,8 @@ const RoomBetsDisplay = ({ roomId }) => {
             </Space>
           </Col>
         </Row>
+
+        <Divider style={{ margin: "8px 0" }} />
       </Card>
     );
   };
