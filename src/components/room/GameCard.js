@@ -68,13 +68,10 @@ const GameCard = ({
         : n.toFixed(1);
 
   const handleTeamChange = (val) => {
-    console.log("handleTeamChange", val);
     if (bet.betType === "spread") {
       const takenLine = val === "home" ? homeLine : awayLine;
-      console.log("takenLine", takenLine);
       onTeamChoiceChange(game.game_id, { teamChoice: val, takenLine });
     } else {
-      console.log("overUnderChoice", val);
       onTeamChoiceChange(game.game_id, { overUnderChoice: val });
     }
   };

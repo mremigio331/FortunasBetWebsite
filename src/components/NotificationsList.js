@@ -58,8 +58,9 @@ const NotificationCard = ({ notification, onAcknowledge, loading }) => {
   );
 };
 
-const NotificationsList = ({ notifications }) => {
+const NotificationsList = () => {
   const {
+    notifications,
     acknowledgeNotification,
     acknowledgeNotificationLoading: ackLoading,
   } = useNotifications();
