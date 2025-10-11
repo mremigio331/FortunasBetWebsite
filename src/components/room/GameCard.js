@@ -68,10 +68,13 @@ const GameCard = ({
         : n.toFixed(1);
 
   const handleTeamChange = (val) => {
+    console.log("handleTeamChange", val);
     if (bet.betType === "spread") {
       const takenLine = val === "home" ? homeLine : awayLine;
+      console.log("takenLine", takenLine);
       onTeamChoiceChange(game.game_id, { teamChoice: val, takenLine });
     } else {
+      console.log("overUnderChoice", val);
       onTeamChoiceChange(game.game_id, { overUnderChoice: val });
     }
   };
@@ -511,7 +514,11 @@ const GameCard = ({
               Choose {bet.betType === "spread" ? "team" : "option"}:
             </div>
             <Radio.Group
-              value={bet.teamChoice ?? null} // make sure initial is null, not "home"
+              value={
+                bet.betType === "spread"
+                  ? (bet.teamChoice ?? null)
+                  : (bet.overUnderChoice ?? null)
+              }
               onChange={(e) => handleTeamChange(e.target.value)}
               size="small"
               style={{ width: "100%" }}

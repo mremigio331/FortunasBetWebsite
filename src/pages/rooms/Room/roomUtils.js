@@ -59,12 +59,12 @@ export const createHandlers = ({
     });
   },
   handleTeamChoiceChange:
-    (selectedBets, setSelectedBets) => (gameId, teamChoice) => {
+    (selectedBets, setSelectedBets) => (gameId, update) => {
       setSelectedBets({
         ...selectedBets,
         [gameId]: {
           ...selectedBets[gameId],
-          teamChoice,
+          ...update,
         },
       });
     },
