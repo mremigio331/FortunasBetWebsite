@@ -24,9 +24,11 @@ import {
   ReloadOutlined,
   DownOutlined,
   RightOutlined,
+  LinkOutlined,
 } from "@ant-design/icons";
 import { UserAuthenticationContext } from "../../provider/UserAuthenticationProvider";
 import useGetBetsForRoom from "../../hooks/bet/useGetBetsForRoom";
+import computeDisplayedSpread from "../../utils/spreadUtils";
 
 const { Title, Text } = Typography;
 
@@ -326,6 +328,7 @@ const RoomBetsDisplay = ({ roomId }) => {
     };
 
     const statusInfo = getBetStatusInfo();
+    console.log(bet);
 
     return (
       <Card
@@ -377,6 +380,18 @@ const RoomBetsDisplay = ({ roomId }) => {
                         View Bet ID
                       </Button>
                     )}
+                    {bet.game_id && (
+                      <Button
+                        size="small"
+                        type="link"
+                        href={`https://www.espn.com/nfl/game?gameId=${bet.game_id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        icon={<LinkOutlined />}
+                      >
+                        View on ESPN
+                      </Button>
+                    )}
                   </div>
                 </>
               )}
@@ -420,7 +435,8 @@ const RoomBetsDisplay = ({ roomId }) => {
                             let teamName = teamChoice;
                             if (teamChoice === "home") teamName = homeTeam;
                             else if (teamChoice === "away") teamName = awayTeam;
-                            return `${teamName} ${spreadValue ? (spreadValue > 0 ? `+${spreadValue}` : spreadValue) : "TBD"}`;
+                            const displaySpread = computeDisplayedSpread(bet);
+                            return `${teamName} ${displaySpread}`;
                           })()
                         : `${bet.game_bet.over_under_choice?.toUpperCase()} ${totalValue || "TBD"}`}
                     </Text>
@@ -487,14 +503,12 @@ const RoomBetsDisplay = ({ roomId }) => {
                       )}
 
                       {/* Show spread info for spread bets */}
-                      {bet.game_bet?.bet_type === "spread" &&
-                        bet.game_bet.spread_value && (
-                          <Text style={{ fontSize: "11px", color: "#8c8c8c" }}>
-                            Spread: {bet.game_bet.team_choice?.toUpperCase()}{" "}
-                            {bet.game_bet.spread_value > 0 ? "+" : ""}
-                            {bet.game_bet.spread_value}
-                          </Text>
-                        )}
+                      {bet.game_bet?.bet_type === "spread" && (
+                        <Text style={{ fontSize: "11px", color: "#8c8c8c" }}>
+                          Spread: {bet.game_bet.team_choice?.toUpperCase()}{" "}
+                          {computeDisplayedSpread(bet)}
+                        </Text>
+                      )}
                     </Space>
                   </div>
                 )}
