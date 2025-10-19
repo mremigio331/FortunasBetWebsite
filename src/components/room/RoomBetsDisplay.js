@@ -347,20 +347,33 @@ const RoomBetsDisplay = ({ roomId }) => {
             <Space direction="vertical" size="small" style={{ width: "100%" }}>
               {!isPrivate && (
                 <>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Text strong style={{ fontSize: "16px" }}>
-                      {awayTeam} @ {homeTeam}
-                    </Text>
-                    <Tag color={statusInfo.tagColor} size="small">
-                      {statusInfo.statusIcon} {statusInfo.statusText}
-                    </Tag>
-                  </div>
+                  {isMobile ? (
+                    <div>
+                      <Text strong style={{ fontSize: "16px" }}>
+                        {awayTeam} @ {homeTeam}
+                      </Text>
+                      <div style={{ marginTop: 6 }}>
+                        <Tag color={statusInfo.tagColor} size="small">
+                          {statusInfo.statusIcon} {statusInfo.statusText}
+                        </Tag>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Text strong style={{ fontSize: "16px" }}>
+                        {awayTeam} @ {homeTeam}
+                      </Text>
+                      <Tag color={statusInfo.tagColor} size="small">
+                        {statusInfo.statusIcon} {statusInfo.statusText}
+                      </Tag>
+                    </div>
+                  )}
                   <div
                     style={{
                       display: "flex",
@@ -371,27 +384,7 @@ const RoomBetsDisplay = ({ roomId }) => {
                     <Text type="secondary" style={{ fontSize: "12px" }}>
                       {betDate}
                     </Text>
-                    {bet.bet_id && (
-                      <Button
-                        size="small"
-                        type="link"
-                        onClick={() => alert(`Bet ID: ${bet.bet_id}`)}
-                      >
-                        View Bet ID
-                      </Button>
-                    )}
-                    {bet.game_id && (
-                      <Button
-                        size="small"
-                        type="link"
-                        href={`https://www.espn.com/nfl/game?gameId=${bet.game_id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        icon={<LinkOutlined />}
-                      >
-                        View on ESPN
-                      </Button>
-                    )}
+                    {/* action buttons moved to the bottom of the card */}
                   </div>
                 </>
               )}
@@ -538,6 +531,42 @@ const RoomBetsDisplay = ({ roomId }) => {
             </Space>
           </Col>
         </Row>
+
+        {/* Bottom action row - only visible when bet details are visible */}
+        {!isPrivate && (bet.bet_id || bet.game_id) && (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-start",
+              gap: 12,
+              marginTop: 8,
+            }}
+          >
+            {bet.bet_id && (
+              <Button
+                size="small"
+                type="link"
+                onClick={() => alert(`Bet ID: ${bet.bet_id}`)}
+                style={{ fontSize: "12px", padding: "0 6px" }}
+              >
+                View Bet ID
+              </Button>
+            )}
+            {bet.game_id && (
+              <Button
+                size="small"
+                type="link"
+                href={`https://www.espn.com/nfl/game?gameId=${bet.game_id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                icon={<LinkOutlined />}
+                style={{ fontSize: "12px", padding: "0 6px" }}
+              >
+                View on ESPN
+              </Button>
+            )}
+          </div>
+        )}
 
         <Divider style={{ margin: "8px 0" }} />
       </Card>

@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { Table, Avatar, Tag, Space, Button, Card, Typography } from "antd";
-import { UserOutlined, DownOutlined, RightOutlined } from "@ant-design/icons";
+import { UserOutlined, DownOutlined } from "@ant-design/icons";
 import nflWeeks from "../../constants/nflWeek"; // Import the NFL weeks constant
+import WeekHeader from "./WeekHeader";
 
 const { Text } = Typography;
 
@@ -121,18 +122,12 @@ const RoomBetsTable = ({
                       >
                         {Object.keys(betsByWeek).map((week) => (
                           <div key={week}>
-                            <Button
-                              type="link"
-                              onClick={() => toggleWeekExpansion(week)}
-                              style={{ paddingLeft: 0 }}
-                            >
-                              {expandedWeeks[week] ? (
-                                <DownOutlined />
-                              ) : (
-                                <RightOutlined />
-                              )}{" "}
-                              {week}
-                            </Button>
+                            <WeekHeader
+                              week={week}
+                              bets={betsByWeek[week]}
+                              expanded={!!expandedWeeks[week]}
+                              onToggle={() => toggleWeekExpansion(week)}
+                            />
                             {expandedWeeks[week] && (
                               <div style={{ marginLeft: "16px" }}>
                                 {betsByWeek[week].map((bet, index) =>
