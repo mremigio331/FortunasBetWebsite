@@ -16,6 +16,7 @@ import {
 } from "antd";
 import RoomBetsTable from "./RoomBetsTable";
 import RoomBetsCards from "./RoomBetsCards";
+import RoomChart from "./RoomChart";
 import {
   TrophyOutlined,
   UserOutlined,
@@ -46,7 +47,11 @@ const useIsMobile = () => {
   return isMobile;
 };
 
-const RoomBetsDisplay = ({ roomId }) => {
+const RoomBetsDisplay = ({
+  roomId,
+  existingBets: existingBetsProp,
+  members: membersProp,
+}) => {
   const isMobile = useIsMobile();
   const { user } = useContext(UserAuthenticationContext);
   const [expandedUsers, setExpandedUsers] = useState({});
@@ -86,6 +91,11 @@ const RoomBetsDisplay = ({ roomId }) => {
     getCurrentUserBets,
     getOtherUsersBets,
   } = useGetBetsForRoom(roomId);
+
+  // prefer props provided from parent (Room) if available, otherwise use hook data
+  const betsSource = existingBetsProp ?? bets;
+  const membersArray = membersProp ?? Object.values(users || {});
+  console.log(users);
 
   // Calculate user statistics
   const userStats = useMemo(() => {
@@ -663,6 +673,13 @@ const RoomBetsDisplay = ({ roomId }) => {
         </Empty>
       ) : (
         <>
+          {/* Room Chart (aggregated points per user by week) */}
+          <RoomChart
+            existingBets={betsSource}
+            members={users}
+            width={Math.min(window.innerWidth - 80, 1000)}
+          />
+
           {/* Bet History Section - Responsive Table for Desktop, Table for Bets on Mobile */}
           <div style={{ marginBottom: "24px" }}>
             <Title level={4} style={{ marginBottom: "16px" }}>

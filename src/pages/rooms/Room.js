@@ -561,7 +561,11 @@ const Room = () => {
           <RoomLeaderboard bets={existingBets || []} members={members || []} />
         </Col>
         <Col span={24}>
-          <RoomBetsDisplay roomId={roomId} />
+          <RoomBetsDisplay
+            roomId={roomId}
+            existingBets={existingBets}
+            members={members}
+          />
         </Col>
         <Col span={24}>
           <NFLOddsSection
@@ -615,6 +619,8 @@ const Room = () => {
               selectedBets,
               setSelectedBets,
             )}
+            existingBets={existingBets}
+            members={members}
           />
         </Col>
         {isCurrentUserAdmin && (
