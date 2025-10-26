@@ -13,20 +13,17 @@ const RoomChart = ({ existingBets = [], members = {}, width = 800 }) => {
   });
   const weeks = Array.from(weekSet).sort((a, b) => a - b);
 
-  // members may be provided as an object keyed by user_id or as an array of member objects.
   const normalizedMembers = Array.isArray(members)
     ? members
     : Object.entries(members || {}).map(([user_id, m]) => ({
         user_id,
-        // support both `name` and `display_name` fields
         display_name: m?.display_name || m?.name || m?.username || m?.email,
         color: m?.color,
       }));
 
-  const series = (normalizedMembers || []).map((m, idx) => {
+  const series = (normalizedMembers || []).map((m) => {
     const pointsByWeek = {};
     weeks.forEach((w) => (pointsByWeek[w] = 0));
-
     existingBets.forEach((bet) => {
       if (!bet) return;
       const uid = bet.user_id;
@@ -37,20 +34,19 @@ const RoomChart = ({ existingBets = [], members = {}, width = 800 }) => {
         pointsByWeek[wk] = (pointsByWeek[wk] || 0) + (pts || 0);
       }
     });
-
-    // convert per-week points to cumulative totals so the chart shows running totals
     let running = 0;
     weeks.forEach((w) => {
       running += pointsByWeek[w] || 0;
       pointsByWeek[w] = running;
     });
-
-    const name =
-      m.display_name || m.name || m.username || m.email || `User ${m.user_id}`;
+    let displayName = m.user_name || "";
+    if (displayName.length > 20) {
+      displayName = displayName.slice(0, 20) + "...";
+    }
     return {
       user_id: m.user_id,
-      name,
-      color: undefined,
+      name: displayName,
+      color: m.color,
       pointsByWeek,
     };
   });

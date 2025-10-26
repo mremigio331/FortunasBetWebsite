@@ -1,23 +1,44 @@
 import React from "react";
-import { Card, Typography, Divider, Row, Col, Avatar } from "antd";
+import { Card, Typography, Divider, Spin, Avatar } from "antd";
+import { TrophyOutlined } from "@ant-design/icons";
 
 /**
+ * RoomLeaderboard
+ *
  * Props:
- * - bets: Array<bet>
- * - members: Array<member>
+ * - isBetsLoading: boolean - loading state for bets
+ * - bets: Array<bet> - array of bet objects
+ * - members: Array<member> - array of member objects
+ *
+ * Displays a leaderboard table of users and their total points, with place and avatar.
  */
-const RoomLeaderboard = ({ bets = [], members = [] }) => {
-  // Map user_id to member info
-  const memberMap = {};
-  members.forEach((m) => {
-    memberMap[m.user_id] = m;
-  });
+const RoomLeaderboard = ({ isBetsLoading, bets = [], members = [] }) => {
+  if (isBetsLoading) {
+    return (
+      <Card
+        title={
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span role="img" aria-label="trophy" style={{ color: "#faad14" }}>
+              🏆
+            </span>
+            Leaderboard
+          </div>
+        }
+        style={{ marginBottom: "2rem", boxShadow: "0 2px 8px #f0f1f2" }}
+      >
+        <div style={{ textAlign: "center", padding: "40px" }}>
+          <Spin size="large" />
+          <div style={{ marginTop: "16px" }}>
+            <Typography.Text>Calculating leaderboard...</Typography.Text>
+          </div>
+        </div>
+      </Card>
+    );
+  }
 
-  // Calculate total points for each user
   const userPointsMap = {};
   bets.forEach((bet) => {
     const userId = bet.user_id;
-    // Only count points that are actually earned (not null)
     let points = 0;
     if (typeof bet.total_points_earned === "number") {
       points = bet.total_points_earned;
@@ -30,7 +51,6 @@ const RoomLeaderboard = ({ bets = [], members = [] }) => {
     userPointsMap[userId] += points;
   });
 
-  // Build leaderboard array from members (approved only)
   const leaderboard = members
     .filter((m) => m.status === "approved")
     .map((m) => ({
@@ -40,7 +60,6 @@ const RoomLeaderboard = ({ bets = [], members = [] }) => {
     }))
     .sort((a, b) => b.totalPoints - a.totalPoints);
 
-  // Calculate places with ties
   let place = 1;
   let lastPoints = null;
   const places = [];
@@ -55,22 +74,23 @@ const RoomLeaderboard = ({ bets = [], members = [] }) => {
   });
 
   return (
-    <Card style={{ marginBottom: "2rem", boxShadow: "0 2px 8px #f0f1f2" }}>
-      <Row align="middle" justify="space-between" style={{ marginBottom: 8 }}>
-        <Col>
-          <Typography.Title level={4} style={{ margin: 0 }}>
-            Leaderboard
-          </Typography.Title>
-        </Col>
-      </Row>
+    <Card
+      title={
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <span role="img" aria-label="trophy" style={{ color: "#faad14" }}>
+            🏆
+          </span>
+          Leaderboard
+        </div>
+      }
+      style={{ marginBottom: "2rem", boxShadow: "0 2px 8px #f0f1f2" }}
+    >
       <Divider style={{ margin: "8px 0 16px 0" }} />
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
           <tr>
-            <th style={{ textAlign: "left", padding: "20px 0" }}>Place</th>{" "}
-            {/* Increased padding */}
-            <th style={{ textAlign: "left", padding: "20px 0" }}></th>{" "}
-            {/* Avatar column */}
+            <th style={{ textAlign: "left", padding: "20px 0" }}>Place</th>
+            <th style={{ textAlign: "left", padding: "20px 0" }}></th>
             <th style={{ textAlign: "left", padding: "20px 0" }}>User</th>
             <th style={{ textAlign: "left", padding: "20px 0" }}>
               Total Points
@@ -80,16 +100,12 @@ const RoomLeaderboard = ({ bets = [], members = [] }) => {
         <tbody>
           {leaderboard.map((user, idx) => (
             <tr key={user.name} style={{ marginBottom: "10px" }}>
-              {" "}
-              {/* Added margin */}
               <td style={{ padding: "18px 0" }}>
-                {/* Increased padding */}
                 {places[idx].tied
                   ? `Tied for ${places[idx].place}`
                   : places[idx].place}
               </td>
               <td style={{ padding: "18px 0" }}>
-                {/* Avatar column with more spacing */}
                 <Avatar
                   size="small"
                   style={{
@@ -102,14 +118,13 @@ const RoomLeaderboard = ({ bets = [], members = [] }) => {
               </td>
               <td
                 style={{
-                  padding: "18px 0", // Increased padding
-                  wordBreak: "break-word", // Ensure long names wrap to a new line
+                  padding: "18px 0",
+                  wordBreak: "break-word",
                 }}
               >
                 {user.name}
               </td>
-              <td style={{ padding: "18px 0" }}>{user.totalPoints}</td>{" "}
-              {/* Increased padding */}
+              <td style={{ padding: "18px 0" }}>{user.totalPoints}</td>
             </tr>
           ))}
         </tbody>

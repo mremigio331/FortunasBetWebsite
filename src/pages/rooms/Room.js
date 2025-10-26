@@ -89,17 +89,15 @@ const Room = () => {
   // Bet creation hook
   const { createBet, isLoading: isBetCreating } = useCreateBet();
 
-  // Get existing bets for the room to check weekly constraints
   const {
     bets: existingBets,
     users: existingBetsUsers,
     betsCount,
-    isFetching: isBetsFetching,
+    isBetsLoading,
     isError: isBetsError,
     refetch: refetchBets,
-  } = useGetBetsForRoom(roomId);
+  } = useGetBetsForRoom(roomId, room ? room.nfl_weeks : null);
 
-  // Get NFL weeks available in the room's date range
   const {
     nflWeeks,
     availableSeasons,
@@ -441,7 +439,7 @@ const Room = () => {
     };
   }, [selectedBets, weeklyTakenPoints]);
 
-  if (isRoomFetching || (room && isNFLWeeksFetching)) {
+  if (isRoomFetching) {
     return (
       <div
         style={{
@@ -453,9 +451,7 @@ const Room = () => {
       >
         <Spin size="large" />
         <div style={{ marginLeft: "16px" }}>
-          <Text>
-            {isRoomFetching ? "Loading room..." : "Loading NFL schedule..."}
-          </Text>
+          <Text>{"Loading room..."}</Text>
         </div>
       </div>
     );
@@ -558,17 +554,24 @@ const Room = () => {
         </Col>
         <Col span={24}>
           {/* Leaderboard above Room Bets */}
-          <RoomLeaderboard bets={existingBets || []} members={members || []} />
+          <RoomLeaderboard
+            isBetsLoading={isBetsLoading}
+            bets={existingBets || []}
+            members={members || []}
+          />
         </Col>
         <Col span={24}>
           <RoomBetsDisplay
+            isFetching={isBetsLoading}
             roomId={roomId}
             existingBets={existingBets}
+            roomWeeks={room ? room.nfl_weeks : null}
             members={members}
           />
         </Col>
         <Col span={24}>
           <NFLOddsSection
+            isNFLWeeksFetching={isNFLWeeksFetching}
             selectedBets={selectedBets}
             selectedBetsCount={selectedBetsCount}
             handleSubmitBets={handleSubmitBets}

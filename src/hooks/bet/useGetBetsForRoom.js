@@ -4,14 +4,20 @@ import { UserAuthenticationContext } from "../../provider/UserAuthenticationProv
 import { apiRequestGet } from "../../api/apiRequest";
 import { useApi } from "../../provider/ApiProvider";
 
-const useGetBetsForRoom = (roomId, enabled = true) => {
+const useGetBetsForRoom = (roomId, nfl_weeks, enabled = true) => {
   const { idToken } = useContext(UserAuthenticationContext);
   const { apiEndpoint, stage } = useApi();
 
   // Validate required parameters
   const hasRequiredParams = useMemo(
-    () => roomId !== undefined && roomId !== null && roomId !== "",
-    [roomId],
+    () =>
+      roomId !== undefined &&
+      roomId !== null &&
+      roomId !== "" &&
+      nfl_weeks != null &&
+      Array.isArray(nfl_weeks) &&
+      nfl_weeks.length > 0,
+    [roomId, nfl_weeks],
   );
 
   const isEnabled = useMemo(
@@ -19,63 +25,94 @@ const useGetBetsForRoom = (roomId, enabled = true) => {
     [enabled, hasRequiredParams, idToken],
   );
 
-  const { data, isFetching, isError, status, error, refetch } = useQuery({
-    queryKey: ["roomBets", roomId],
-    queryFn: () => {
-      return apiRequestGet(apiEndpoint, `/bet/room/${roomId}/bets`, idToken);
-    },
-    enabled: isEnabled,
-    keepPreviousData: false, // Get fresh data when room changes
-    staleTime: 1000 * 60 * 2, // 2 minutes - shorter for more real-time updates
-    cacheTime: 1000 * 60 * 10, // 10 minutes cache
-    retry: 3, // Retry failed requests 3 times
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
-    refetchOnWindowFocus: true, // Refetch when window comes back into focus
-    refetchInterval: 1000 * 60 * 5, // Refetch every 5 minutes for live updates
-  });
+  const { data, isFetching, isError, status, error, refetch, isLoading } =
+    useQuery({
+      queryKey: ["roomBets", roomId, nfl_weeks],
+      queryFn: async () => {
+        const requests = nfl_weeks.map((weekObj) => {
+          const { season_type, week } = weekObj;
+          const endpoint = `/bet/room/${roomId}/bets/season_type/${season_type}/week/${week}`;
+          return apiRequestGet(apiEndpoint, endpoint, idToken);
+        });
+        const results = await Promise.all(requests);
+        let allBets = [];
+        let allUsers = {};
+        let totalCount = 0;
+        let messages = [];
+        let roomIdFromApi = roomId;
+        results.forEach((result) => {
+          const outerData = result?.data || {};
+          const data = outerData?.data || {};
+          if (Array.isArray(data.bets)) {
+            allBets = allBets.concat(data.bets);
+          }
+          if (data.users && typeof data.users === "object") {
+            allUsers = { ...allUsers, ...data.users };
+          }
+          if (typeof data.count === "number") {
+            totalCount += data.count;
+          }
+          if (outerData.message) {
+            messages.push(outerData.message);
+          }
+          if (data.room_id) {
+            roomIdFromApi = data.room_id;
+          }
+        });
+        return {
+          bets: allBets,
+          users: allUsers,
+          count: totalCount,
+          room_id: roomIdFromApi,
+          message: messages.length ? messages.join("; ") : null,
+        };
+      },
+      enabled: isEnabled,
+      keepPreviousData: false,
+      staleTime: 1000 * 60 * 2,
+      cacheTime: 1000 * 60 * 10,
+      retry: 3,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      refetchOnWindowFocus: true,
+      refetchInterval: 1000 * 60 * 5,
+    });
 
   // Memoize the return values
   const returnValues = useMemo(() => {
-    // Handle the nested data structure from apiRequestGet
-    const apiData = data?.data?.data || data?.data || {};
+    const apiData = data || {};
     const bets = apiData.bets || [];
-    const users = apiData.users || {}; // User profiles keyed by user_id
+    const users = apiData.users || {};
     const betsCount = apiData.count || 0;
     const hasBets = bets.length > 0;
-
+    const isBetsFetching = isFetching;
+    const isBetsLoading = isLoading;
+    const isBetsRefetching = isFetching && !isLoading;
     return {
       bets,
-      users, // Include users data
+      users,
       betsCount,
       roomId: apiData.room_id || roomId,
       message: apiData.message || data?.message || null,
-      isBetsFetching: isFetching,
+      isBetsFetching,
+      isBetsLoading,
+      isBetsRefetching,
       isBetsError: isError,
       betsStatus: status,
       betsError: error,
       betsRefetch: refetch,
-      // Helper methods
       refetchBets: () => refetch(),
-      // Check if we have bets data
       hasBets,
-      // Get bets by user
-      getBetsByUser: (userId) => {
-        return bets.filter((bet) => bet.user_id === userId);
-      },
-      // Get current user's bets
+      getBetsByUser: (userId) => bets.filter((bet) => bet.user_id === userId),
       getCurrentUserBets: (currentUserId) => {
         if (!currentUserId) return [];
         return bets.filter((bet) => bet.user_id === currentUserId);
       },
-      // Get other users' bets
       getOtherUsersBets: (currentUserId) => {
         if (!currentUserId) return [];
         return bets.filter((bet) => bet.user_id !== currentUserId);
       },
-      // Get bets by points wagered
-      getBetsByPoints: (points) => {
-        return bets.filter((bet) => bet.points_wagered === points);
-      },
+      getBetsByPoints: (points) =>
+        bets.filter((bet) => bet.points_wagered === points),
     };
   }, [data, roomId, isFetching, isError, status, error, refetch, isEnabled]);
 

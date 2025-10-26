@@ -48,15 +48,46 @@ const useIsMobile = () => {
 };
 
 const RoomBetsDisplay = ({
+  isFetching,
   roomId,
+  roomWeeks,
   existingBets: existingBetsProp,
   members: membersProp,
+  users: usersProp,
 }) => {
+  if (isFetching) {
+    return (
+      <Card
+        title={
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Space>
+              <TrophyOutlined />
+              <span>Room Bets</span>
+            </Space>
+          </div>
+        }
+        style={{ marginBottom: "24px" }}
+      >
+        <div style={{ textAlign: "center", padding: "40px" }}>
+          <Spin size="large" />
+          <div style={{ marginTop: "16px" }}>
+            <Typography.Text>Loading bets...</Typography.Text>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
   const isMobile = useIsMobile();
   const { user } = useContext(UserAuthenticationContext);
   const [expandedUsers, setExpandedUsers] = useState({});
 
-  // Helper function to get avatar style based on color
   const getAvatarStyle = (color = "black") => {
     const colorMap = {
       black: { backgroundColor: "#262626", color: "#ffffff" },
@@ -79,36 +110,39 @@ const RoomBetsDisplay = ({
     return colorMap[color.toLowerCase()] || colorMap.black;
   };
 
-  const {
-    bets,
-    users, // User profiles keyed by user_id
-    betsCount,
-    isBetsFetching,
-    isBetsError,
-    betsError,
-    betsRefetch,
-    hasBets,
-    getCurrentUserBets,
-    getOtherUsersBets,
-  } = useGetBetsForRoom(roomId);
-
-  // prefer props provided from parent (Room) if available, otherwise use hook data
-  const betsSource = existingBetsProp ?? bets;
-  const membersArray = membersProp ?? Object.values(users || {});
-  console.log(users);
+  const betsSource = existingBetsProp || [];
+  const usersList = usersProp || membersProp || [];
+  const users = Array.isArray(usersList)
+    ? Object.fromEntries(usersList.map((u) => [u.user_id, u]))
+    : usersList;
+  const betsCount = betsSource.length;
+  const hasBets = betsCount > 0;
+  const getCurrentUserBets = (userId) => {
+    if (!userId) return [];
+    return betsSource.filter((bet) => bet.user_id === userId);
+  };
+  const getOtherUsersBets = (userId) => {
+    if (!userId) return [];
+    return betsSource.filter((bet) => bet.user_id !== userId);
+  };
 
   // Calculate user statistics
   const userStats = useMemo(() => {
-    if (!bets || !Array.isArray(bets) || !users) return [];
+    if (!betsSource || !Array.isArray(betsSource) || !users) return [];
 
     const statsMap = {};
 
-    bets.forEach((bet) => {
+    betsSource.forEach((bet) => {
       const userId = bet.user_id;
       const userProfile = users[userId] || {};
-      const userName =
-        userProfile.name || `User ${userId?.slice(-4) || "****"}`;
-      const userColor = userProfile.color || "black";
+      let userName =
+        userProfile.user_name ||
+        userProfile.name ||
+        `User ${userId?.slice(-4) || "****"}`;
+      if (userName.length > 20) {
+        userName = userName.slice(0, 20) + "...";
+      }
+      const userColor = userProfile.user_color || "black";
 
       if (!statsMap[userId]) {
         statsMap[userId] = {
@@ -138,18 +172,15 @@ const RoomBetsDisplay = ({
       statsMap[userId].bets.push(bet);
     });
 
-    // Sort bets by event_datetime in reverse order for each user
     Object.values(statsMap).forEach((userStat) => {
       userStat.bets.sort(
         (a, b) => (b.event_datetime || 0) - (a.event_datetime || 0),
       );
     });
-
-    // Convert to array and sort by points_total descending
     return Object.values(statsMap).sort(
       (a, b) => b.points_total - a.points_total,
     );
-  }, [bets, users]);
+  }, [betsSource, users]);
 
   const currentUserBets = useMemo(() => {
     return getCurrentUserBets(user?.user_id);
@@ -253,8 +284,11 @@ const RoomBetsDisplay = ({
   };
 
   const totalPointsWagered = useMemo(() => {
-    return bets.reduce((total, bet) => total + (bet.points_wagered || 0), 0);
-  }, [bets]);
+    return betsSource.reduce(
+      (total, bet) => total + (bet.points_wagered || 0),
+      0,
+    );
+  }, [betsSource]);
 
   const renderBetCard = (bet, isCurrentUser = false) => {
     const isPrivate = !bet.game_bet && !isCurrentUser;
@@ -338,7 +372,6 @@ const RoomBetsDisplay = ({
     };
 
     const statusInfo = getBetStatusInfo();
-    console.log(bet);
 
     return (
       <Card
@@ -583,56 +616,7 @@ const RoomBetsDisplay = ({
     );
   };
 
-  if (isBetsFetching) {
-    return (
-      <Card
-        title={
-          <Space>
-            <TrophyOutlined />
-            <span>Room Bets</span>
-          </Space>
-        }
-        style={{ marginBottom: "24px" }}
-      >
-        <div style={{ textAlign: "center", padding: "20px" }}>
-          <Spin size="large" />
-          <div style={{ marginTop: "12px" }}>
-            <Text>Loading current bets...</Text>
-          </div>
-        </div>
-      </Card>
-    );
-  }
-
-  if (isBetsError) {
-    return (
-      <Card
-        title={
-          <Space>
-            <TrophyOutlined />
-            <span>Room Bets</span>
-          </Space>
-        }
-        style={{ marginBottom: "24px" }}
-      >
-        <Alert
-          message="Error Loading Bets"
-          description={betsError?.message || "Failed to load room bets"}
-          type="error"
-          showIcon
-          action={
-            <Button
-              size="small"
-              icon={<ReloadOutlined />}
-              onClick={betsRefetch}
-            >
-              Retry
-            </Button>
-          }
-        />
-      </Card>
-    );
-  }
+  // No loading/error UI since data comes from parent
 
   return (
     <Card
@@ -649,14 +633,6 @@ const RoomBetsDisplay = ({
             <span>Room Bets</span>
             <Tag color="blue">{betsCount} total</Tag>
           </Space>
-          <Button
-            size="small"
-            icon={<ReloadOutlined />}
-            onClick={betsRefetch}
-            type="text"
-          >
-            Refresh
-          </Button>
         </div>
       }
       style={{ marginBottom: "24px" }}
@@ -676,7 +652,7 @@ const RoomBetsDisplay = ({
           {/* Room Chart (aggregated points per user by week) */}
           <RoomChart
             existingBets={betsSource}
-            members={users}
+            members={membersProp}
             width={Math.min(window.innerWidth - 80, 1000)}
           />
 

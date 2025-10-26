@@ -22,6 +22,7 @@ import useGetCurrentNflWeek from "../../../hooks/bet/useGetCurrentNflWeek";
 import RoomBetsDisplay from "../../../components/room/RoomBetsDisplay";
 
 const NFLOddsSection = ({
+  isNFLWeeksFetching,
   selectedBets,
   selectedBetsCount,
   handleSubmitBets,
@@ -62,8 +63,27 @@ const NFLOddsSection = ({
   handleBetTypeChange,
   handleTeamChoiceChange,
   handlePointsChange,
-  roomId, // <-- make sure this is passed in
+  roomId,
 }) => {
+  if (isNFLWeeksFetching) {
+    return (
+      <Card
+        title={
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <TrophyOutlined />
+            NFL Betting Odds
+          </div>
+        }
+      >
+        <div style={{ textAlign: "center", padding: "40px" }}>
+          <Spin size="large" />
+          <div style={{ marginTop: "16px" }}>
+            <Typography.Text>Loading NFL odds...</Typography.Text>
+          </div>
+        </div>
+      </Card>
+    );
+  }
   const {
     currentWeekInfo,
     isFetching: isCurrentWeekFetching,
