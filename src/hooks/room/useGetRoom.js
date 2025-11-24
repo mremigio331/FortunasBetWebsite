@@ -18,19 +18,20 @@ const useGetRoom = (roomId, enabled = true) => {
     [enabled, idToken, roomId],
   );
 
-  const { data, isFetching, isError, status, error, refetch } = useQuery({
-    queryKey: ["room", roomId],
-    queryFn: () =>
-      apiRequestGet(apiEndpoint, `/room/get_room/${roomId}`, idToken),
-    enabled: isEnabled,
-    keepPreviousData: true,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    cacheTime: 1000 * 60 * 15, // 15 minutes
-  });
+  const { data, isFetching, isLoading, isError, status, error, refetch } =
+    useQuery({
+      queryKey: ["room", roomId],
+      queryFn: () =>
+        apiRequestGet(apiEndpoint, `/room/get_room/${roomId}`, idToken),
+      enabled: isEnabled,
+      keepPreviousData: true,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      cacheTime: 1000 * 60 * 15, // 15 minutes
+    });
 
   return {
     room: data ? data.data.room : null,
-    isRoomFetching: isFetching,
+    isRoomFetching: isLoading,
     isRoomError: isError,
     roomStatus: status,
     roomError: error,
