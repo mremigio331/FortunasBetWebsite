@@ -286,8 +286,8 @@ const Room = () => {
 
           if (bet.betType === "spread") {
             teamChoice = bet.teamChoice; // "home" or "away"
-          } else {
-            overUnderChoice = bet.teamChoice; // "over" or "under"
+          } else if (bet.betType === "overUnder") {
+            overUnderChoice = bet.overUnderChoice; // always use explicit overUnderChoice
           }
 
           // Create the game_bet object
