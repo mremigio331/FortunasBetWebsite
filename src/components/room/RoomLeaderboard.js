@@ -1,6 +1,7 @@
 import React from "react";
 import { Card, Typography, Divider, Spin, Avatar } from "antd";
 import { TrophyOutlined } from "@ant-design/icons";
+import { getAvatarStyle } from "../../utils/avatarStyles";
 
 /**
  * RoomLeaderboard
@@ -109,7 +110,7 @@ const RoomLeaderboard = ({ isBetsLoading, bets = [], members = [] }) => {
                 <Avatar
                   size="small"
                   style={{
-                    backgroundColor: user.color || "#1890ff",
+                    ...getAvatarStyle(user.color),
                     verticalAlign: "middle",
                   }}
                 >

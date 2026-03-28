@@ -3,38 +3,106 @@ import { Typography, Space, Tag } from "antd";
 
 const { Text } = Typography;
 
-const ScoreDisplay = ({ bet, isCompact = false, showBetResult = false }) => {
-  const gameStatus = bet.game_status;
+/**
+ * Normalizes either game_status or game_data into a common shape.
+ * Returns null if neither is present.
+ */
+function normalizeScoreData(bet) {
+  const gameStatus = bet?.game_status;
+  const gameData = bet?.game_data;
+  const oddsSnapshot = bet?.odds_snapshot;
 
-  if (!gameStatus || !gameStatus.home_team || !gameStatus.away_team) {
-    return null;
+  if (gameStatus && gameStatus.home_team && gameStatus.away_team) {
+    return {
+      homeTeam: gameStatus.home_team.short_name,
+      awayTeam: gameStatus.away_team.short_name,
+      homeScore: gameStatus.home_team.score || 0,
+      awayScore: gameStatus.away_team.score || 0,
+      gameState: gameStatus.status?.completed
+        ? "post"
+        : gameStatus.status?.state || "pre",
+      detail: gameStatus.status?.detail || "",
+    };
   }
 
-  const { status, home_team, away_team } = gameStatus;
-  const isLive = status.state === "in";
-  const isCompleted = status.state === "post" || status.completed;
-  const isPregame = status.state === "pre";
+  if (gameData && gameData.competitors && gameData.competitors.length > 0) {
+    const homeTeam = gameData.competitors.find((c) => c.homeAway === "home");
+    const awayTeam = gameData.competitors.find((c) => c.homeAway === "away");
+    if (!homeTeam || !awayTeam) return null;
+
+    return {
+      homeTeam: homeTeam.name,
+      awayTeam: awayTeam.name,
+      homeScore: homeTeam.score || 0,
+      awayScore: awayTeam.score || 0,
+      gameState: gameData.status?.state || "pre",
+      detail: gameData.status?.detail || "",
+    };
+  }
+
+  // Handle odds_snapshot shape (teams.home/away with abbreviation, status.home_score/away_score)
+  if (oddsSnapshot && oddsSnapshot.teams?.home && oddsSnapshot.teams?.away) {
+    const state = oddsSnapshot.status?.completed
+      ? "post"
+      : oddsSnapshot.status?.state || "pre";
+    return {
+      homeTeam:
+        oddsSnapshot.teams.home.abbreviation ||
+        oddsSnapshot.teams.home.name ||
+        "Home",
+      awayTeam:
+        oddsSnapshot.teams.away.abbreviation ||
+        oddsSnapshot.teams.away.name ||
+        "Away",
+      homeScore:
+        oddsSnapshot.status?.home_score || oddsSnapshot.teams.home.score || 0,
+      awayScore:
+        oddsSnapshot.status?.away_score || oddsSnapshot.teams.away.score || 0,
+      gameState: state,
+      detail: oddsSnapshot.status?.detail || "",
+    };
+  }
+
+  return null;
+}
+
+const ScoreDisplay = ({ bet, mode = "full", showBetResult = false }) => {
+  const normalized = normalizeScoreData(bet);
+  if (!normalized) return null;
+
+  const { homeTeam, awayTeam, homeScore, awayScore, gameState, detail } =
+    normalized;
+
+  const isLive = gameState === "in";
+  const isCompleted = gameState === "post";
+  const isPregame = gameState === "pre";
 
   // Don't show scores for pregame
   if (isPregame) {
+    if (detail) {
+      return (
+        <Space size="small">
+          <Tag color="blue">{detail || "Upcoming"}</Tag>
+        </Space>
+      );
+    }
     return null;
   }
 
-  const totalScore = (away_team.score || 0) + (home_team.score || 0);
+  const totalScore = awayScore + homeScore;
 
   const getStatusText = () => {
     if (isLive) return "LIVE";
     if (isCompleted) return "FINAL";
-    return status.detail || "";
+    return detail || "";
   };
 
   const getStatusColor = () => {
-    if (isLive) return "#ff4d4f"; // Red for live
-    if (isCompleted) return "#52c41a"; // Green for final
-    return "#1890ff"; // Blue default
+    if (isLive) return "#ff4d4f";
+    if (isCompleted) return "#52c41a";
+    return "#1890ff";
   };
 
-  // Calculate bet result context for display
   const getBetResultContext = () => {
     if (!showBetResult || !bet.game_bet || !isCompleted) return null;
 
@@ -56,13 +124,9 @@ const ScoreDisplay = ({ bet, isCompact = false, showBetResult = false }) => {
       const teamChoice = bet.game_bet.team_choice;
       if (spread && teamChoice) {
         const selectedScore =
-          teamChoice.toLowerCase() === "home"
-            ? home_team.score
-            : away_team.score;
+          teamChoice.toLowerCase() === "home" ? homeScore : awayScore;
         const opponentScore =
-          teamChoice.toLowerCase() === "home"
-            ? away_team.score
-            : home_team.score;
+          teamChoice.toLowerCase() === "home" ? awayScore : homeScore;
         const margin = selectedScore - opponentScore;
         const result = margin > spread;
         return {
@@ -76,18 +140,17 @@ const ScoreDisplay = ({ bet, isCompact = false, showBetResult = false }) => {
 
   const betResult = getBetResultContext();
 
-  if (isCompact) {
-    // Compact version for smaller cards
+  if (mode === "compact") {
     return (
       <div style={{ fontSize: "12px", color: "#595959", marginTop: "4px" }}>
         <Space direction="vertical" size={2} style={{ width: "100%" }}>
           <Space size={4}>
             <Text style={{ fontSize: "12px", fontWeight: "500" }}>
-              {away_team.short_name}: {away_team.score || 0}
+              {awayTeam}: {awayScore}
             </Text>
             <Text style={{ fontSize: "12px", color: "#8c8c8c" }}>-</Text>
             <Text style={{ fontSize: "12px", fontWeight: "500" }}>
-              {home_team.short_name}: {home_team.score || 0}
+              {homeTeam}: {homeScore}
             </Text>
             {(isLive || isCompleted) && (
               <Tag
@@ -100,7 +163,6 @@ const ScoreDisplay = ({ bet, isCompact = false, showBetResult = false }) => {
             )}
           </Space>
 
-          {/* Show bet result context if available */}
           {betResult && (
             <Text
               style={{
@@ -113,7 +175,6 @@ const ScoreDisplay = ({ bet, isCompact = false, showBetResult = false }) => {
             </Text>
           )}
 
-          {/* Show total for Total bets */}
           {bet.game_bet?.bet_type === "over_under" && (
             <Text style={{ fontSize: "11px", color: "#8c8c8c" }}>
               Total: {totalScore}
@@ -125,7 +186,7 @@ const ScoreDisplay = ({ bet, isCompact = false, showBetResult = false }) => {
     );
   }
 
-  // Full version for larger displays
+  // Full mode
   return (
     <div style={{ marginTop: "8px" }}>
       <div
@@ -148,7 +209,7 @@ const ScoreDisplay = ({ bet, isCompact = false, showBetResult = false }) => {
         >
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <Text style={{ fontSize: "13px", fontWeight: "500" }}>
-              {away_team.short_name}
+              {awayTeam}
             </Text>
             <Text
               style={{
@@ -157,7 +218,7 @@ const ScoreDisplay = ({ bet, isCompact = false, showBetResult = false }) => {
                 color: "#262626",
               }}
             >
-              {away_team.score || 0}
+              {awayScore}
             </Text>
           </div>
 
@@ -169,10 +230,10 @@ const ScoreDisplay = ({ bet, isCompact = false, showBetResult = false }) => {
                 color: "#262626",
               }}
             >
-              {home_team.score || 0}
+              {homeScore}
             </Text>
             <Text style={{ fontSize: "13px", fontWeight: "500" }}>
-              {home_team.short_name}
+              {homeTeam}
             </Text>
           </div>
         </div>
@@ -192,7 +253,6 @@ const ScoreDisplay = ({ bet, isCompact = false, showBetResult = false }) => {
         )}
       </div>
 
-      {/* Show total score for Total bets */}
       {bet.game_bet?.bet_type === "over_under" && (
         <div
           style={{
@@ -203,7 +263,7 @@ const ScoreDisplay = ({ bet, isCompact = false, showBetResult = false }) => {
           }}
         >
           <Text style={{ fontSize: "12px" }}>
-            Total: {(away_team.score || 0) + (home_team.score || 0)}
+            Total: {totalScore}
             {bet.game_bet.total_value && (
               <span style={{ color: "#8c8c8c" }}>
                 {" "}
@@ -214,7 +274,6 @@ const ScoreDisplay = ({ bet, isCompact = false, showBetResult = false }) => {
         </div>
       )}
 
-      {/* Show spread info for spread bets */}
       {bet.game_bet?.bet_type === "spread" && bet.game_bet.spread_value && (
         <div
           style={{
@@ -232,7 +291,6 @@ const ScoreDisplay = ({ bet, isCompact = false, showBetResult = false }) => {
         </div>
       )}
 
-      {/* Show bet result if available */}
       {betResult && (
         <div
           style={{
@@ -256,4 +314,5 @@ const ScoreDisplay = ({ bet, isCompact = false, showBetResult = false }) => {
   );
 };
 
+export { normalizeScoreData };
 export default ScoreDisplay;

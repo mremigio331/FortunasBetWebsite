@@ -17,6 +17,7 @@ import {
 import RoomBetsTable from "./RoomBetsTable";
 import RoomBetsCards from "./RoomBetsCards";
 import RoomChart from "./RoomChart";
+import ScoreDisplay from "./ScoreDisplay";
 import {
   TrophyOutlined,
   UserOutlined,
@@ -30,6 +31,8 @@ import {
 import { UserAuthenticationContext } from "../../provider/UserAuthenticationProvider";
 import useGetBetsForRoom from "../../hooks/bet/useGetBetsForRoom";
 import computeDisplayedSpread from "../../utils/spreadUtils";
+import { getAvatarStyle } from "../../utils/avatarStyles";
+import { truncateName } from "../../utils/textUtils";
 
 const { Title, Text } = Typography;
 
@@ -88,28 +91,6 @@ const RoomBetsDisplay = ({
   const { user } = useContext(UserAuthenticationContext);
   const [expandedUsers, setExpandedUsers] = useState({});
 
-  const getAvatarStyle = (color = "black") => {
-    const colorMap = {
-      black: { backgroundColor: "#262626", color: "#ffffff" },
-      white: {
-        backgroundColor: "#ffffff",
-        color: "#262626",
-        border: "1px solid #d9d9d9",
-      },
-      red: { backgroundColor: "#ff4d4f", color: "#ffffff" },
-      blue: { backgroundColor: "#1890ff", color: "#ffffff" },
-      green: { backgroundColor: "#52c41a", color: "#ffffff" },
-      yellow: { backgroundColor: "#faad14", color: "#262626" },
-      orange: { backgroundColor: "#fa8c16", color: "#ffffff" },
-      purple: { backgroundColor: "#722ed1", color: "#ffffff" },
-      pink: { backgroundColor: "#eb2f96", color: "#ffffff" },
-      brown: { backgroundColor: "#8b4513", color: "#ffffff" },
-      gray: { backgroundColor: "#8c8c8c", color: "#ffffff" },
-      cyan: { backgroundColor: "#13c2c2", color: "#ffffff" },
-    };
-    return colorMap[color.toLowerCase()] || colorMap.black;
-  };
-
   const betsSource = existingBetsProp || [];
   const usersList = usersProp || membersProp || [];
   const users = Array.isArray(usersList)
@@ -140,7 +121,7 @@ const RoomBetsDisplay = ({
         userProfile.name ||
         `User ${userId?.slice(-4) || "****"}`;
       if (userName.length > 20) {
-        userName = userName.slice(0, 20) + "...";
+        userName = truncateName(userName);
       }
       const userColor = userProfile.user_color || "black";
 
@@ -481,73 +462,7 @@ const RoomBetsDisplay = ({
               )}
 
               {/* Show game scores when available */}
-              {!isPrivate &&
-                bet.odds_snapshot?.teams?.home &&
-                bet.odds_snapshot?.teams?.away && (
-                  <div
-                    style={{
-                      fontSize: "12px",
-                      color: "#595959",
-                      marginTop: "4px",
-                    }}
-                  >
-                    <Space
-                      direction="vertical"
-                      size={2}
-                      style={{ width: "100%" }}
-                    >
-                      <Space size={4}>
-                        <Text style={{ fontSize: "12px", fontWeight: "500" }}>
-                          {bet.odds_snapshot.teams.away.abbreviation}:{" "}
-                          {bet.odds_snapshot.status.away_score || 0}
-                        </Text>
-                        <Text style={{ fontSize: "12px", color: "#8c8c8c" }}>
-                          -
-                        </Text>
-                        <Text style={{ fontSize: "12px", fontWeight: "500" }}>
-                          {bet.odds_snapshot.teams.home.abbreviation}:{" "}
-                          {bet.odds_snapshot.status.home_score || 0}
-                        </Text>
-                        {(bet.odds_snapshot.status?.state === "in" ||
-                          bet.odds_snapshot.status?.state === "post" ||
-                          bet.odds_snapshot.status?.completed) && (
-                          <Tag
-                            color={
-                              bet.odds_snapshot.status?.state === "in"
-                                ? "#ff4d4f"
-                                : "#52c41a"
-                            }
-                            size="small"
-                            style={{ fontSize: "10px", lineHeight: "14px" }}
-                          >
-                            {bet.odds_snapshot.status?.state === "in"
-                              ? "LIVE"
-                              : "FINAL"}
-                          </Tag>
-                        )}
-                      </Space>
-
-                      {/* Show total for Total bets */}
-                      {bet.game_bet?.bet_type === "over_under" && (
-                        <Text style={{ fontSize: "11px", color: "#8c8c8c" }}>
-                          Total:{" "}
-                          {parseInt(bet.odds_snapshot.teams.away.score || 0) +
-                            parseInt(bet.odds_snapshot.teams.home.score || 0)}
-                          {bet.game_bet.total_value &&
-                            ` (O/U ${bet.game_bet.total_value})`}
-                        </Text>
-                      )}
-
-                      {/* Show spread info for spread bets */}
-                      {bet.game_bet?.bet_type === "spread" && (
-                        <Text style={{ fontSize: "11px", color: "#8c8c8c" }}>
-                          Spread: {bet.game_bet.team_choice?.toUpperCase()}{" "}
-                          {computeDisplayedSpread(bet)}
-                        </Text>
-                      )}
-                    </Space>
-                  </div>
-                )}
+              {!isPrivate && <ScoreDisplay bet={bet} mode="compact" />}
             </Space>
           </Col>
 

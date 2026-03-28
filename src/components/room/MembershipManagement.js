@@ -24,6 +24,7 @@ import {
 import { jwtDecode } from "jwt-decode";
 import useGetRoomMembers from "../../hooks/membership/useGetRoomMembers";
 import useEditMembershipRequest from "../../hooks/membership/useEditMembershipRequest";
+import { getAvatarStyle } from "../../utils/avatarStyles";
 
 const { Title, Text } = Typography;
 
@@ -210,7 +211,7 @@ const MembershipManagement = ({ roomId, idToken }) => {
               <Space>
                 <Avatar
                   icon={<UserOutlined />}
-                  style={{ backgroundColor: member.user_color || "#1890ff" }}
+                  style={getAvatarStyle(member.user_color)}
                   size="small"
                 />
                 <div>
@@ -294,7 +295,7 @@ const MembershipManagement = ({ roomId, idToken }) => {
         <Space>
           <Avatar
             icon={<UserOutlined />}
-            style={{ backgroundColor: member.user_color || "#1890ff" }}
+            style={getAvatarStyle(member.user_color)}
           />
           <div>
             <Text strong>{userName || member.user_id}</Text>

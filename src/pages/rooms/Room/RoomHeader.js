@@ -13,11 +13,11 @@ import {
 import {
   LockOutlined,
   UnlockOutlined,
-  UserOutlined,
   HourglassOutlined,
 } from "@ant-design/icons";
 import useCreateMembershipRequest from "../../../hooks/membership/useCreateMembershipRequest";
 import useEditRoom from "../../../hooks/room/useEditRoom";
+import MembershipStatusTag from "../../../components/shared/MembershipStatusTag";
 
 const { Title, Text } = Typography;
 
@@ -34,7 +34,6 @@ const RoomHeader = ({
   const { editRoomAsync, editRoomLoading } = useEditRoom();
 
   let membershipTag = null;
-  let requestButton = null;
 
   const { createMembershipRequest, createMembershipRequestLoading } =
     useCreateMembershipRequest();
@@ -61,30 +60,15 @@ const RoomHeader = ({
       ? members.find((m) => m.user_id === currentUserId)
       : null;
 
-    if (userMember && userMember.status === "approved") {
-      membershipTag = (
-        <Tag icon={<UserOutlined />} color="blue">
-          Member
-        </Tag>
-      );
-    } else if (userMember && userMember.status === "pending") {
-      membershipTag = (
-        <Tag icon={<HourglassOutlined />} color="orange">
-          Pending Approval
-        </Tag>
-      );
-    } else {
-      requestButton = (
-        <Button
-          type="primary"
-          size="small"
-          onClick={onRequestMembership}
-          loading={createMembershipRequestLoading}
-        >
-          Request Membership
-        </Button>
-      );
-    }
+    const membershipStatus = userMember ? userMember.status : "none";
+
+    membershipTag = (
+      <MembershipStatusTag
+        status={membershipStatus}
+        onRequestAccess={onRequestMembership}
+        loading={createMembershipRequestLoading}
+      />
+    );
   }
 
   return (
@@ -129,7 +113,6 @@ const RoomHeader = ({
             {room.public ? "Public" : "Private"}
           </Tag>
           {membershipTag}
-          {requestButton}
         </div>
       </div>
 

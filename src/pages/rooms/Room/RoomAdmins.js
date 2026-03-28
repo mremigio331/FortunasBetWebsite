@@ -1,5 +1,6 @@
 import React from "react";
 import { Divider, Tag, Space } from "antd";
+import { truncateName } from "../../../utils/textUtils";
 
 const RoomAdmins = ({ room }) => {
   if (!room.admin_user_ids && !room.admins && !room.admin_profiles) return null;
@@ -16,15 +17,13 @@ const RoomAdmins = ({ room }) => {
         {room.admin_profiles
           ? room.admin_profiles.map((admin, index) => (
               <Tag key={admin.user_id} color="blue">
-                {admin.user_name.length > 10
-                  ? `${admin.user_name.slice(0, 10)}...`
-                  : admin.user_name}
+                {truncateName(admin.user_name, 10)}
               </Tag>
             ))
           : (room.admin_user_ids || room.admins).map((adminId, index) => (
               <Tag key={adminId} color="blue">
                 Admin {index + 1}:{" "}
-                {adminId.length > 10 ? `${adminId.slice(0, 10)}...` : adminId}
+                {truncateName(adminId, 10)}
               </Tag>
             ))}
       </Space>

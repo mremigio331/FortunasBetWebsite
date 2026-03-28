@@ -3,6 +3,7 @@ import { Table, Avatar, Tag, Space, Button, Card, Typography } from "antd";
 import { UserOutlined, DownOutlined } from "@ant-design/icons";
 import nflWeeks from "../../constants/nflWeek"; // Import the NFL weeks constant
 import WeekHeader from "./WeekHeader";
+import { truncateName } from "../../utils/textUtils";
 
 const { Text } = Typography;
 
@@ -98,9 +99,7 @@ const RoomBetsTable = ({
                             <Text style={{ wordBreak: "break-word" }} strong>
                               {userStat.user_id === user?.user_id
                                 ? "Your Bets"
-                                : `${userStat.user_name.slice(0, 20)}${
-                                    userStat.user_name.length > 20 ? "..." : ""
-                                  }'s Bets`}
+                                : `${truncateName(userStat.user_name)}'s Bets`}
                             </Text>
                             <Tag color="blue">{userStat.bets.length} bets</Tag>
                           </Space>

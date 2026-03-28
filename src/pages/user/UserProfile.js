@@ -17,25 +17,10 @@ import usePutProfile from "../../hooks/user/usePutProfile";
 import NotificationsList from "../../components/NotificationsList";
 import { useNotifications } from "../../provider/NotificationsProvider";
 import { UserAuthenticationContext } from "../../provider/UserAuthenticationProvider";
+import { getAvatarStyle, COLOR_OPTIONS } from "../../utils/avatarStyles";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
-
-// Available color options for user avatars
-const COLOR_OPTIONS = [
-  { value: "black", label: "Black", color: "#262626" },
-  { value: "white", label: "White", color: "#ffffff" },
-  { value: "red", label: "Red", color: "#ff4d4f" },
-  { value: "blue", label: "Blue", color: "#1890ff" },
-  { value: "green", label: "Green", color: "#52c41a" },
-  { value: "yellow", label: "Yellow", color: "#faad14" },
-  { value: "orange", label: "Orange", color: "#fa8c16" },
-  { value: "purple", label: "Purple", color: "#722ed1" },
-  { value: "pink", label: "Pink", color: "#eb2f96" },
-  { value: "brown", label: "Brown", color: "#8b4513" },
-  { value: "gray", label: "Gray", color: "#8c8c8c" },
-  { value: "cyan", label: "Cyan", color: "#13c2c2" },
-];
 
 const UserProfileCard = ({
   userProfile,
@@ -59,23 +44,11 @@ const UserProfileCard = ({
     setColorValue(userProfile?.color || "blue");
   }, [userProfile?.color]);
 
-  // Get color style for avatar
-  const getColorStyle = (color) => {
-    const colorOption = COLOR_OPTIONS.find((opt) => opt.value === color);
-    if (!colorOption) return { backgroundColor: "#1890ff", color: "#ffffff" };
-
-    return {
-      backgroundColor: colorOption.color,
-      color: colorOption.value === "white" ? "#262626" : "#ffffff",
-      border: colorOption.value === "white" ? "1px solid #d9d9d9" : "none",
-    };
-  };
-
   return (
     <Card
       title="User Profile"
       extra={
-        <Avatar size={64} style={getColorStyle(userProfile?.color || "blue")}>
+        <Avatar size={64} style={getAvatarStyle(userProfile?.color || "blue")}>
           {userProfile?.name ? userProfile.name.charAt(0).toUpperCase() : "U"}
         </Avatar>
       }
@@ -219,7 +192,7 @@ const UserProfileCard = ({
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <Avatar
                     size="small"
-                    style={getColorStyle(userProfile.color || "blue")}
+                    style={getAvatarStyle(userProfile.color || "blue")}
                   >
                     {userProfile?.name
                       ? userProfile.name.charAt(0).toUpperCase()

@@ -2,6 +2,7 @@ import React from "react";
 import { Typography, Space } from "antd";
 import { TrophyOutlined } from "@ant-design/icons";
 import UserPointsLineChart from "./UserPointsLineChart";
+import { truncateName } from "../../utils/textUtils";
 
 // RoomChart: aggregates existingBets and members into a series used by UserPointsLineChart
 const RoomChart = ({ existingBets = [], members = {}, width = 800 }) => {
@@ -39,10 +40,7 @@ const RoomChart = ({ existingBets = [], members = {}, width = 800 }) => {
       running += pointsByWeek[w] || 0;
       pointsByWeek[w] = running;
     });
-    let displayName = m.user_name || "";
-    if (displayName.length > 20) {
-      displayName = displayName.slice(0, 20) + "...";
-    }
+    let displayName = truncateName(m.user_name || "");
     return {
       user_id: m.user_id,
       name: displayName,

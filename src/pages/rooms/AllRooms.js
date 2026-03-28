@@ -15,19 +15,15 @@ import {
   message,
 } from "antd";
 import {
-  EyeOutlined,
-  UserAddOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
   SearchOutlined,
   ReloadOutlined,
   PlusOutlined,
-  CrownOutlined,
 } from "@ant-design/icons";
 import { jwtDecode } from "jwt-decode";
 import { UserAuthenticationContext } from "../../provider/UserAuthenticationProvider";
 import useGetAllRooms from "../../hooks/room/useGetAllRooms";
 import useCreateMembershipRequest from "../../hooks/membership/useCreateMembershipRequest";
+import MembershipStatusTag from "../../components/shared/MembershipStatusTag";
 
 const { Title } = Typography;
 const { Search } = Input;
@@ -156,64 +152,14 @@ const AllRooms = () => {
     );
 
     const renderMembershipStatus = () => {
-      if (status === "admin") {
-        return (
-          <Space>
-            <Tag icon={<CrownOutlined />} color="gold">
-              Admin
-            </Tag>
-            <Button
-              type="link"
-              icon={<EyeOutlined />}
-              size="small"
-              onClick={() => handleViewRoom(room.room_id)}
-            >
-              View
-            </Button>
-          </Space>
-        );
-      } else if (status === "approved" || status === "member") {
-        return (
-          <Space>
-            <Tag icon={<CheckCircleOutlined />} color="green">
-              Member
-            </Tag>
-            <Button
-              type="link"
-              icon={<EyeOutlined />}
-              size="small"
-              onClick={() => handleViewRoom(room.room_id)}
-            >
-              View
-            </Button>
-          </Space>
-        );
-      } else if (status === "pending") {
-        return (
-          <Tag icon={<ClockCircleOutlined />} color="orange">
-            Pending
-          </Tag>
-        );
-      } else if (status === "denied") {
-        return (
-          <Tag icon={<ClockCircleOutlined />} color="red">
-            Denied
-          </Tag>
-        );
-      } else {
-        return (
-          <Button
-            type="primary"
-            icon={<UserAddOutlined />}
-            size="small"
-            loading={createMembershipRequestLoading}
-            onClick={() => handleRequestAccess(room.room_id)}
-            block
-          >
-            Request Access
-          </Button>
-        );
-      }
+      return (
+        <MembershipStatusTag
+          status={status}
+          onViewRoom={() => handleViewRoom(room.room_id)}
+          onRequestAccess={() => handleRequestAccess(room.room_id)}
+          loading={createMembershipRequestLoading}
+        />
+      );
     };
 
     return (
@@ -371,63 +317,14 @@ const AllRooms = () => {
       render: (_, record) => {
         const status = getRoomMembershipStatus(record);
 
-        if (status === "admin") {
-          return (
-            <Space>
-              <Tag icon={<CrownOutlined />} color="gold">
-                Admin
-              </Tag>
-              <Button
-                type="link"
-                icon={<EyeOutlined />}
-                size="small"
-                onClick={() => handleViewRoom(record.room_id)}
-              >
-                View
-              </Button>
-            </Space>
-          );
-        } else if (status === "approved" || status === "member") {
-          return (
-            <Space>
-              <Tag icon={<CheckCircleOutlined />} color="green">
-                Member
-              </Tag>
-              <Button
-                type="link"
-                icon={<EyeOutlined />}
-                size="small"
-                onClick={() => handleViewRoom(record.room_id)}
-              >
-                View
-              </Button>
-            </Space>
-          );
-        } else if (status === "pending") {
-          return (
-            <Tag icon={<ClockCircleOutlined />} color="orange">
-              Pending
-            </Tag>
-          );
-        } else if (status === "denied") {
-          return (
-            <Tag icon={<ClockCircleOutlined />} color="red">
-              Denied
-            </Tag>
-          );
-        } else {
-          return (
-            <Button
-              type="primary"
-              icon={<UserAddOutlined />}
-              size="small"
-              loading={createMembershipRequestLoading}
-              onClick={() => handleRequestAccess(record.room_id)}
-            >
-              Request Access
-            </Button>
-          );
-        }
+        return (
+          <MembershipStatusTag
+            status={status}
+            onViewRoom={() => handleViewRoom(record.room_id)}
+            onRequestAccess={() => handleRequestAccess(record.room_id)}
+            loading={createMembershipRequestLoading}
+          />
+        );
       },
     },
   ];
