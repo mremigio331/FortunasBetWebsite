@@ -5,11 +5,9 @@ import {
   Row,
   Col,
   Typography,
-  Spin,
   Alert,
   Button,
   Space,
-  Divider,
   message,
 } from "antd";
 
@@ -29,6 +27,8 @@ import NFLOddsSection from "./Room/NFLOddsSection";
 import { createHandlers } from "./Room/roomUtils";
 import RoomBetsDisplay from "../../components/room/RoomBetsDisplay";
 import RoomLeaderboard from "../../components/room/RoomLeaderboard";
+import LoadingSpinner from "../../components/shared/LoadingSpinner";
+import ErrorAlert from "../../components/shared/ErrorAlert";
 import MembershipManagement from "../../components/room/MembershipManagement";
 import useGetRoomMembers from "../../hooks/membership/useGetRoomMembers";
 
@@ -443,16 +443,13 @@ const Room = () => {
     return (
       <div
         style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
           minHeight: "400px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
-        <Spin size="large" />
-        <div style={{ marginLeft: "16px" }}>
-          <Text>{"Loading room..."}</Text>
-        </div>
+        <LoadingSpinner message="Loading room..." />
       </div>
     );
   }
@@ -460,22 +457,18 @@ const Room = () => {
   if (isRoomError) {
     return (
       <div style={{ padding: "24px" }}>
-        <Alert
-          message="Error Loading Room"
+        <ErrorAlert
+          title="Error Loading Room"
           description={roomError?.message || "Failed to load room information"}
-          type="error"
-          showIcon
-          action={
-            <Space>
-              <Button size="small" onClick={roomRefetch}>
-                Retry
-              </Button>
-              <Button size="small" onClick={handleGoBack}>
-                Go Back
-              </Button>
-            </Space>
-          }
+          onRetry={roomRefetch}
         />
+        <Button
+          size="small"
+          onClick={handleGoBack}
+          style={{ marginTop: "8px" }}
+        >
+          Go Back
+        </Button>
       </div>
     );
   }

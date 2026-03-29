@@ -1,11 +1,10 @@
 import React, { useMemo, useContext } from "react";
+import useIsMobile from "../../hooks/useIsMobile";
 import { useNavigate } from "react-router-dom";
 import {
   Table,
   Card,
   Typography,
-  Spin,
-  Alert,
   Button,
   Tag,
   Space,
@@ -24,6 +23,8 @@ import { UserAuthenticationContext } from "../../provider/UserAuthenticationProv
 import useGetAllRooms from "../../hooks/room/useGetAllRooms";
 import useCreateMembershipRequest from "../../hooks/membership/useCreateMembershipRequest";
 import MembershipStatusTag from "../../components/shared/MembershipStatusTag";
+import LoadingSpinner from "../../components/shared/LoadingSpinner";
+import ErrorAlert from "../../components/shared/ErrorAlert";
 
 const { Title } = Typography;
 const { Search } = Input;
@@ -34,8 +35,7 @@ const AllRooms = () => {
   const { idToken } = useContext(UserAuthenticationContext);
 
   // Detect mobile
-  const isMobile =
-    typeof window !== "undefined" ? window.innerWidth <= 768 : false;
+  const isMobile = useIsMobile();
 
   // Get current user ID from JWT token
   const currentUserId = useMemo(() => {
@@ -333,13 +333,13 @@ const AllRooms = () => {
     return (
       <div
         style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
           minHeight: "400px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
-        <Spin size="large" />
+        <LoadingSpinner />
       </div>
     );
   }
@@ -347,20 +347,10 @@ const AllRooms = () => {
   if (isRoomsError) {
     return (
       <div style={{ padding: "24px" }}>
-        <Alert
-          message="Error Loading Rooms"
+        <ErrorAlert
+          title="Error Loading Rooms"
           description={roomsError?.message || "Failed to load rooms"}
-          type="error"
-          showIcon
-          action={
-            <Button
-              size="small"
-              onClick={roomsRefetch}
-              icon={<ReloadOutlined />}
-            >
-              Retry
-            </Button>
-          }
+          onRetry={roomsRefetch}
         />
       </div>
     );

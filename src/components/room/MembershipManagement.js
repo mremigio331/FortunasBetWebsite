@@ -25,6 +25,7 @@ import { jwtDecode } from "jwt-decode";
 import useGetRoomMembers from "../../hooks/membership/useGetRoomMembers";
 import useEditMembershipRequest from "../../hooks/membership/useEditMembershipRequest";
 import { getAvatarStyle } from "../../utils/avatarStyles";
+import ErrorAlert from "../shared/ErrorAlert";
 
 const { Title, Text } = Typography;
 
@@ -357,10 +358,11 @@ const MembershipManagement = ({ roomId, idToken }) => {
   if (isMembersError) {
     return (
       <Card title="Membership Management">
-        <Text type="danger">Failed to load membership data</Text>
-        <Button onClick={membersRefetch} style={{ marginLeft: 8 }}>
-          Retry
-        </Button>
+        <ErrorAlert
+          title="Error Loading Members"
+          description="Failed to load membership data"
+          onRetry={membersRefetch}
+        />
       </Card>
     );
   }

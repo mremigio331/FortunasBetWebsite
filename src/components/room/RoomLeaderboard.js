@@ -1,5 +1,6 @@
 import React from "react";
-import { Card, Typography, Divider, Spin, Avatar } from "antd";
+import { Card, Typography, Divider, Avatar } from "antd";
+import LoadingSpinner from "../shared/LoadingSpinner";
 import { TrophyOutlined } from "@ant-design/icons";
 import { getAvatarStyle } from "../../utils/avatarStyles";
 
@@ -27,12 +28,7 @@ const RoomLeaderboard = ({ isBetsLoading, bets = [], members = [] }) => {
         }
         style={{ marginBottom: "2rem", boxShadow: "0 2px 8px #f0f1f2" }}
       >
-        <div style={{ textAlign: "center", padding: "40px" }}>
-          <Spin size="large" />
-          <div style={{ marginTop: "16px" }}>
-            <Typography.Text>Calculating leaderboard...</Typography.Text>
-          </div>
-        </div>
+        <LoadingSpinner message="Calculating leaderboard..." />
       </Card>
     );
   }

@@ -14,7 +14,6 @@ import {
   Space,
   message,
   Spin,
-  Alert,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -24,6 +23,7 @@ import {
 } from "@ant-design/icons";
 import useCreateRoom from "../../hooks/room/useCreateRoom";
 import useGetValidLeagues from "../../hooks/room/useGetValidLeagues";
+import ErrorAlert from "../../components/shared/ErrorAlert";
 import dayjs from "dayjs";
 
 const { Title, Text } = Typography;
@@ -87,19 +87,19 @@ const CreateRoom = () => {
   if (isValidLeaguesError) {
     return (
       <div style={{ padding: "24px" }}>
-        <Alert
-          message="Error Loading Leagues"
+        <ErrorAlert
+          title="Error Loading Leagues"
           description={
             validLeaguesError?.message || "Failed to load valid leagues"
           }
-          type="error"
-          showIcon
-          action={
-            <Button size="small" onClick={handleGoBack}>
-              Go Back
-            </Button>
-          }
         />
+        <Button
+          size="small"
+          onClick={handleGoBack}
+          style={{ marginTop: "8px" }}
+        >
+          Go Back
+        </Button>
       </div>
     );
   }
@@ -248,16 +248,15 @@ const CreateRoom = () => {
               </Form.Item>
 
               {createRoomError && (
-                <Alert
-                  message="Error Creating Room"
-                  description={
-                    createRoomError.message ||
-                    "An error occurred while creating the room"
-                  }
-                  type="error"
-                  showIcon
-                  style={{ marginBottom: "16px" }}
-                />
+                <div style={{ marginBottom: "16px" }}>
+                  <ErrorAlert
+                    title="Error Creating Room"
+                    description={
+                      createRoomError.message ||
+                      "An error occurred while creating the room"
+                    }
+                  />
+                </div>
               )}
 
               <Form.Item>

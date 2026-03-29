@@ -1,10 +1,10 @@
 import React, { useMemo, useContext, useState } from "react";
+import useIsMobile from "../../hooks/useIsMobile";
 import {
   Card,
   Row,
   Col,
   Typography,
-  Spin,
   Alert,
   Tag,
   Space,
@@ -33,22 +33,9 @@ import useGetBetsForRoom from "../../hooks/bet/useGetBetsForRoom";
 import computeDisplayedSpread from "../../utils/spreadUtils";
 import { getAvatarStyle } from "../../utils/avatarStyles";
 import { truncateName } from "../../utils/textUtils";
+import LoadingSpinner from "../shared/LoadingSpinner";
 
 const { Title, Text } = Typography;
-
-// Responsive hook
-const useIsMobile = () => {
-  const [isMobile, setIsMobile] = React.useState(false);
-  React.useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
-  return isMobile;
-};
 
 const RoomBetsDisplay = ({
   isFetching,
@@ -77,12 +64,7 @@ const RoomBetsDisplay = ({
         }
         style={{ marginBottom: "24px" }}
       >
-        <div style={{ textAlign: "center", padding: "40px" }}>
-          <Spin size="large" />
-          <div style={{ marginTop: "16px" }}>
-            <Typography.Text>Loading bets...</Typography.Text>
-          </div>
-        </div>
+        <LoadingSpinner message="Loading bets..." />
       </Card>
     );
   }

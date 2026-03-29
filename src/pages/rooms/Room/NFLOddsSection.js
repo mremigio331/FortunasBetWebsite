@@ -4,15 +4,14 @@ import {
   Space,
   Button,
   Alert,
-  Spin,
   Tag,
   Row,
   Col,
   Empty,
   Divider,
-  Typography,
 } from "antd";
 import { TrophyOutlined, ReloadOutlined } from "@ant-design/icons";
+import ErrorAlert from "../../../components/shared/ErrorAlert";
 import WeekYearSelector from "../../../components/room/WeekYearSelector";
 import BettingSummary from "../../../components/room/BettingSummary";
 import StatusMessages from "../../../components/room/StatusMessages";
@@ -20,6 +19,7 @@ import GameCard from "../../../components/room/GameCard";
 import CurrentWeekUserBetsAlert from "./CurrentWeekUserBetsAlert";
 import useGetCurrentNflWeek from "../../../hooks/bet/useGetCurrentNflWeek";
 import RoomBetsDisplay from "../../../components/room/RoomBetsDisplay";
+import LoadingSpinner from "../../../components/shared/LoadingSpinner";
 
 const NFLOddsSection = ({
   isNFLWeeksFetching,
@@ -75,12 +75,7 @@ const NFLOddsSection = ({
           </div>
         }
       >
-        <div style={{ textAlign: "center", padding: "40px" }}>
-          <Spin size="large" />
-          <div style={{ marginTop: "16px" }}>
-            <Typography.Text>Loading NFL odds...</Typography.Text>
-          </div>
-        </div>
+        <LoadingSpinner message="Loading NFL odds..." />
       </Card>
     );
   }
@@ -202,27 +197,15 @@ const NFLOddsSection = ({
           style={{ marginBottom: "16px" }}
         />
       )}
-      {isOddsFetching && (
-        <div style={{ textAlign: "center", padding: "40px" }}>
-          <Spin size="large" />
-          <div style={{ marginTop: "16px" }}>
-            <Typography.Text>Loading NFL odds...</Typography.Text>
-          </div>
-        </div>
-      )}
+      {isOddsFetching && <LoadingSpinner message="Loading NFL odds..." />}
       {isOddsError && (
-        <Alert
-          message="Error Loading Odds"
-          description={oddsError?.message || "Failed to load NFL odds"}
-          type="error"
-          showIcon
-          action={
-            <Button size="small" onClick={oddsRefetch}>
-              Retry
-            </Button>
-          }
-          style={{ marginBottom: "16px" }}
-        />
+        <div style={{ marginBottom: "16px" }}>
+          <ErrorAlert
+            title="Error Loading Odds"
+            description={oddsError?.message || "Failed to load NFL odds"}
+            onRetry={oddsRefetch}
+          />
+        </div>
       )}
       {!isOddsFetching && !isOddsError && !hasOdds && (
         <Empty

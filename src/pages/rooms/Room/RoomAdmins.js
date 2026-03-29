@@ -22,8 +22,7 @@ const RoomAdmins = ({ room }) => {
             ))
           : (room.admin_user_ids || room.admins).map((adminId, index) => (
               <Tag key={adminId} color="blue">
-                Admin {index + 1}:{" "}
-                {truncateName(adminId, 10)}
+                Admin {index + 1}: {truncateName(adminId, 10)}
               </Tag>
             ))}
       </Space>
