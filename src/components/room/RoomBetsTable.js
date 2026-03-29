@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Table, Avatar, Tag, Space, Button, Card, Typography } from "antd";
 import { UserOutlined, DownOutlined } from "@ant-design/icons";
-import nflWeeks from "../../constants/nflWeek"; // Import the NFL weeks constant
 import WeekHeader from "./WeekHeader";
 import { truncateName } from "../../utils/textUtils";
+import { groupBetsByWeek } from "../../utils/betUtils";
 
 const { Text } = Typography;
 
@@ -14,29 +14,9 @@ const RoomBetsTable = ({
   toggleUserExpansion,
   getAvatarStyle,
   user,
-  renderBetCard,
+  BetCardComponent,
 }) => {
   const [expandedWeeks, setExpandedWeeks] = useState({});
-
-  const getWeekForDate = (date) => {
-    const gameDate = new Date(date * 1000);
-    const week = nflWeeks.find(
-      (w) => new Date(w.start) <= gameDate && gameDate <= new Date(w.end),
-    );
-    return week ? week.week : "Unknown Week";
-  };
-
-  const groupBetsByWeek = (bets) => {
-    const weeks = {};
-    bets.forEach((bet) => {
-      const week = bet.event_datetime
-        ? getWeekForDate(bet.event_datetime)
-        : "Unknown Week";
-      if (!weeks[week]) weeks[week] = [];
-      weeks[week].push(bet);
-    });
-    return weeks;
-  };
 
   const toggleWeekExpansion = (week) => {
     setExpandedWeeks((prev) => ({
@@ -44,10 +24,6 @@ const RoomBetsTable = ({
       [week]: !prev[week],
     }));
   };
-
-  // fallback: if renderBetCard is not provided, render nothing for bets
-  const safeRenderBetCard =
-    typeof renderBetCard === "function" ? renderBetCard : () => null;
 
   return (
     <div className="bet-history-table-wrapper">
@@ -129,12 +105,13 @@ const RoomBetsTable = ({
                             />
                             {expandedWeeks[week] && (
                               <div style={{ marginLeft: "16px" }}>
-                                {betsByWeek[week].map((bet, index) =>
-                                  safeRenderBetCard(
-                                    bet,
-                                    userStat.user_id === user?.user_id,
-                                  ),
-                                )}
+                                {betsByWeek[week].map((bet) => (
+                                  <BetCardComponent
+                                    key={`${bet.user_id}-${bet.game_id}-${bet.points_wagered}`}
+                                    bet={bet}
+                                    isCurrentUser={userStat.user_id === user?.user_id}
+                                  />
+                                ))}
                               </div>
                             )}
                           </div>

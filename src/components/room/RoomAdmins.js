@@ -1,6 +1,6 @@
 import React from "react";
 import { Divider, Tag, Space } from "antd";
-import { truncateName } from "../../../utils/textUtils";
+import { truncateName } from "../../utils/textUtils";
 
 const RoomAdmins = ({ room }) => {
   if (!room.admin_user_ids && !room.admins && !room.admin_profiles) return null;

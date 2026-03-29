@@ -3,6 +3,7 @@ import { Card, Typography, Divider, Avatar } from "antd";
 import LoadingSpinner from "../shared/LoadingSpinner";
 import { TrophyOutlined } from "@ant-design/icons";
 import { getAvatarStyle } from "../../utils/avatarStyles";
+import { computeUserStats } from "../../utils/betUtils";
 
 /**
  * RoomLeaderboard
@@ -33,29 +34,32 @@ const RoomLeaderboard = ({ isBetsLoading, bets = [], members = [] }) => {
     );
   }
 
-  const userPointsMap = {};
-  bets.forEach((bet) => {
-    const userId = bet.user_id;
-    let points = 0;
-    if (typeof bet.total_points_earned === "number") {
-      points = bet.total_points_earned;
-    } else if (bet.game_bet && typeof bet.game_bet.points_earned === "number") {
-      points = bet.game_bet.points_earned;
-    }
-    if (!userPointsMap[userId]) {
-      userPointsMap[userId] = 0;
-    }
-    userPointsMap[userId] += points;
-  });
+  const usersMap = Object.fromEntries(
+    members
+      .filter((m) => m.status === "approved")
+      .map((m) => [m.user_id, m]),
+  );
+  const stats = computeUserStats(bets, usersMap);
 
-  const leaderboard = members
-    .filter((m) => m.status === "approved")
+  // Include approved members who have no bets (computeUserStats only
+  // returns entries for users present in the bets array).
+  const statsUserIds = new Set(stats.map((s) => s.user_id));
+  const membersWithNoBets = Object.values(usersMap)
+    .filter((m) => !statsUserIds.has(m.user_id))
     .map((m) => ({
       name: m.user_name || m.user_id,
       color: m.user_color,
-      totalPoints: userPointsMap[m.user_id] || 0,
-    }))
-    .sort((a, b) => b.totalPoints - a.totalPoints);
+      totalPoints: 0,
+    }));
+
+  const leaderboard = [
+    ...stats.map((s) => ({
+      name: s.user_name,
+      color: s.user_color,
+      totalPoints: s.points_total,
+    })),
+    ...membersWithNoBets,
+  ];
 
   let place = 1;
   let lastPoints = null;

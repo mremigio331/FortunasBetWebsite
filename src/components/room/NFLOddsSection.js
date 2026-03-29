@@ -11,15 +11,15 @@ import {
   Divider,
 } from "antd";
 import { TrophyOutlined, ReloadOutlined } from "@ant-design/icons";
-import ErrorAlert from "../../../components/shared/ErrorAlert";
-import WeekYearSelector from "../../../components/room/WeekYearSelector";
-import BettingSummary from "../../../components/room/BettingSummary";
-import StatusMessages from "../../../components/room/StatusMessages";
-import GameCard from "../../../components/room/GameCard";
+import ErrorAlert from "../shared/ErrorAlert";
+import WeekYearSelector from "./WeekYearSelector";
+import BettingSummary from "./BettingSummary";
+import StatusMessages from "./StatusMessages";
+import GameCard from "./GameCard";
 import CurrentWeekUserBetsAlert from "./CurrentWeekUserBetsAlert";
-import useGetCurrentNflWeek from "../../../hooks/bet/useGetCurrentNflWeek";
-import RoomBetsDisplay from "../../../components/room/RoomBetsDisplay";
-import LoadingSpinner from "../../../components/shared/LoadingSpinner";
+import useGetCurrentNflWeek from "../../hooks/bet/useGetCurrentNflWeek";
+import RoomBetsDisplay from "./RoomBetsDisplay";
+import LoadingSpinner from "../shared/LoadingSpinner";
 
 const NFLOddsSection = ({
   isNFLWeeksFetching,

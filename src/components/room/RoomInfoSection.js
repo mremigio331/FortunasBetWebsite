@@ -3,7 +3,7 @@
 
 import React from "react";
 import { Col, Divider, Typography } from "antd";
-import RoomInfoCards from "../../../components/room/RoomInfoCards";
+import RoomInfoCards from "./RoomInfoCards";
 import RoomAdmins from "./RoomAdmins";
 
 const { Paragraph } = Typography;

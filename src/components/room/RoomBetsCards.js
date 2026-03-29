@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import { Card, Space, Avatar, Tag, Typography, Button, Divider } from "antd";
 import { UserOutlined, DownOutlined, RightOutlined } from "@ant-design/icons";
 import WeekHeader from "./WeekHeader";
+import { groupBetsByWeek } from "../../utils/betUtils";
 
 const { Text } = Typography;
 
-const RoomBetsCards = ({ userStats, getAvatarStyle, user, renderBetCard }) => {
+const RoomBetsCards = ({ userStats, getAvatarStyle, user, BetCardComponent }) => {
   const [expandedUsers, setExpandedUsers] = useState({});
   // track expanded weeks per user: { [userId]: { [week]: boolean } }
   const [expandedWeeks, setExpandedWeeks] = useState({});
@@ -88,12 +89,7 @@ const RoomBetsCards = ({ userStats, getAvatarStyle, user, renderBetCard }) => {
                 <Divider style={{ margin: "8px 0" }} />
                 {/* Group bets by week for mobile view */}
                 {(() => {
-                  const byWeek = {};
-                  userStat.bets.forEach((bet) => {
-                    const w = bet.week ?? "Unknown";
-                    if (!byWeek[w]) byWeek[w] = [];
-                    byWeek[w].push(bet);
-                  });
+                  const byWeek = groupBetsByWeek(userStat.bets);
 
                   // Sort weeks descending (numerically when possible)
                   const weeks = Object.keys(byWeek).sort((a, b) => {
@@ -117,12 +113,14 @@ const RoomBetsCards = ({ userStats, getAvatarStyle, user, renderBetCard }) => {
                       />
                       {(expandedWeeks[userStat.user_id] || {})[week] && (
                         <div style={{ marginTop: 8 }}>
-                          {byWeek[week].map((bet) =>
-                            renderBetCard(
-                              bet,
-                              userStat.user_id === user?.user_id,
-                            ),
-                          )}
+                          {byWeek[week].map((bet) => (
+                            <BetCardComponent
+                              key={`${bet.user_id}-${bet.game_id}-${bet.points_wagered}`}
+                              bet={bet}
+                              isCurrentUser={userStat.user_id === user?.user_id}
+                              isMobile={true}
+                            />
+                          ))}
                         </div>
                       )}
                     </div>

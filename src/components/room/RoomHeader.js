@@ -15,9 +15,9 @@ import {
   UnlockOutlined,
   HourglassOutlined,
 } from "@ant-design/icons";
-import useCreateMembershipRequest from "../../../hooks/membership/useCreateMembershipRequest";
-import useEditRoom from "../../../hooks/room/useEditRoom";
-import MembershipStatusTag from "../../../components/shared/MembershipStatusTag";
+import useCreateMembershipRequest from "../../hooks/membership/useCreateMembershipRequest";
+import useEditRoom from "../../hooks/room/useEditRoom";
+import MembershipStatusTag from "../shared/MembershipStatusTag";
 
 const { Title, Text } = Typography;
 
