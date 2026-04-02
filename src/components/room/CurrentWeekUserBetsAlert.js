@@ -6,11 +6,14 @@ const CurrentWeekUserBetsAlert = ({
   currentWeekUserBets,
   selectedWeek,
   weeklyTakenPoints,
+  roomSport = "NFL",
+  sportRules,
 }) => {
   if (!currentWeekUserBets.length) return null;
+  const maxBets = sportRules?.maxBetsPerWeek ?? 3;
   return (
     <Alert
-      message={`Your bets for Week ${selectedWeek} (${currentWeekUserBets.length}/3)`}
+      message={`Your bets for Week ${selectedWeek} (${currentWeekUserBets.length}/${maxBets})`}
       description={
         <div style={{ marginTop: "8px" }}>
           <Row gutter={[12, 12]}>
@@ -131,8 +134,32 @@ const CurrentWeekUserBetsAlert = ({
               fontStyle: "italic",
             }}
           >
-            💡 Point values {weeklyTakenPoints.join(", ")} are unavailable for
-            new bets this week.
+            {sportRules?.uniquePointsPerBet ? (
+              <>
+                💡 Point values {weeklyTakenPoints.join(", ")} are unavailable
+                for new bets this week.
+              </>
+            ) : (
+              (() => {
+                const pointCounts = weeklyTakenPoints.reduce((acc, p) => {
+                  acc[p] = (acc[p] || 0) + 1;
+                  return acc;
+                }, {});
+                const remaining = maxBets - currentWeekUserBets.length;
+                const summaryParts = Object.entries(pointCounts).map(
+                  ([pt, count]) => {
+                    const limit = sportRules?.pointLimits?.[parseInt(pt)] ?? 0;
+                    return `${count}/${limit} at ${pt}pt`;
+                  },
+                );
+                return (
+                  <>
+                    💡 {summaryParts.join(", ")} used. {remaining} bet
+                    {remaining !== 1 ? "s" : ""} remaining this week.
+                  </>
+                );
+              })()
+            )}
           </div>
         </div>
       }

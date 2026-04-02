@@ -25,6 +25,9 @@ const GameCard = ({
   onBetTypeChange,
   onTeamChoiceChange,
   onPointsChange,
+  roomSport = "NFL",
+  sportRules,
+  sessionPointCounts = {},
 }) => {
   // ----- helpers -----
   const getOverallRecord = (records) => {
@@ -554,18 +557,43 @@ const GameCard = ({
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <Text style={{ fontSize: 11, color: "#666" }}>Points:</Text>
             <div style={{ display: "flex", gap: 4 }}>
-              {[1, 2, 3].map((points) => {
+              {(sportRules?.allowedPoints || [1, 2, 3]).map((points) => {
                 const isCurrent = bet.points === points;
-                const isWeeklyTaken = weeklyTakenPoints?.includes(points);
-                const isSessionDup =
-                  !isWeeklyTaken && duplicatePointValues?.includes(points);
-                const disabled = !isCurrent && (isWeeklyTaken || isSessionDup);
+                const pointLimit = sportRules?.pointLimits?.[points] ?? 1;
 
+                // Count how many times this point value is used this week (existing bets)
+                const weeklyUsedCount =
+                  weeklyTakenPoints?.filter((p) => p === points).length ?? 0;
+
+                let disabled = false;
                 let title = "";
-                if (isWeeklyTaken)
-                  title = `${points} points already used this week`;
-                else if (isSessionDup)
-                  title = `${points} points already selected in another bet`;
+
+                if (sportRules?.uniquePointsPerBet) {
+                  // NFL: each point value can only be used once
+                  const isWeeklyTaken = weeklyTakenPoints?.includes(points);
+                  const isSessionDup =
+                    !isWeeklyTaken && duplicatePointValues?.includes(points);
+                  disabled = !isCurrent && (isWeeklyTaken || isSessionDup);
+                  if (isWeeklyTaken)
+                    title = `${points} point${points !== 1 ? "s" : ""} already used this week`;
+                  else if (isSessionDup)
+                    title = `${points} point${points !== 1 ? "s" : ""} already selected in another bet`;
+                } else {
+                  // MLB: point values have per-value limits
+                  // Use actual session counts (excluding this bet if it already has this point value)
+                  const sessionCount = sessionPointCounts[points] || 0;
+                  const sessionCountExcludingSelf = isCurrent
+                    ? sessionCount - 1
+                    : sessionCount;
+                  const atLimit =
+                    weeklyUsedCount + sessionCountExcludingSelf >= pointLimit;
+                  disabled = !isCurrent && atLimit;
+                  if (disabled)
+                    title = `Maximum ${pointLimit} bet${pointLimit !== 1 ? "s" : ""} at ${points} point${points !== 1 ? "s" : ""} per week`;
+                }
+
+                const label = sportRules?.pointLabels?.[points] ?? points;
+                const isBigBet = roomSport === "MLB" && points === 6;
 
                 const btn = (
                   <Button
@@ -575,19 +603,39 @@ const GameCard = ({
                     disabled={disabled}
                     onClick={() => onPointsChange(game.game_id, points)}
                     style={{
-                      width: 32,
+                      minWidth: isBigBet ? 64 : 32,
                       height: 24,
                       fontSize: 11,
-                      padding: 0,
+                      padding: "0 6px",
                       opacity: disabled ? 0.5 : 1,
+                      ...(isBigBet && !isCurrent
+                        ? {
+                            borderColor: "#faad14",
+                            color: "#d48806",
+                            fontWeight: 600,
+                          }
+                        : {}),
+                      ...(isBigBet && isCurrent
+                        ? {
+                            backgroundColor: "#faad14",
+                            borderColor: "#faad14",
+                            fontWeight: 600,
+                          }
+                        : {}),
                     }}
                   >
-                    {points}
+                    {isBigBet ? "★ Big Bet" : label}
                   </Button>
                 );
 
-                return disabled ? (
-                  <Tooltip key={points} title={title}>
+                const tooltipTitle = disabled
+                  ? title
+                  : isBigBet
+                    ? "6 points — 1 per week"
+                    : "";
+
+                return tooltipTitle ? (
+                  <Tooltip key={points} title={tooltipTitle}>
                     {btn}
                   </Tooltip>
                 ) : (

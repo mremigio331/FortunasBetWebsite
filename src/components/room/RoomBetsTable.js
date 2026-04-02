@@ -109,7 +109,9 @@ const RoomBetsTable = ({
                                   <BetCardComponent
                                     key={`${bet.user_id}-${bet.game_id}-${bet.points_wagered}`}
                                     bet={bet}
-                                    isCurrentUser={userStat.user_id === user?.user_id}
+                                    isCurrentUser={
+                                      userStat.user_id === user?.user_id
+                                    }
                                   />
                                 ))}
                               </div>

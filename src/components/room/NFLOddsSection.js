@@ -64,6 +64,9 @@ const NFLOddsSection = ({
   handleTeamChoiceChange,
   handlePointsChange,
   roomId,
+  roomSport = "NFL",
+  sportRules,
+  sessionPointCounts,
 }) => {
   if (isNFLWeeksFetching) {
     return (
@@ -71,11 +74,13 @@ const NFLOddsSection = ({
         title={
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <TrophyOutlined />
-            NFL Betting Odds
+            {roomSport === "MLB" ? "MLB" : "NFL"} Betting Odds
           </div>
         }
       >
-        <LoadingSpinner message="Loading NFL odds..." />
+        <LoadingSpinner
+          message={`Loading ${roomSport === "MLB" ? "MLB" : "NFL"} odds...`}
+        />
       </Card>
     );
   }
@@ -109,14 +114,22 @@ const NFLOddsSection = ({
     setSelectedWeek,
   ]);
 
+  const maxBets = sportRules?.maxBetsPerWeek ?? 3;
+
   return (
     <Card
       title={
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <TrophyOutlined />
-          NFL Betting Odds
-          {selectedBetsCount > 0 && (
-            <Tag color="blue">{selectedBetsCount}/3 games selected</Tag>
+          {roomSport === "MLB" ? "MLB" : "NFL"} Betting Odds
+          {(selectedBetsCount > 0 || weeklyTakenPoints.length > 0) && (
+            <Tag color="blue">
+              {selectedBetsCount + weeklyTakenPoints.length}/{maxBets} bets this
+              week
+              {selectedBetsCount > 0 && weeklyTakenPoints.length > 0
+                ? ` (${weeklyTakenPoints.length} placed, ${selectedBetsCount} new)`
+                : ""}
+            </Tag>
           )}
         </div>
       }
@@ -187,6 +200,8 @@ const NFLOddsSection = ({
         currentWeekUserBets={currentWeekUserBets}
         selectedWeek={selectedWeek}
         weeklyTakenPoints={weeklyTakenPoints}
+        roomSport={roomSport}
+        sportRules={sportRules}
       />
       {isNFLWeeksError && (
         <Alert
@@ -197,12 +212,19 @@ const NFLOddsSection = ({
           style={{ marginBottom: "16px" }}
         />
       )}
-      {isOddsFetching && <LoadingSpinner message="Loading NFL odds..." />}
+      {isOddsFetching && (
+        <LoadingSpinner
+          message={`Loading ${roomSport === "MLB" ? "MLB" : "NFL"} odds...`}
+        />
+      )}
       {isOddsError && (
         <div style={{ marginBottom: "16px" }}>
           <ErrorAlert
             title="Error Loading Odds"
-            description={oddsError?.message || "Failed to load NFL odds"}
+            description={
+              oddsError?.message ||
+              `Failed to load ${roomSport === "MLB" ? "MLB" : "NFL"} odds`
+            }
             onRetry={oddsRefetch}
           />
         </div>
@@ -226,6 +248,10 @@ const NFLOddsSection = ({
             selectedSeasonType={selectedSeasonType}
             selectedBetsCount={selectedBetsCount}
             hasDuplicatePoints={hasDuplicatePoints}
+            roomSport={roomSport}
+            sportRules={sportRules}
+            weeklyTakenPoints={weeklyTakenPoints}
+            sessionPointCounts={sessionPointCounts}
           />
           {selectedBetsCount > 0 && (
             <div style={{ marginBottom: "16px", textAlign: "center" }}>
@@ -260,8 +286,25 @@ const NFLOddsSection = ({
             {memoizedNflOdds.map((game) => {
               const isSelected = !!selectedBets[game.game_id];
               const bet = selectedBets[game.game_id];
+              const totalBetsUsed =
+                selectedBetsCount + weeklyTakenPoints.length;
+              const weeklyPointCounts = weeklyTakenPoints.reduce((acc, p) => {
+                acc[p] = (acc[p] || 0) + 1;
+                return acc;
+              }, {});
+
+              // Check if all point values are at their limits (no available point to assign)
+              const allPointsAtLimit =
+                sportRules?.allowedPoints?.every((pt) => {
+                  const weeklyUsed = weeklyPointCounts[pt] || 0;
+                  const sessionUsed = sessionPointCounts[pt] || 0;
+                  const limit = sportRules.pointLimits?.[pt] ?? 1;
+                  return weeklyUsed + sessionUsed >= limit;
+                }) ?? false;
+
               const canSelect =
-                (selectedBetsCount < 3 || isSelected) &&
+                (totalBetsUsed < maxBets || isSelected) &&
+                (!allPointsAtLimit || isSelected) &&
                 (isCurrentUserAdmin || isMember);
               const hasConflictingPoints =
                 isSelected && bet && duplicatePointValues.includes(bet.points);
@@ -279,6 +322,9 @@ const NFLOddsSection = ({
                     onBetTypeChange={handleBetTypeChange}
                     onTeamChoiceChange={handleTeamChoiceChange}
                     onPointsChange={handlePointsChange}
+                    roomSport={roomSport}
+                    sportRules={sportRules}
+                    sessionPointCounts={sessionPointCounts}
                   />
                 </Col>
               );

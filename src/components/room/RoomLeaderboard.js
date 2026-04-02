@@ -35,9 +35,7 @@ const RoomLeaderboard = ({ isBetsLoading, bets = [], members = [] }) => {
   }
 
   const usersMap = Object.fromEntries(
-    members
-      .filter((m) => m.status === "approved")
-      .map((m) => [m.user_id, m]),
+    members.filter((m) => m.status === "approved").map((m) => [m.user_id, m]),
   );
   const stats = computeUserStats(bets, usersMap);
 

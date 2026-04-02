@@ -6,7 +6,12 @@ import { groupBetsByWeek } from "../../utils/betUtils";
 
 const { Text } = Typography;
 
-const RoomBetsCards = ({ userStats, getAvatarStyle, user, BetCardComponent }) => {
+const RoomBetsCards = ({
+  userStats,
+  getAvatarStyle,
+  user,
+  BetCardComponent,
+}) => {
   const [expandedUsers, setExpandedUsers] = useState({});
   // track expanded weeks per user: { [userId]: { [week]: boolean } }
   const [expandedWeeks, setExpandedWeeks] = useState({});

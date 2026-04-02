@@ -18,6 +18,7 @@ import {
 import useCreateMembershipRequest from "../../hooks/membership/useCreateMembershipRequest";
 import useEditRoom from "../../hooks/room/useEditRoom";
 import MembershipStatusTag from "../shared/MembershipStatusTag";
+import SportTag from "../shared/SportTag";
 
 const { Title, Text } = Typography;
 
@@ -105,6 +106,7 @@ const RoomHeader = ({
             alignItems: "center",
           }}
         >
+          <SportTag sport={room.sport || "NFL"} />
           <Tag
             icon={room.public ? <UnlockOutlined /> : <LockOutlined />}
             color={room.public ? "green" : "red"}

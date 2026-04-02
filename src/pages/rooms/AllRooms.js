@@ -23,6 +23,7 @@ import { UserAuthenticationContext } from "../../provider/UserAuthenticationProv
 import useGetAllRooms from "../../hooks/room/useGetAllRooms";
 import useCreateMembershipRequest from "../../hooks/membership/useCreateMembershipRequest";
 import MembershipStatusTag from "../../components/shared/MembershipStatusTag";
+import SportTag from "../../components/shared/SportTag";
 import LoadingSpinner from "../../components/shared/LoadingSpinner";
 import ErrorAlert from "../../components/shared/ErrorAlert";
 
@@ -151,6 +152,10 @@ const AllRooms = () => {
       </Tag>
     );
 
+    // Tag for sport
+    const sport = room.sport || "NFL";
+    const sportTag = <SportTag sport={sport} size="small" />;
+
     const renderMembershipStatus = () => {
       return (
         <MembershipStatusTag
@@ -187,6 +192,7 @@ const AllRooms = () => {
               gap: 4,
             }}
           >
+            {sportTag}
             {publicTag}
             <span>ID: {room.room_id}</span>
           </div>
@@ -254,6 +260,7 @@ const AllRooms = () => {
               gap: 4,
             }}
           >
+            <SportTag sport={record.sport || "NFL"} size="small" />
             <Tag
               color={record.public ? "green" : "red"}
               style={{ marginRight: 4 }}

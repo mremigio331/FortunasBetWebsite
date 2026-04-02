@@ -12,6 +12,7 @@ import useGetBetsForRoom from "../../hooks/bet/useGetBetsForRoom";
 import useGetRoomMembers from "../../hooks/membership/useGetRoomMembers";
 import useBetSelection from "../../hooks/room/useBetSelection";
 import useNFLWeekSelection from "../../hooks/room/useNFLWeekSelection";
+import { getSportBettingRules } from "../../configs/sportConfig";
 import RoomInfoSection from "../../components/room/RoomInfoSection";
 import RoomHeader from "../../components/room/RoomHeader";
 import NFLOddsSection from "../../components/room/NFLOddsSection";
@@ -88,11 +89,15 @@ const Room = () => {
   // Memoize and sort odds by date
   const memoizedNflOdds = useMemo(() => {
     if (!nflOdds) return [];
-    return [...nflOdds].sort(
-      (a, b) => new Date(a.date) - new Date(b.date),
-    );
+    return [...nflOdds].sort((a, b) => new Date(a.date) - new Date(b.date));
   }, [nflOdds]);
   const memoizedOddsCount = useMemo(() => oddsCount, [oddsCount]);
+
+  const roomSport = room?.sport || "NFL";
+  const sportRules = useMemo(
+    () => getSportBettingRules(roomSport),
+    [roomSport],
+  );
 
   // Bet selection state, derived values, and handlers
   const {
@@ -103,6 +108,7 @@ const Room = () => {
     weeklyTakenPoints,
     hasDuplicatePoints,
     duplicatePointValues,
+    sessionPointCounts,
     handleClearBets,
     handleGameSelect,
     handleBetTypeChange,
@@ -118,6 +124,7 @@ const Room = () => {
     selectedYear,
     sport,
     league,
+    roomSport,
     nflOdds: memoizedNflOdds,
     createBet,
     refetchBets,
@@ -287,12 +294,15 @@ const Room = () => {
             memoizedOddsCount={memoizedOddsCount}
             isBetCreating={isBetCreating}
             duplicatePointValues={duplicatePointValues}
+            sessionPointCounts={sessionPointCounts}
             handleGameSelect={handleGameSelect}
             handleBetTypeChange={handleBetTypeChange}
             handleTeamChoiceChange={handleTeamChoiceChange}
             handlePointsChange={handlePointsChange}
             existingBets={existingBets}
             members={members}
+            roomSport={roomSport}
+            sportRules={sportRules}
           />
         </Col>
         {isCurrentUserAdmin && (

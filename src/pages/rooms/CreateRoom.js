@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Card,
@@ -8,6 +8,7 @@ import {
   Switch,
   Button,
   DatePicker,
+  Radio,
   Row,
   Col,
   Typography,
@@ -48,11 +49,23 @@ const CreateRoom = () => {
     navigate(-1);
   };
 
+  const SPORT_LEAGUES = {
+    NFL: ["NFL"],
+    MLB: ["MLB"],
+  };
+
+  const handleSportChange = (e) => {
+    const sport = e.target.value;
+    const leagues = SPORT_LEAGUES[sport] || [];
+    form.setFieldsValue({ leagues });
+  };
+
   const handleSubmit = async (values) => {
     try {
       // Convert dates to epoch timestamps
       const roomData = {
         room_name: values.room_name,
+        sport: values.sport,
         description: values.description || null,
         leagues: values.leagues,
         public: !values.public,
@@ -138,6 +151,22 @@ const CreateRoom = () => {
                 leagues: [],
               }}
             >
+              <Form.Item
+                name="sport"
+                label="Sport"
+                rules={[{ required: true, message: "Please select a sport" }]}
+              >
+                <Radio.Group
+                  size="large"
+                  optionType="button"
+                  buttonStyle="solid"
+                  onChange={handleSportChange}
+                >
+                  <Radio.Button value="NFL">NFL</Radio.Button>
+                  <Radio.Button value="MLB">MLB</Radio.Button>
+                </Radio.Group>
+              </Form.Item>
+
               <Row gutter={[16, 0]}>
                 <Col xs={24} md={12}>
                   <Form.Item

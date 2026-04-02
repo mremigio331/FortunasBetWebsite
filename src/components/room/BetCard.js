@@ -1,18 +1,6 @@
 import React from "react";
-import {
-  Card,
-  Row,
-  Col,
-  Typography,
-  Tag,
-  Space,
-  Divider,
-  Button,
-} from "antd";
-import {
-  EyeInvisibleOutlined,
-  LinkOutlined,
-} from "@ant-design/icons";
+import { Card, Row, Col, Typography, Tag, Space, Divider, Button } from "antd";
+import { EyeInvisibleOutlined, LinkOutlined } from "@ant-design/icons";
 import ScoreDisplay from "./ScoreDisplay";
 import computeDisplayedSpread from "../../utils/spreadUtils";
 
@@ -94,8 +82,7 @@ const BetCard = ({ bet, isCurrentUser = false, isMobile = false }) => {
   }
 
   // Get spread and total values from odds_snapshot if not in game_bet
-  const totalValue =
-    bet.game_bet?.total_value || bet.odds_snapshot?.overUnder;
+  const totalValue = bet.game_bet?.total_value || bet.odds_snapshot?.overUnder;
 
   const statusInfo = getBetStatusInfo(bet, isPrivate);
 
@@ -212,10 +199,7 @@ const BetCard = ({ bet, isCurrentUser = false, isMobile = false }) => {
 
         <Col span={8} style={{ textAlign: "right" }}>
           <Space direction="vertical" size="small" align="end">
-            <Text
-              strong
-              style={{ color: statusInfo.color, fontSize: "16px" }}
-            >
+            <Text strong style={{ color: statusInfo.color, fontSize: "16px" }}>
               {bet.points_wagered} pts
             </Text>
             {bet.total_points_earned && (

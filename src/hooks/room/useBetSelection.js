@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { message } from "antd";
+import { getSportBettingRules } from "../../configs/sportConfig";
 
 /**
  * Custom hook encapsulating bet selection state management:
@@ -15,6 +16,7 @@ import { message } from "antd";
  * @param {number} params.selectedYear
  * @param {string} params.sport - e.g. "football"
  * @param {string} params.league - e.g. "nfl"
+ * @param {string} params.roomSport - e.g. "NFL" or "MLB"
  * @param {Array} params.nflOdds - Memoized sorted odds array
  * @param {Function} params.createBet - Mutation function from useCreateBet
  * @param {Function} params.refetchBets - Refetch bets after submission
@@ -29,11 +31,17 @@ const useBetSelection = ({
   selectedYear,
   sport,
   league,
+  roomSport = "NFL",
   nflOdds,
   createBet,
   refetchBets,
 }) => {
   const [selectedBets, setSelectedBets] = useState({});
+
+  const sportRules = useMemo(
+    () => getSportBettingRules(roomSport),
+    [roomSport],
+  );
 
   const selectedBetsCount = Object.keys(selectedBets).length;
 
@@ -83,24 +91,58 @@ const useBetSelection = ({
       return acc;
     }, {});
 
-    const hasDups = Object.values(pointCounts).some((count) => count > 1);
-    const dupValues = Object.entries(pointCounts)
-      .filter(([_, count]) => count > 1)
-      .map(([points, _]) => parseInt(points));
+    if (sportRules.uniquePointsPerBet) {
+      // NFL: each point value must be unique across session + week
+      const hasDups = Object.values(pointCounts).some((count) => count > 1);
+      const dupValues = Object.entries(pointCounts)
+        .filter(([_, count]) => count > 1)
+        .map(([points, _]) => parseInt(points));
 
-    const weeklyConflicts = Object.values(selectedBets)
-      .map((bet) => bet.points)
-      .filter((points) => weeklyTakenPoints.includes(points));
+      const weeklyConflicts = Object.values(selectedBets)
+        .map((bet) => bet.points)
+        .filter((points) => weeklyTakenPoints.includes(points));
 
-    const allConflictingPoints = [
-      ...new Set([...dupValues, ...weeklyTakenPoints]),
-    ];
+      const allConflictingPoints = [
+        ...new Set([...dupValues, ...weeklyTakenPoints]),
+      ];
 
-    return {
-      hasDuplicatePoints: hasDups || weeklyConflicts.length > 0,
-      duplicatePointValues: allConflictingPoints,
-    };
-  }, [selectedBets, weeklyTakenPoints]);
+      return {
+        hasDuplicatePoints: hasDups || weeklyConflicts.length > 0,
+        duplicatePointValues: allConflictingPoints,
+      };
+    } else {
+      // MLB: point values have per-value limits (e.g., max 4 at 1pt, max 1 at 6pt)
+      const weeklyPointCounts = weeklyTakenPoints.reduce((acc, p) => {
+        acc[p] = (acc[p] || 0) + 1;
+        return acc;
+      }, {});
+
+      const overLimitPoints = [];
+      let hasOverLimit = false;
+
+      for (const [pointStr, sessionCount] of Object.entries(pointCounts)) {
+        const point = parseInt(pointStr);
+        const weeklyCount = weeklyPointCounts[point] || 0;
+        const limit = sportRules.pointLimits[point] ?? 0;
+        if (sessionCount + weeklyCount > limit) {
+          hasOverLimit = true;
+          overLimitPoints.push(point);
+        }
+      }
+
+      // Also check total bet count
+      const totalBets =
+        Object.keys(selectedBets).length + weeklyTakenPoints.length;
+      if (totalBets > sportRules.maxBetsPerWeek) {
+        hasOverLimit = true;
+      }
+
+      return {
+        hasDuplicatePoints: hasOverLimit,
+        duplicatePointValues: overLimitPoints,
+      };
+    }
+  }, [selectedBets, weeklyTakenPoints, sportRules]);
 
   // --- Handlers ---
 
@@ -108,19 +150,30 @@ const useBetSelection = ({
     setSelectedBets({});
   }, []);
 
-  const handleGameSelect = useCallback((gameId, betData) => {
-    setSelectedBets((prev) => {
-      if (prev[gameId]) {
-        const newBets = { ...prev };
-        delete newBets[gameId];
-        return newBets;
-      }
-      return {
-        ...prev,
-        [gameId]: { betType: "spread", teamChoice: "home", points: 1 },
-      };
-    });
-  }, []);
+  const handleGameSelect = useCallback(
+    (gameId, betData) => {
+      setSelectedBets((prev) => {
+        if (prev[gameId]) {
+          const newBets = { ...prev };
+          delete newBets[gameId];
+          return newBets;
+        }
+        // Prevent selecting more games than remaining weekly slots
+        const totalUsed = Object.keys(prev).length + weeklyTakenPoints.length;
+        if (totalUsed >= sportRules.maxBetsPerWeek) {
+          message.warning(
+            `Maximum ${sportRules.maxBetsPerWeek} bets per week reached (${weeklyTakenPoints.length} existing + ${Object.keys(prev).length} selected)`,
+          );
+          return prev;
+        }
+        return {
+          ...prev,
+          [gameId]: { betType: "spread", teamChoice: "home", points: 1 },
+        };
+      });
+    },
+    [weeklyTakenPoints, sportRules],
+  );
 
   const handleBetTypeChange = useCallback((gameId, betType) => {
     setSelectedBets((prev) => ({
@@ -143,17 +196,20 @@ const useBetSelection = ({
     }));
   }, []);
 
-  const handlePointsChange = useCallback((gameId, points) => {
-    if (points >= 1 && points <= 3) {
-      setSelectedBets((prev) => ({
-        ...prev,
-        [gameId]: {
-          ...prev[gameId],
-          points,
-        },
-      }));
-    }
-  }, []);
+  const handlePointsChange = useCallback(
+    (gameId, points) => {
+      if (sportRules.allowedPoints.includes(points)) {
+        setSelectedBets((prev) => ({
+          ...prev,
+          [gameId]: {
+            ...prev[gameId],
+            points,
+          },
+        }));
+      }
+    },
+    [sportRules],
+  );
 
   const handleSubmitBets = useCallback(async () => {
     const betEntries = Object.entries(selectedBets);
@@ -267,6 +323,14 @@ const useBetSelection = ({
     refetchBets,
   ]);
 
+  // Count of each point value selected in the current session (for MLB per-value limit checks)
+  const sessionPointCounts = useMemo(() => {
+    return Object.values(selectedBets).reduce((acc, bet) => {
+      acc[bet.points] = (acc[bet.points] || 0) + 1;
+      return acc;
+    }, {});
+  }, [selectedBets]);
+
   return {
     selectedBets,
     setSelectedBets,
@@ -276,6 +340,8 @@ const useBetSelection = ({
     weeklyTakenPoints,
     hasDuplicatePoints,
     duplicatePointValues,
+    sessionPointCounts,
+    sportRules,
     handleClearBets,
     handleGameSelect,
     handleBetTypeChange,

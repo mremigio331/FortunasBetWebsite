@@ -45,7 +45,6 @@ export function groupBetsByWeek(bets) {
   return weeks;
 }
 
-
 /**
  * Aggregate an array of bets into per-user statistics.
  *
