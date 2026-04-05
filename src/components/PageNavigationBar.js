@@ -4,6 +4,7 @@ import {
   HomeOutlined,
   UserOutlined,
   AppstoreOutlined,
+  TeamOutlined,
   MenuUnfoldOutlined,
   MenuFoldOutlined,
 } from "@ant-design/icons";
@@ -23,6 +24,8 @@ const PageNavigationBar = ({ collapsed, setCollapsed }) => {
   let selectedKey = "home";
   if (location.pathname.startsWith("/user/profile")) {
     selectedKey = "profile";
+  } else if (location.pathname.startsWith("/your-rooms")) {
+    selectedKey = "your-rooms";
   } else if (
     location.pathname.startsWith("/rooms") ||
     location.pathname.startsWith("/room/")
@@ -58,6 +61,7 @@ const PageNavigationBar = ({ collapsed, setCollapsed }) => {
           }}
           onClick={({ key }) => {
             if (key === "home") navigate("/");
+            else if (key === "your-rooms") navigate("/your-rooms");
             else if (key === "rooms") navigate("/rooms");
             else if (key === "profile") navigate("/user/profile");
           }}
@@ -68,9 +72,14 @@ const PageNavigationBar = ({ collapsed, setCollapsed }) => {
               label: "Home",
             },
             {
+              key: "your-rooms",
+              icon: <TeamOutlined />,
+              label: "Your Rooms",
+            },
+            {
               key: "rooms",
               icon: <AppstoreOutlined />,
-              label: "Rooms",
+              label: "All Rooms",
             },
             {
               key: "profile",
@@ -108,6 +117,7 @@ const PageNavigationBar = ({ collapsed, setCollapsed }) => {
         style={{ height: "100%", borderRight: 0 }}
         onClick={({ key }) => {
           if (key === "home") navigate("/");
+          else if (key === "your-rooms") navigate("/your-rooms");
           else if (key === "rooms") navigate("/rooms");
           else if (key === "profile") navigate("/user/profile");
         }}
@@ -118,9 +128,14 @@ const PageNavigationBar = ({ collapsed, setCollapsed }) => {
             label: "Home",
           },
           {
+            key: "your-rooms",
+            icon: <TeamOutlined />,
+            label: "Your Rooms",
+          },
+          {
             key: "rooms",
             icon: <AppstoreOutlined />,
-            label: "Rooms",
+            label: "All Rooms",
           },
           {
             key: "profile",

@@ -12,6 +12,7 @@ import {
   Row,
   Col,
   message,
+  Switch,
 } from "antd";
 import {
   SearchOutlined,
@@ -33,6 +34,7 @@ const { Search } = Input;
 const AllRooms = () => {
   const navigate = useNavigate();
   const [searchText, setSearchText] = React.useState("");
+  const [hideInactive, setHideInactive] = React.useState(true);
   const { idToken } = useContext(UserAuthenticationContext);
 
   // Detect mobile
@@ -57,7 +59,7 @@ const AllRooms = () => {
     isRoomsError,
     roomsError,
     roomsRefetch,
-  } = useGetAllRooms();
+  } = useGetAllRooms(true, hideInactive);
 
   const { createMembershipRequest, createMembershipRequestLoading } =
     useCreateMembershipRequest();
@@ -91,7 +93,7 @@ const AllRooms = () => {
     // Filter by search text if provided
     if (searchText.trim()) {
       const searchLower = searchText.toLowerCase();
-      filtered = allRooms.filter(
+      filtered = filtered.filter(
         (room) =>
           room.room_name?.toLowerCase().includes(searchLower) ||
           room.description?.toLowerCase().includes(searchLower) ||
@@ -379,7 +381,7 @@ const AllRooms = () => {
               }}
             >
               <Title level={2} style={{ margin: 0 }}>
-                All Rooms ({roomsCount})
+                All Rooms ({sortedAndFilteredRooms.length})
               </Title>
 
               {isMobile ? (
@@ -429,14 +431,42 @@ const AllRooms = () => {
           </Col>
 
           <Col span={24}>
-            <Search
-              placeholder="Search rooms by name, description, or ID"
-              allowClear
-              enterButton={<SearchOutlined />}
-              size="large"
-              onSearch={handleSearch}
-              onChange={(e) => setSearchText(e.target.value)}
-            />
+            <div
+              style={{
+                display: "flex",
+                flexDirection: isMobile ? "column" : "row",
+                alignItems: isMobile ? "stretch" : "center",
+                gap: "12px",
+              }}
+            >
+              <div style={{ flex: 1 }}>
+                <Search
+                  placeholder="Search rooms by name, description, or ID"
+                  allowClear
+                  enterButton={<SearchOutlined />}
+                  size="large"
+                  onSearch={handleSearch}
+                  onChange={(e) => setSearchText(e.target.value)}
+                />
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                <Switch
+                  checked={!hideInactive}
+                  onChange={(checked) => setHideInactive(!checked)}
+                  size="small"
+                />
+                <span style={{ fontSize: "13px", color: "#595959" }}>
+                  Show archived/completed
+                </span>
+              </div>
+            </div>
           </Col>
         </Row>
 

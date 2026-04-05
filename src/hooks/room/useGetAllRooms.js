@@ -4,7 +4,7 @@ import { UserAuthenticationContext } from "../../provider/UserAuthenticationProv
 import { apiRequestGet } from "../../api/apiRequest";
 import { useApi } from "../../provider/ApiProvider";
 
-const useGetAllRooms = (enabled = true) => {
+const useGetAllRooms = (enabled = true, active = true) => {
   const { idToken } = useContext(UserAuthenticationContext);
   const { apiEndpoint, stage } = useApi();
 
@@ -15,12 +15,17 @@ const useGetAllRooms = (enabled = true) => {
   }, [enabled, idToken]);
 
   const { data, isFetching, isError, status, error, refetch } = useQuery({
-    queryKey: ["allRooms"],
-    queryFn: () => apiRequestGet(apiEndpoint, "/room/get_all_rooms", idToken),
+    queryKey: ["allRooms", active],
+    queryFn: () =>
+      apiRequestGet(
+        apiEndpoint,
+        `/room/get_all_rooms?active=${active}`,
+        idToken,
+      ),
     enabled: isEnabled,
     keepPreviousData: true,
-    staleTime: 1000 * 60 * 5, // 5 minutes: rooms don't change frequently
-    cacheTime: 1000 * 60 * 15, // 15 minutes: keeps data in cache
+    staleTime: 1000 * 60 * 5,
+    cacheTime: 1000 * 60 * 15,
   });
 
   return {

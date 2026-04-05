@@ -11,6 +11,8 @@ const RoomBetsCards = ({
   getAvatarStyle,
   user,
   BetCardComponent,
+  onEditBet,
+  onRemoveBet,
 }) => {
   const [expandedUsers, setExpandedUsers] = useState({});
   // track expanded weeks per user: { [userId]: { [week]: boolean } }
@@ -124,6 +126,16 @@ const RoomBetsCards = ({
                               bet={bet}
                               isCurrentUser={userStat.user_id === user?.user_id}
                               isMobile={true}
+                              onEditBet={
+                                userStat.user_id === user?.user_id
+                                  ? onEditBet
+                                  : undefined
+                              }
+                              onRemoveBet={
+                                userStat.user_id === user?.user_id
+                                  ? onRemoveBet
+                                  : undefined
+                              }
                             />
                           ))}
                         </div>

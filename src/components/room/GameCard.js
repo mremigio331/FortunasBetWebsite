@@ -202,7 +202,10 @@ const GameCard = ({
                   display: "inline-block",
                 }}
               >
-                🔴 LIVE - Q{game.status.period} {game.status.displayClock}
+                🔴 LIVE -{" "}
+                {roomSport === "MLB"
+                  ? `${game.status.shortDetail || `Inn ${game.status.period}`}`
+                  : `Q${game.status.period} ${game.status.displayClock}`}
               </div>
             ) : game.status.state === "post" ? (
               <div

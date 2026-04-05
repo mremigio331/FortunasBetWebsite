@@ -1,12 +1,27 @@
 import React from "react";
 import { Card, Row, Col, Typography, Tag, Space, Divider, Button } from "antd";
-import { EyeInvisibleOutlined, LinkOutlined } from "@ant-design/icons";
+import {
+  EyeInvisibleOutlined,
+  LinkOutlined,
+  EditOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
 import ScoreDisplay from "./ScoreDisplay";
 import computeDisplayedSpread from "../../utils/spreadUtils";
 
 const { Text } = Typography;
 
 const getBetStatusInfo = (bet, isPrivate) => {
+  if (bet.status === "removed") {
+    return {
+      color: "#8c8c8c",
+      borderColor: "#d9d9d9",
+      tagColor: "default",
+      statusText: "REMOVED",
+      statusIcon: <DeleteOutlined />,
+    };
+  }
+
   if (isPrivate) {
     return {
       color: "#8c8c8c",
@@ -63,8 +78,20 @@ const getBetStatusInfo = (bet, isPrivate) => {
   }
 };
 
-const BetCard = ({ bet, isCurrentUser = false, isMobile = false }) => {
-  const isPrivate = !bet.game_bet && !isCurrentUser;
+const BetCard = ({
+  bet,
+  isCurrentUser = false,
+  isMobile = false,
+  onEditBet,
+  onRemoveBet,
+}) => {
+  const isRemoved = bet.status === "removed";
+  const isPrivate = !isRemoved && !bet.game_bet && !isCurrentUser;
+
+  // Determine if the game hasn't started yet (bet is editable)
+  const now = Math.floor(Date.now() / 1000);
+  const gameNotStarted =
+    bet.event_datetime && bet.event_datetime > now && !bet.game_bet?.result;
 
   // Format date
   const betDate = bet.event_datetime
@@ -94,7 +121,12 @@ const BetCard = ({ bet, isCurrentUser = false, isMobile = false }) => {
         marginBottom: "8px",
         border: `2px solid ${statusInfo.borderColor}`,
         borderRadius: "8px",
-        backgroundColor: isPrivate ? "#fafafa" : "white",
+        backgroundColor: isPrivate
+          ? "#fafafa"
+          : isRemoved
+            ? "#f5f5f5"
+            : "white",
+        opacity: isRemoved ? 0.7 : 1,
       }}
       bodyStyle={{ padding: "12px" }}
     >
@@ -193,7 +225,25 @@ const BetCard = ({ bet, isCurrentUser = false, isMobile = false }) => {
             )}
 
             {/* Show game scores when available */}
-            {!isPrivate && <ScoreDisplay bet={bet} mode="compact" />}
+            {!isPrivate && !isRemoved && (
+              <ScoreDisplay bet={bet} mode="compact" />
+            )}
+
+            {/* Show removal timestamp for removed bets */}
+            {isRemoved && bet.removed_at && (
+              <Text
+                type="secondary"
+                style={{ fontSize: "11px", fontStyle: "italic" }}
+              >
+                Removed on{" "}
+                {new Date(bet.removed_at * 1000).toLocaleDateString(undefined, {
+                  month: "short",
+                  day: "numeric",
+                  hour: "numeric",
+                  minute: "2-digit",
+                })}
+              </Text>
+            )}
           </Space>
         </Col>
 
@@ -219,7 +269,7 @@ const BetCard = ({ bet, isCurrentUser = false, isMobile = false }) => {
       </Row>
 
       {/* Bottom action row - only visible when bet details are visible */}
-      {!isPrivate && (bet.bet_id || bet.game_id) && (
+      {!isPrivate && !isRemoved && (bet.bet_id || bet.game_id) && (
         <div
           style={{
             display: "flex",
@@ -228,6 +278,29 @@ const BetCard = ({ bet, isCurrentUser = false, isMobile = false }) => {
             marginTop: 8,
           }}
         >
+          {isCurrentUser && gameNotStarted && onEditBet && (
+            <Button
+              size="small"
+              type="link"
+              icon={<EditOutlined />}
+              onClick={() => onEditBet(bet)}
+              style={{ fontSize: "12px", padding: "0 6px" }}
+            >
+              Edit Bet
+            </Button>
+          )}
+          {isCurrentUser && gameNotStarted && onRemoveBet && (
+            <Button
+              size="small"
+              type="link"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => onRemoveBet(bet)}
+              style={{ fontSize: "12px", padding: "0 6px" }}
+            >
+              Remove Bet
+            </Button>
+          )}
           {bet.bet_id && (
             <Button
               size="small"
@@ -242,7 +315,7 @@ const BetCard = ({ bet, isCurrentUser = false, isMobile = false }) => {
             <Button
               size="small"
               type="link"
-              href={`https://www.espn.com/nfl/game?gameId=${bet.game_id}`}
+              href={`https://www.espn.com/${bet.sport === "baseball" ? "mlb" : "nfl"}/game?gameId=${bet.game_id}`}
               target="_blank"
               rel="noopener noreferrer"
               icon={<LinkOutlined />}

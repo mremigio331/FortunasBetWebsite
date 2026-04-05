@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { message } from "antd";
 import { getSportBettingRules } from "../../configs/sportConfig";
 
@@ -37,6 +38,7 @@ const useBetSelection = ({
   refetchBets,
 }) => {
   const [selectedBets, setSelectedBets] = useState({});
+  const queryClient = useQueryClient();
 
   const sportRules = useMemo(
     () => getSportBettingRules(roomSport),
@@ -304,6 +306,7 @@ const useBetSelection = ({
         `Successfully placed ${betEntries.length} bet${betEntries.length !== 1 ? "s" : ""}!`,
       );
       refetchBets();
+      queryClient.invalidateQueries({ queryKey: ["homeData"] });
       setSelectedBets({});
     } catch (error) {
       console.error("Error submitting bets:", error);

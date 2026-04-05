@@ -23,14 +23,16 @@ const UserPointsLineChart = ({
     });
   });
 
+  // Ensure Y-axis always has room: min 0, max is maxVal + 1
+  const yMax = maxVal + 1;
+
   // padding
   const pad = { top: 12, right: 12, bottom: 28, left: 28 };
   const innerW = width - pad.left - pad.right;
   const innerH = height - pad.top - pad.bottom;
 
   const x = (i) => pad.left + innerW * (i / Math.max(1, weeks.length - 1));
-  const y = (v) =>
-    pad.top + innerH - (maxVal === 0 ? 0 : (v / maxVal) * innerH);
+  const y = (v) => pad.top + innerH - (v / yMax) * innerH;
 
   const pointsForSeries = (s) =>
     weeks.map((w, i) => `${x(i)},${y(s.pointsByWeek?.[w] || 0)}`).join(" ");
@@ -78,28 +80,36 @@ const UserPointsLineChart = ({
         ))}
 
         {/* y axis labels */}
-        {[0, 0.25, 0.5, 0.75, 1].map((t, idx) => {
-          const val = Math.round(maxVal * (1 - t));
-          return (
+        {(() => {
+          const tickCount = Math.min(yMax, 5);
+          const step = yMax / tickCount;
+          const ticks = [];
+          const seen = new Set();
+          for (let i = 0; i <= tickCount; i++) {
+            const val = Math.round(step * i);
+            if (!seen.has(val)) {
+              seen.add(val);
+              ticks.push({
+                val,
+                yPos: pad.top + innerH - (val / yMax) * innerH,
+              });
+            }
+          }
+          return ticks.map(({ val, yPos }, idx) => (
             <g key={idx}>
-              <text
-                x={6}
-                y={pad.top + 4 + innerH * t}
-                fontSize={10}
-                fill="#666"
-              >
+              <text x={6} y={yPos + 4} fontSize={10} fill="#666">
                 {val}
               </text>
               <line
                 x1={pad.left}
                 x2={pad.left + innerW}
-                y1={pad.top + innerH * t}
-                y2={pad.top + innerH * t}
+                y1={yPos}
+                y2={yPos}
                 stroke="#f0f0f0"
               />
             </g>
-          );
-        })}
+          ));
+        })()}
 
         {/* lines */}
         {series.map((s, idx) => (

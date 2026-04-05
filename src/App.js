@@ -12,6 +12,7 @@ import Home from "./pages/home/Home";
 import UserProfile from "./pages/user/UserProfile";
 import Room from "./pages/rooms/Room";
 import AllRooms from "./pages/rooms/AllRooms";
+import YourRooms from "./pages/rooms/YourRooms";
 import CreateRoom from "./pages/rooms/CreateRoom";
 import { UserAuthenticationContext } from "./provider/UserAuthenticationProvider";
 import PageNavigationBar from "./components/PageNavigationBar";
@@ -54,6 +55,14 @@ const PageRoutes = () => {
         element={
           <ProtectedRoute>
             <Room />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/your-rooms"
+        element={
+          <ProtectedRoute>
+            <YourRooms />
           </ProtectedRoute>
         }
       />

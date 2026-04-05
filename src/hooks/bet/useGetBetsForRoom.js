@@ -4,20 +4,36 @@ import { UserAuthenticationContext } from "../../provider/UserAuthenticationProv
 import { apiRequestGet } from "../../api/apiRequest";
 import { useApi } from "../../provider/ApiProvider";
 
-const useGetBetsForRoom = (roomId, nfl_weeks, enabled = true) => {
+/**
+ * Fetch all bets for a room across its weeks.
+ *
+ * Supports two modes:
+ *  - NFL: pass nfl_weeks (array of {season_type, week})
+ *  - MLB: pass mlb_weeks (array of {start, end} epoch timestamps)
+ *
+ * At least one of nfl_weeks or mlb_weeks must be a non-empty array.
+ */
+const useGetBetsForRoom = (
+  roomId,
+  nfl_weeks,
+  enabled = true,
+  mlb_weeks = null,
+) => {
   const { idToken } = useContext(UserAuthenticationContext);
-  const { apiEndpoint, stage } = useApi();
+  const { apiEndpoint } = useApi();
 
-  // Validate required parameters
+  const hasNFL = useMemo(
+    () => Array.isArray(nfl_weeks) && nfl_weeks.length > 0,
+    [nfl_weeks],
+  );
+  const hasMLB = useMemo(
+    () => Array.isArray(mlb_weeks) && mlb_weeks.length > 0,
+    [mlb_weeks],
+  );
+
   const hasRequiredParams = useMemo(
-    () =>
-      roomId !== undefined &&
-      roomId !== null &&
-      roomId !== "" &&
-      nfl_weeks != null &&
-      Array.isArray(nfl_weeks) &&
-      nfl_weeks.length > 0,
-    [roomId, nfl_weeks],
+    () => roomId != null && roomId !== "" && (hasNFL || hasMLB),
+    [roomId, hasNFL, hasMLB],
   );
 
   const isEnabled = useMemo(
@@ -25,15 +41,31 @@ const useGetBetsForRoom = (roomId, nfl_weeks, enabled = true) => {
     [enabled, hasRequiredParams, idToken],
   );
 
+  // Stable cache key
+  const weeksKey = useMemo(
+    () => (hasNFL ? nfl_weeks : mlb_weeks),
+    [hasNFL, nfl_weeks, mlb_weeks],
+  );
+
   const { data, isFetching, isError, status, error, refetch, isLoading } =
     useQuery({
-      queryKey: ["roomBets", roomId, nfl_weeks],
+      queryKey: ["roomBets", roomId, weeksKey],
       queryFn: async () => {
-        const requests = nfl_weeks.map((weekObj) => {
-          const { season_type, week } = weekObj;
-          const endpoint = `/bet/room/${roomId}/bets/season_type/${season_type}/week/${week}`;
-          return apiRequestGet(apiEndpoint, endpoint, idToken);
-        });
+        let requests;
+
+        if (hasNFL) {
+          requests = nfl_weeks.map((weekObj) => {
+            const { season_type, week } = weekObj;
+            const endpoint = `/bet/room/${roomId}/bets/season_type/${season_type}/week/${week}`;
+            return apiRequestGet(apiEndpoint, endpoint, idToken);
+          });
+        } else {
+          requests = mlb_weeks.map((weekObj) => {
+            const endpoint = `/bet/room/${roomId}/bets/week_start/${weekObj.start}/week_end/${weekObj.end}`;
+            return apiRequestGet(apiEndpoint, endpoint, idToken);
+          });
+        }
+
         const results = await Promise.all(requests);
         let allBets = [];
         let allUsers = {};
@@ -42,21 +74,21 @@ const useGetBetsForRoom = (roomId, nfl_weeks, enabled = true) => {
         let roomIdFromApi = roomId;
         results.forEach((result) => {
           const outerData = result?.data || {};
-          const data = outerData?.data || {};
-          if (Array.isArray(data.bets)) {
-            allBets = allBets.concat(data.bets);
+          const d = outerData?.data || {};
+          if (Array.isArray(d.bets)) {
+            allBets = allBets.concat(d.bets);
           }
-          if (data.users && typeof data.users === "object") {
-            allUsers = { ...allUsers, ...data.users };
+          if (d.users && typeof d.users === "object") {
+            allUsers = { ...allUsers, ...d.users };
           }
-          if (typeof data.count === "number") {
-            totalCount += data.count;
+          if (typeof d.count === "number") {
+            totalCount += d.count;
           }
           if (outerData.message) {
             messages.push(outerData.message);
           }
-          if (data.room_id) {
-            roomIdFromApi = data.room_id;
+          if (d.room_id) {
+            roomIdFromApi = d.room_id;
           }
         });
         return {
@@ -77,25 +109,21 @@ const useGetBetsForRoom = (roomId, nfl_weeks, enabled = true) => {
       refetchInterval: 1000 * 60 * 5,
     });
 
-  // Memoize the return values
   const returnValues = useMemo(() => {
     const apiData = data || {};
     const bets = apiData.bets || [];
     const users = apiData.users || {};
     const betsCount = apiData.count || 0;
     const hasBets = bets.length > 0;
-    const isBetsFetching = isFetching;
-    const isBetsLoading = isLoading;
-    const isBetsRefetching = isFetching && !isLoading;
     return {
       bets,
       users,
       betsCount,
       roomId: apiData.room_id || roomId,
       message: apiData.message || data?.message || null,
-      isBetsFetching,
-      isBetsLoading,
-      isBetsRefetching,
+      isBetsFetching: isFetching,
+      isBetsLoading: isLoading,
+      isBetsRefetching: isFetching && !isLoading,
       isBetsError: isError,
       betsStatus: status,
       betsError: error,

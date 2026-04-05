@@ -15,7 +15,7 @@ import ErrorAlert from "../shared/ErrorAlert";
 import WeekYearSelector from "./WeekYearSelector";
 import BettingSummary from "./BettingSummary";
 import StatusMessages from "./StatusMessages";
-import GameCard from "./GameCard";
+import GameCard from "./gameCard/GameCard";
 import CurrentWeekUserBetsAlert from "./CurrentWeekUserBetsAlert";
 import useGetCurrentNflWeek from "../../hooks/bet/useGetCurrentNflWeek";
 import RoomBetsDisplay from "./RoomBetsDisplay";

@@ -15,6 +15,8 @@ const RoomBetsTable = ({
   getAvatarStyle,
   user,
   BetCardComponent,
+  onEditBet,
+  onRemoveBet,
 }) => {
   const [expandedWeeks, setExpandedWeeks] = useState({});
 
@@ -111,6 +113,16 @@ const RoomBetsTable = ({
                                     bet={bet}
                                     isCurrentUser={
                                       userStat.user_id === user?.user_id
+                                    }
+                                    onEditBet={
+                                      userStat.user_id === user?.user_id
+                                        ? onEditBet
+                                        : undefined
+                                    }
+                                    onRemoveBet={
+                                      userStat.user_id === user?.user_id
+                                        ? onRemoveBet
+                                        : undefined
                                     }
                                   />
                                 ))}

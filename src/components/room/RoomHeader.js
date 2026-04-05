@@ -9,6 +9,7 @@ import {
   Form,
   Input,
   Switch,
+  Select,
 } from "antd";
 import {
   LockOutlined,
@@ -88,6 +89,7 @@ const RoomHeader = ({
                 form.setFieldsValue({
                   room_name: room.room_name,
                   public: room.public,
+                  sport: room.sport || "NFL",
                 });
                 setEditModalVisible(true);
               }}
@@ -147,8 +149,15 @@ const RoomHeader = ({
           initialValues={{
             room_name: room.room_name,
             public: room.public,
+            sport: room.sport || "NFL",
           }}
         >
+          <Form.Item name="sport" label="Sport">
+            <Select disabled>
+              <Select.Option value="NFL">NFL</Select.Option>
+              <Select.Option value="MLB">MLB</Select.Option>
+            </Select>
+          </Form.Item>
           <Form.Item
             name="room_name"
             label="Room Name"

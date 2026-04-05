@@ -191,20 +191,18 @@ const CreateRoom = () => {
                 <Col xs={24} md={12}>
                   <Form.Item
                     name="leagues"
-                    label="Leagues"
+                    label="League"
                     rules={[
                       {
                         required: true,
-                        message: "Please select at least one league",
+                        message: "Please select a sport first",
                       },
                     ]}
                   >
                     <Select
-                      mode="multiple"
-                      placeholder="Select leagues"
+                      placeholder="Auto-selected based on sport"
                       size="large"
-                      loading={isValidLeaguesFetching}
-                      disabled={isValidLeaguesFetching}
+                      disabled
                     >
                       {validLeagues.map((league) => (
                         <Option key={league} value={league}>

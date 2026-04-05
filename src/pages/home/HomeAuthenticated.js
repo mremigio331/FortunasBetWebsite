@@ -1,39 +1,18 @@
 import React from "react";
-import { Button, Layout, Typography, Card, List, Space, Tag, Spin } from "antd";
-import { useNavigate, Link } from "react-router-dom";
+import { Layout, Typography, Card, Space, Tag, Spin } from "antd";
+import { Link } from "react-router-dom";
 import { useUserProfile } from "../../provider/UserProfileProvider";
-import useGetUserMembershipRequests from "../../hooks/membership/useGetUserMembershipRequests";
-import useGetUserBetsForCurrentWeek from "../../hooks/bet/useGetUserBetsForCurrentWeek";
-import {
-  DownOutlined,
-  RightOutlined,
-  EyeInvisibleOutlined,
-  TrophyFilled,
-} from "@ant-design/icons";
+import useGetHomeData from "../../hooks/home/useGetHomeData";
+import { EyeInvisibleOutlined } from "@ant-design/icons";
 import { Collapse, Row, Col } from "antd";
+import TrophyIndicators from "../../components/bet/TrophyIndicators";
 const { Content } = Layout;
 const { Title, Text } = Typography;
 
 const HomeAuthenticated = () => {
-  const navigate = useNavigate();
-  const { userProfile, isUserFetching, userRefetch } = useUserProfile();
-  const {
-    userMembershipRequests,
-    membershipRequestsByStatus,
-    isUserMembershipRequestsFetching,
-    isUserMembershipRequestsError,
-    userMembershipRequestsError,
-  } = useGetUserMembershipRequests(true);
+  const { userProfile } = useUserProfile();
+  const { rooms, isLoading, isError, error, refetch } = useGetHomeData(true);
 
-  const {
-    currentWeekInfo,
-    isFetching: isUserBetsFetching,
-    isError: isUserBetsError,
-    error: userBetsError,
-    refetch: refetchUserBets,
-  } = useGetUserBetsForCurrentWeek(true);
-
-  // Helper to render a bet card or orange card if null, using RoomBetsDisplay logic
   const renderBetCardOrPrompt = (bet, pointLabel) => {
     if (!bet) {
       return (
@@ -49,7 +28,6 @@ const HomeAuthenticated = () => {
         </Card>
       );
     }
-    // --- RoomBetsDisplay renderBetCard logic ---
     const isPrivate = !bet.game_bet;
     const betDate = bet.event_datetime
       ? new Date(bet.event_datetime * 1000).toLocaleDateString()
@@ -208,6 +186,45 @@ const HomeAuthenticated = () => {
     );
   };
 
+  const renderBetSlots = (room) => {
+    const bets = room.bets || {};
+    if (room.room_sport === "MLB") {
+      const regs = bets.regular_bets || [];
+      return (
+        <>
+          {renderBetCardOrPrompt(regs[0] || null, "1pt bet #1")}
+          {renderBetCardOrPrompt(regs[1] || null, "1pt bet #2")}
+          {renderBetCardOrPrompt(regs[2] || null, "1pt bet #3")}
+          {renderBetCardOrPrompt(regs[3] || null, "1pt bet #4")}
+          {renderBetCardOrPrompt(bets.big_bet || null, "6pt big bet")}
+        </>
+      );
+    }
+    return (
+      <>
+        {renderBetCardOrPrompt(bets.one_point || null, "one point")}
+        {renderBetCardOrPrompt(bets.two_point || null, "two point")}
+        {renderBetCardOrPrompt(bets.three_point || null, "three point")}
+      </>
+    );
+  };
+
+  const calculateTotalPoints = (room) => {
+    const bets = room.bets || {};
+    let allBets = [];
+    if (room.room_sport === "MLB") {
+      allBets = [...(bets.regular_bets || []), bets.big_bet].filter(Boolean);
+    } else {
+      allBets = [bets.one_point, bets.two_point, bets.three_point].filter(
+        Boolean,
+      );
+    }
+    return allBets.reduce(
+      (sum, bet) => sum + (bet.total_points_earned || 0),
+      0,
+    );
+  };
+
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <Content style={{ padding: "32px 16px 0 16px" }}>
@@ -218,184 +235,75 @@ const HomeAuthenticated = () => {
           <Text>{`You have signed in as ${userProfile?.name || "User"}`}</Text>
         </div>
         <div style={{ maxWidth: 600, margin: "32px auto 0 auto" }}>
-          <Title level={3} style={{ marginBottom: 16, textAlign: "left" }}>
+          <Title level={3} style={{ margin: "0 0 16px 0", textAlign: "left" }}>
             Your Rooms
           </Title>
-          {isUserMembershipRequestsFetching || isUserBetsFetching ? (
+          {isLoading ? (
             <Spin size="large" />
-          ) : isUserMembershipRequestsError || isUserBetsError ? (
+          ) : isError ? (
             <Card style={{ marginBottom: 16 }}>
               <Text type="danger">
-                Error loading rooms or bets:{" "}
-                {userMembershipRequestsError?.message ||
-                  userBetsError?.message ||
-                  "Unknown error"}
+                Error loading rooms: {error?.message || "Unknown error"}
               </Text>
             </Card>
-          ) : userMembershipRequests && userMembershipRequests.length > 0 ? (
-            <>
-              <Title level={4} style={{ marginBottom: 8 }}>
-                Active Rooms
-              </Title>
-              {membershipRequestsByStatus.approved.map((room) => {
-                const roomBets = currentWeekInfo?.bets?.[room.room_id] || {};
-                return (
-                  <Card
-                    style={{ marginBottom: 12, boxShadow: "0 2px 8px #f0f1f2" }}
-                    key={room.room_id}
-                    bodyStyle={{ padding: "16px 20px" }}
+          ) : rooms && rooms.length > 0 ? (
+            rooms.map((room) => (
+              <Card
+                style={{ marginBottom: 12, boxShadow: "0 2px 8px #f0f1f2" }}
+                key={room.room_id}
+                bodyStyle={{ padding: "16px 20px" }}
+              >
+                <Space direction="vertical" style={{ width: "100%" }}>
+                  <Link
+                    to={`/room/${room.room_id}`}
+                    style={{
+                      fontWeight: 600,
+                      fontSize: 18,
+                      color: "#1890ff",
+                      textDecoration: "none",
+                    }}
                   >
-                    <Space direction="vertical" style={{ width: "100%" }}>
-                      <Link
-                        to={`/room/${room.room_id}`}
-                        style={{
-                          fontWeight: 600,
-                          fontSize: 18,
-                          color: "#1890ff",
-                          textDecoration: "none",
-                        }}
-                      >
-                        {room.room_name || room.room_id}
-                      </Link>
-                      <Text type="secondary" style={{ fontSize: 13 }}>
-                        Room ID: {room.room_id}
-                      </Text>
-                      <Collapse
-                        accordion
-                        size="small"
-                        style={{ background: "#f6faff" }}
-                      >
-                        <Collapse.Panel
-                          header={
-                            <span
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 12,
-                              }}
-                            >
-                              Your Bets for This Week
-                              {["one_point", "two_point", "three_point"].map(
-                                (pt, idx) => {
-                                  const bet = roomBets[pt];
-                                  let color = "#d9d9d9"; // default gray
-                                  if (bet && bet.game_bet?.result === "win")
-                                    color = "#52c41a";
-                                  else if (
-                                    bet &&
-                                    bet.game_bet?.result === "loss"
-                                  )
-                                    color = "#ff4d4f";
-                                  else if (
-                                    bet &&
-                                    bet.game_bet?.result === "push"
-                                  )
-                                    color = "#faad14";
-                                  else if (bet && !bet.game_bet?.result)
-                                    color = "#8c8c8c";
-                                  return (
-                                    <span
-                                      key={pt}
-                                      style={{
-                                        display: "inline-flex",
-                                        alignItems: "center",
-                                        marginLeft: 4,
-                                      }}
-                                    >
-                                      <TrophyFilled
-                                        style={{
-                                          color,
-                                          fontSize: 18,
-                                          marginRight: 2,
-                                        }}
-                                      />
-                                      <span style={{ fontWeight: 600, color }}>
-                                        {idx + 1}
-                                      </span>
-                                    </span>
-                                  );
-                                },
-                              )}
-                            </span>
-                          }
-                          key="bets"
+                    {room.room_name || room.room_id}
+                  </Link>
+                  <Collapse
+                    accordion
+                    size="small"
+                    style={{ background: "#f6faff" }}
+                  >
+                    <Collapse.Panel
+                      header={
+                        <span
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 12,
+                          }}
                         >
-                          <div style={{ marginBottom: 8 }}>
-                            {renderBetCardOrPrompt(
-                              roomBets.one_point,
-                              "one point",
-                            )}
-                            {renderBetCardOrPrompt(
-                              roomBets.two_point,
-                              "two point",
-                            )}
-                            {renderBetCardOrPrompt(
-                              roomBets.three_point,
-                              "three point",
-                            )}
-                          </div>
-                          {/* Total points for the week */}
-                          <div style={{ textAlign: "right", marginTop: 8 }}>
-                            <Tag
-                              color="#52c41a"
-                              style={{ fontSize: 15, fontWeight: 600 }}
-                            >
-                              Total Points Won:{" "}
-                              {["one_point", "two_point", "three_point"].reduce(
-                                (sum, pt) => {
-                                  const bet = roomBets[pt];
-                                  return (
-                                    sum +
-                                    (bet && bet.total_points_earned
-                                      ? bet.total_points_earned
-                                      : 0)
-                                  );
-                                },
-                                0,
-                              )}
-                            </Tag>
-                          </div>
-                        </Collapse.Panel>
-                      </Collapse>
-                    </Space>
-                  </Card>
-                );
-              })}
-              <Title level={4} style={{ margin: "24px 0 8px" }}>
-                Pending Rooms
-              </Title>
-              <List
-                itemLayout="vertical"
-                dataSource={membershipRequestsByStatus.pending}
-                renderItem={(room) => (
-                  <Card
-                    style={{ marginBottom: 12, boxShadow: "0 2px 8px #f0f1f2" }}
-                    key={room.room_id}
-                    bodyStyle={{ padding: "16px 20px" }}
-                  >
-                    <Space direction="vertical" style={{ width: "100%" }}>
-                      <Link
-                        to={`/room/${room.room_id}`}
-                        style={{
-                          fontWeight: 600,
-                          fontSize: 18,
-                          color: "#faad14",
-                          textDecoration: "none",
-                        }}
-                      >
-                        {room.room_name || room.room_id}
-                      </Link>
-                      <Text type="secondary" style={{ fontSize: 13 }}>
-                        Room ID: {room.room_id}
-                      </Text>
-                      <Tag color="orange" style={{ fontSize: 13 }}>
-                        Pending Approval
-                      </Tag>
-                    </Space>
-                  </Card>
-                )}
-              />
-            </>
+                          Your Bets for This Week
+                          <TrophyIndicators
+                            sport={room.room_sport}
+                            bets={room.bets}
+                          />
+                        </span>
+                      }
+                      key="bets"
+                    >
+                      <div style={{ marginBottom: 8 }}>
+                        {renderBetSlots(room)}
+                      </div>
+                      <div style={{ textAlign: "right", marginTop: 8 }}>
+                        <Tag
+                          color="#52c41a"
+                          style={{ fontSize: 15, fontWeight: 600 }}
+                        >
+                          Total Points Won: {calculateTotalPoints(room)}
+                        </Tag>
+                      </div>
+                    </Collapse.Panel>
+                  </Collapse>
+                </Space>
+              </Card>
+            ))
           ) : (
             <Text type="secondary">You are not a member of any rooms yet.</Text>
           )}
