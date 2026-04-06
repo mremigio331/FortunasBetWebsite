@@ -41,8 +41,13 @@ const useMLBWeekSelection = ({ room, mlbWeeksData }) => {
     return availableWeeks.map((w) => {
       const startDate = new Date(w.start * 1000);
       const endDate = new Date(w.end * 1000);
+      // Format in Eastern Time to match backend week boundaries (Mon-Sun ET)
       const fmt = (d) =>
-        d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+        d.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          timeZone: "America/New_York",
+        });
       return {
         value: w.week,
         label: `Week ${w.week} (${fmt(startDate)} - ${fmt(endDate)})`,

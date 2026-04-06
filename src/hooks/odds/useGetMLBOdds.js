@@ -6,12 +6,34 @@ import { useApi } from "../../provider/ApiProvider";
 
 /**
  * Generate YYYYMMDD date strings for each day in an epoch range.
+ * Uses Eastern Time to match backend MLB week boundaries (Mon-Sun ET).
  */
 const getDatesInRange = (weekStart, weekEnd) => {
   if (!weekStart || !weekEnd) return [];
   const dates = [];
-  const current = new Date(weekStart * 1000);
-  const end = new Date(weekEnd * 1000);
+  // Format in ET to get the correct calendar date for each epoch
+  const startDate = new Date(weekStart * 1000);
+  const endDate = new Date(weekEnd * 1000);
+
+  // Get the ET calendar date for the start
+  const startParts = startDate
+    .toLocaleDateString("en-CA", { timeZone: "America/New_York" })
+    .split("-");
+  const endParts = endDate
+    .toLocaleDateString("en-CA", { timeZone: "America/New_York" })
+    .split("-");
+
+  const current = new Date(
+    parseInt(startParts[0]),
+    parseInt(startParts[1]) - 1,
+    parseInt(startParts[2]),
+  );
+  const end = new Date(
+    parseInt(endParts[0]),
+    parseInt(endParts[1]) - 1,
+    parseInt(endParts[2]),
+  );
+
   while (current <= end) {
     const yyyy = current.getFullYear();
     const mm = String(current.getMonth() + 1).padStart(2, "0");
@@ -34,6 +56,7 @@ const formatDateLabel = (dateStr) => {
     weekday: "short",
     month: "short",
     day: "numeric",
+    timeZone: "America/New_York",
   });
 };
 
