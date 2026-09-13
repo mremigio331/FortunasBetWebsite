@@ -1,7 +1,6 @@
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import AWS from "aws-sdk";
 import App from "./App";
 import UserAuthenticationProvider from "./provider/UserAuthenticationProvider";
 import { UserProfileProvider } from "./provider/UserProfileProvider";
@@ -13,10 +12,6 @@ import ApiProvider from "./provider/ApiProvider";
 // import "./index.css";
 
 const queryClient = new QueryClient();
-
-AWS.config.update({
-  region: "us-west-2",
-});
 
 // Optionally, add a global style reset here if you don't have a CSS file:
 const style = document.createElement("style");
