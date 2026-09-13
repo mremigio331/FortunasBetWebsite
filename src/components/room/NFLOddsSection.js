@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import {
   Card,
   Space,
@@ -13,16 +13,25 @@ import {
 import { TrophyOutlined, ReloadOutlined } from "@ant-design/icons";
 import ErrorAlert from "../shared/ErrorAlert";
 import WeekYearSelector from "./WeekYearSelector";
+import WeekResolutionNotice from "./WeekResolutionNotice";
 import BettingSummary from "./BettingSummary";
 import StatusMessages from "./StatusMessages";
 import GameCard from "./gameCard/GameCard";
 import CurrentWeekUserBetsAlert from "./CurrentWeekUserBetsAlert";
-import useGetCurrentNflWeek from "../../hooks/bet/useGetCurrentNflWeek";
 import RoomBetsDisplay from "./RoomBetsDisplay";
 import LoadingSpinner from "../shared/LoadingSpinner";
 
 const NFLOddsSection = ({
   isNFLWeeksFetching,
+  // Week_Resolution status, threaded down from `Room.js` via
+  // `useNFLWeekSelection`. This component does NOT resolve the current week
+  // itself — it used to call `useGetCurrentNflWeek` and seed the selection with
+  // its own adopt-on-empty effect, which is exactly the duplication
+  // Requirements 7.3 / 7.4 rule out.
+  isWeekLoading = false,
+  isWeekEstimate = false,
+  isCurrentWeekOutOfRange = false,
+  isOffSeason = false,
   selectedBets,
   selectedBetsCount,
   handleSubmitBets,
@@ -42,13 +51,9 @@ const NFLOddsSection = ({
   handleYearChange,
   selectedWeek,
   handleWeekChange,
-  setSelectedWeek,
-  setSelectedYear,
-  setSelectedSeasonType,
   weekOptions,
   yearOptions,
   seasonTypeOptions,
-  isValidCombination,
   currentWeekUserBets,
   weeklyTakenPoints,
   isNFLWeeksError,
@@ -84,36 +89,6 @@ const NFLOddsSection = ({
       </Card>
     );
   }
-  const {
-    currentWeekInfo,
-    isFetching: isCurrentWeekFetching,
-    isError: isCurrentWeekError,
-    error: currentWeekError,
-  } = useGetCurrentNflWeek();
-
-  // Set season type and week if not already set
-  useEffect(() => {
-    if (
-      currentWeekInfo &&
-      currentWeekInfo.season_type_value &&
-      currentWeekInfo.week_value &&
-      (!selectedSeasonType || !selectedWeek)
-    ) {
-      if (!selectedSeasonType && setSelectedSeasonType) {
-        setSelectedSeasonType(currentWeekInfo.season_type_value);
-      }
-      if (!selectedWeek && setSelectedWeek) {
-        setSelectedWeek(currentWeekInfo.week_value);
-      }
-    }
-  }, [
-    currentWeekInfo,
-    selectedSeasonType,
-    selectedWeek,
-    setSelectedSeasonType,
-    setSelectedWeek,
-  ]);
-
   const maxBets = sportRules?.maxBetsPerWeek ?? 3;
 
   return (
@@ -186,15 +161,21 @@ const NFLOddsSection = ({
       )}
       <WeekYearSelector
         selectedSeasonType={selectedSeasonType}
-        setSelectedSeasonType={setSelectedSeasonType}
+        onSeasonTypeChange={handleSeasonTypeChange}
         selectedYear={selectedYear}
-        setSelectedYear={setSelectedYear}
+        onYearChange={handleYearChange}
         selectedWeek={selectedWeek}
-        setSelectedWeek={setSelectedWeek}
+        onWeekChange={handleWeekChange}
         weekOptions={weekOptions}
         yearOptions={yearOptions}
         seasonTypeOptions={seasonTypeOptions}
-        isValidCombination={isValidCombination}
+        isWeekLoading={isWeekLoading}
+      />
+      <WeekResolutionNotice
+        isWeekLoading={isWeekLoading}
+        isWeekEstimate={isWeekEstimate}
+        isCurrentWeekOutOfRange={isCurrentWeekOutOfRange}
+        isOffSeason={isOffSeason}
       />
       <CurrentWeekUserBetsAlert
         currentWeekUserBets={currentWeekUserBets}

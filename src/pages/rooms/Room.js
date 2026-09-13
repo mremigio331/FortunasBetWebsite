@@ -16,9 +16,13 @@ import useGetRoomMembers from "../../hooks/membership/useGetRoomMembers";
 import useGetRoomLeaderboard from "../../hooks/room/useGetRoomLeaderboard";
 import useGetRoomBetsAll from "../../hooks/room/useGetRoomBetsAll";
 import useBetSelection from "../../hooks/room/useBetSelection";
+import useCurrentWeek, {
+  MLB_SEASON_TYPE,
+} from "../../hooks/room/useCurrentWeek";
 import useNFLWeekSelection from "../../hooks/room/useNFLWeekSelection";
 import useMLBWeekSelection from "../../hooks/room/useMLBWeekSelection";
 import { getSportBettingRules } from "../../configs/sportConfig";
+import { getEasternDateParts } from "../../utils/easternTime";
 import RoomInfoSection from "../../components/room/RoomInfoSection";
 import RoomHeader from "../../components/room/RoomHeader";
 import NFLOddsSection from "../../components/room/NFLOddsSection";
@@ -77,25 +81,61 @@ const Room = () => {
     [roomSport],
   );
 
-  // --- NFL hooks (only active for NFL rooms) ---
+  // --- Room week ranges (one per sport; the other stays disabled) ---
   const nflWeeksData = useGetNFLWeeksInRange(
     !isMLB ? room?.start_date : null,
     !isMLB ? room?.end_date : null,
   );
 
+  const mlbWeeksData = useGetMLBWeeksInRange(
+    isMLB ? room?.start_date : null,
+    isMLB ? room?.end_date : null,
+  );
+
+  /**
+   * The Current_Week, from the single source of truth (Requirement 7.3). This
+   * page does not compute "which week is it" anywhere else — no date math here,
+   * no direct use of the Fallback_Week_Source.
+   *
+   * `mlbWeeksData` is handed in so an MLB room resolves against the range it has
+   * already fetched instead of issuing a second identical request.
+   */
+  const {
+    currentWeek: resolvedCurrentWeek,
+    isLoading: isCurrentWeekLoading,
+    isEstimate: isCurrentWeekEstimate,
+    isOffSeason: isCurrentWeekOffSeason,
+  } = useCurrentWeek(roomSport, {
+    room,
+    mlbWeeksData,
+    enabled: Boolean(room),
+  });
+
+  // The resolution belongs to one sport at a time; do not leak it across.
+  const nflCurrentWeek = isMLB ? null : resolvedCurrentWeek;
+  const mlbCurrentWeek = isMLB ? resolvedCurrentWeek : null;
+
+  // --- NFL hooks (only active for NFL rooms) ---
   const {
     selectedWeek: nflSelectedWeek,
     selectedYear: nflSelectedYear,
     selectedSeasonType: nflSelectedSeasonType,
-    setSelectedWeek: nflSetSelectedWeek,
-    setSelectedYear: nflSetSelectedYear,
-    setSelectedSeasonType: nflSetSelectedSeasonType,
     weekOptions: nflWeekOptions,
     yearOptions: nflYearOptions,
     seasonTypeOptions: nflSeasonTypeOptions,
-    isValidCombination: nflIsValidCombination,
     createChangeHandlers: nflCreateChangeHandlers,
-  } = useNFLWeekSelection({ room: !isMLB ? room : null, nflWeeksData });
+    isWeekLoading: isNFLWeekLoading,
+    isWeekEstimate: isNFLWeekEstimate,
+    isCurrentWeekOutOfRange: isNFLCurrentWeekOutOfRange,
+    isOffSeason: isNFLOffSeason,
+  } = useNFLWeekSelection({
+    room: !isMLB ? room : null,
+    nflWeeksData,
+    currentWeek: nflCurrentWeek,
+    isCurrentWeekLoading: !isMLB && isCurrentWeekLoading,
+    isCurrentWeekEstimate: !isMLB && isCurrentWeekEstimate,
+    isOffSeason: !isMLB && isCurrentWeekOffSeason,
+  });
 
   const {
     nflOdds,
@@ -115,19 +155,32 @@ const Room = () => {
   );
 
   // --- MLB hooks (only active for MLB rooms) ---
-  const mlbWeeksData = useGetMLBWeeksInRange(
-    isMLB ? room?.start_date : null,
-    isMLB ? room?.end_date : null,
-  );
-
   const {
     selectedWeekNumber: mlbSelectedWeekNumber,
-    setSelectedWeekNumber: mlbSetSelectedWeekNumber,
     selectedWeek: mlbSelectedWeek,
-    selectedDate: mlbSelectedDate,
     weekOptions: mlbWeekOptions,
     createChangeHandlers: mlbCreateChangeHandlers,
-  } = useMLBWeekSelection({ room: isMLB ? room : null, mlbWeeksData });
+    isWeekLoading: isMLBWeekLoading,
+    isWeekEstimate: isMLBWeekEstimate,
+    isCurrentWeekOutOfRange: isMLBCurrentWeekOutOfRange,
+    isOffSeason: isMLBOffSeason,
+  } = useMLBWeekSelection({
+    room: isMLB ? room : null,
+    mlbWeeksData,
+    currentWeek: mlbCurrentWeek,
+    isCurrentWeekLoading: isMLB && isCurrentWeekLoading,
+    isCurrentWeekEstimate: isMLB && isCurrentWeekEstimate,
+    isOffSeason: isMLB && isCurrentWeekOffSeason,
+  });
+
+  /**
+   * For MLB the Current_Week is derived from the room's own week range, so
+   * `useCurrentWeek.isEstimate` means exactly one thing: no week in this room
+   * contains the present moment. That is the out-of-range case (Requirement 1.6),
+   * not a "we guessed" estimate, and the page should say so.
+   */
+  const isMLBWeekOutOfRange =
+    isMLBCurrentWeekOutOfRange || (isMLB && isCurrentWeekEstimate);
 
   const {
     mlbOdds,
@@ -159,12 +212,20 @@ const Room = () => {
     isMLB ? mlbWeeksData.availableWeeks : null,
   );
 
-  const selectedSeasonType = isMLB ? 2 : nflSelectedSeasonType;
-  const selectedYear = isMLB
-    ? mlbSelectedWeek
-      ? new Date(mlbSelectedWeek.start * 1000).getFullYear()
-      : new Date().getFullYear()
-    : nflSelectedYear;
+  const selectedSeasonType = isMLB ? MLB_SEASON_TYPE : nflSelectedSeasonType;
+
+  // The MLB season year is the ET calendar year of the selected week's Monday.
+  // Browser-local accessors would disagree by a day for viewers west of ET
+  // (Requirement 3.5); `resolvedCurrentWeek.year` covers the pre-selection frame.
+  const mlbSelectedYear = useMemo(() => {
+    if (mlbSelectedWeek) {
+      const parts = getEasternDateParts(new Date(mlbSelectedWeek.start * 1000));
+      if (parts) return parts.year;
+    }
+    return mlbCurrentWeek?.year ?? null;
+  }, [mlbSelectedWeek, mlbCurrentWeek]);
+
+  const selectedYear = isMLB ? mlbSelectedYear : nflSelectedYear;
   const sport = isMLB ? "baseball" : nflSport || "football";
   const league = isMLB ? "mlb" : nflLeague || "nfl";
 
@@ -355,6 +416,10 @@ const Room = () => {
           {isMLB ? (
             <MLBOddsSection
               isMLBWeeksFetching={mlbWeeksData.isMLBWeeksFetching}
+              isWeekLoading={isMLBWeekLoading}
+              isWeekEstimate={isMLBWeekEstimate}
+              isCurrentWeekOutOfRange={isMLBWeekOutOfRange}
+              isOffSeason={isMLBOffSeason}
               selectedBets={selectedBets}
               selectedBetsCount={selectedBetsCount}
               handleSubmitBets={handleSubmitBets}
@@ -392,6 +457,10 @@ const Room = () => {
           ) : (
             <NFLOddsSection
               isNFLWeeksFetching={nflWeeksData.isNFLWeeksFetching}
+              isWeekLoading={isNFLWeekLoading}
+              isWeekEstimate={isNFLWeekEstimate}
+              isCurrentWeekOutOfRange={isNFLCurrentWeekOutOfRange}
+              isOffSeason={isNFLOffSeason}
               selectedBets={selectedBets}
               selectedBetsCount={selectedBetsCount}
               handleSubmitBets={handleSubmitBets}
@@ -409,13 +478,9 @@ const Room = () => {
               handleYearChange={nflChangeHandlers.handleYearChange}
               selectedWeek={nflSelectedWeek}
               handleWeekChange={nflChangeHandlers.handleWeekChange}
-              setSelectedWeek={nflSetSelectedWeek}
-              setSelectedYear={nflSetSelectedYear}
-              setSelectedSeasonType={nflSetSelectedSeasonType}
               weekOptions={nflWeekOptions}
               yearOptions={nflYearOptions}
               seasonTypeOptions={nflSeasonTypeOptions}
-              isValidCombination={nflIsValidCombination}
               currentWeekUserBets={currentWeekUserBets}
               weeklyTakenPoints={weeklyTakenPoints}
               isNFLWeeksError={nflWeeksData.isNFLWeeksError}

@@ -3,6 +3,7 @@ import { Card, Space, Button, Alert, Tag, Row, Col, Empty, Tabs } from "antd";
 import { TrophyOutlined, ReloadOutlined } from "@ant-design/icons";
 import ErrorAlert from "../shared/ErrorAlert";
 import MLBWeekSelector from "./MLBWeekSelector";
+import WeekResolutionNotice from "./WeekResolutionNotice";
 import BettingSummary from "./BettingSummary";
 import GameCard from "./gameCard/GameCard";
 import CurrentWeekUserBetsAlert from "./CurrentWeekUserBetsAlert";
@@ -10,6 +11,13 @@ import LoadingSpinner from "../shared/LoadingSpinner";
 
 const MLBOddsSection = ({
   isMLBWeeksFetching,
+  // Week_Resolution status, threaded down from `Room.js` via
+  // `useMLBWeekSelection`, which gets the Current_Week from `useCurrentWeek` —
+  // the single source of truth (Requirement 7.3).
+  isWeekLoading = false,
+  isWeekEstimate = false,
+  isCurrentWeekOutOfRange = false,
+  isOffSeason = false,
   selectedBets,
   selectedBetsCount,
   handleSubmitBets,
@@ -245,6 +253,14 @@ const MLBOddsSection = ({
           handleWeekChange(val);
         }}
         weekOptions={weekOptions}
+        isWeekLoading={isWeekLoading}
+      />
+
+      <WeekResolutionNotice
+        isWeekLoading={isWeekLoading}
+        isWeekEstimate={isWeekEstimate}
+        isCurrentWeekOutOfRange={isCurrentWeekOutOfRange}
+        isOffSeason={isOffSeason}
       />
 
       <CurrentWeekUserBetsAlert
