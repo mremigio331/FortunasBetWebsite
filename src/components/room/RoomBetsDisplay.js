@@ -48,30 +48,6 @@ const RoomBetsDisplay = ({
   refetchBets,
   removedBets: removedBetsProp,
 }) => {
-  if (isFetching) {
-    return (
-      <Card
-        title={
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <Space>
-              <TrophyOutlined />
-              <span>Room Bets</span>
-            </Space>
-          </div>
-        }
-        style={{ marginBottom: "24px" }}
-      >
-        <LoadingSpinner message="Loading bets..." />
-      </Card>
-    );
-  }
-
   const isMobile = useIsMobile();
   const { user } = useContext(UserAuthenticationContext);
   const [expandedUsers, setExpandedUsers] = useState({});
@@ -261,6 +237,32 @@ const RoomBetsDisplay = ({
   }, [betsSource]);
 
   // No loading/error UI since data comes from parent
+
+  // Loading state: rendered only after all hooks above have run, so the hook
+  // call order stays stable across renders (Rules of Hooks).
+  if (isFetching) {
+    return (
+      <Card
+        title={
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Space>
+              <TrophyOutlined />
+              <span>Room Bets</span>
+            </Space>
+          </div>
+        }
+        style={{ marginBottom: "24px" }}
+      >
+        <LoadingSpinner message="Loading bets..." />
+      </Card>
+    );
+  }
 
   return (
     <>

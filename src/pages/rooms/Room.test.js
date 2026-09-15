@@ -20,7 +20,13 @@
  */
 
 import React, { useSyncExternalStore } from "react";
-import { render, screen, waitFor, act, fireEvent } from "@testing-library/react";
+import {
+  render,
+  screen,
+  waitFor,
+  act,
+  fireEvent,
+} from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { message } from "antd";
@@ -554,9 +560,7 @@ describe("Room — NFL week resolving after the initial render", () => {
 
     expect(isSelectDisabled("Week:")).toBe(false);
     expect(selectedValueOf("Year:")).toBe("2024");
-    expect(selectedValueOf("Season Type:")).toBe(
-      getSeasonTypeDisplayName(2),
-    );
+    expect(selectedValueOf("Season Type:")).toBe(getSeasonTypeDisplayName(2));
     expect(
       screen.queryByText("Finding the current week..."),
     ).not.toBeInTheDocument();
@@ -665,7 +669,9 @@ describe("Room — MLB", () => {
   });
 
   it("adopts the containing week when the room's range resolves late", async () => {
-    store.set(mlbScenario({ mlbRange: mlbRangeState({ isMLBWeeksFetching: true }) }));
+    store.set(
+      mlbScenario({ mlbRange: mlbRangeState({ isMLBWeeksFetching: true }) }),
+    );
 
     renderRoom();
     expect(screen.getByText("Loading MLB schedule...")).toBeInTheDocument();
@@ -686,7 +692,11 @@ describe("Room — MLB", () => {
     // MLB's version of the old bug: the range came back with only the first
     // week, the page showed Week 1, and because the state was no longer empty
     // the containing week was never adopted (Requirements 1.3, 8.6).
-    store.set(mlbScenario({ mlbRange: mlbRangeState({ availableWeeks: [MLB_WEEK_1] }) }));
+    store.set(
+      mlbScenario({
+        mlbRange: mlbRangeState({ availableWeeks: [MLB_WEEK_1] }),
+      }),
+    );
 
     renderRoom();
     await waitFor(() =>
@@ -732,7 +742,9 @@ describe("Room — MLB", () => {
 
     act(() => {
       // A refetch hands back a fresh array with identical contents.
-      store.set({ mlbRange: mlbRangeState({ availableWeeks: [...MLB_RANGE] }) });
+      store.set({
+        mlbRange: mlbRangeState({ availableWeeks: [...MLB_RANGE] }),
+      });
     });
 
     await waitFor(() =>

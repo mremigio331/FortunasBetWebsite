@@ -257,18 +257,39 @@ const useBetSelection = ({
           overUnderChoice = bet.overUnderChoice;
         }
 
+        // Resolve the signed spread line for the picked team.
+        // Prefer the line captured at selection time (`bet.takenLine`); fall
+        // back to deriving it from the odds `spread` magnitude + `favoredTeam`
+        // (same derivation used to render the per-side lines in GameCard).
+        let spreadValue = null;
+        if (bet.betType === "spread") {
+          if (bet.takenLine !== null && bet.takenLine !== undefined) {
+            spreadValue = bet.takenLine;
+          } else if (game.spread !== null && game.spread !== undefined) {
+            const spreadAbs = Math.abs(Number(game.spread));
+            if (!Number.isNaN(spreadAbs)) {
+              spreadValue =
+                teamChoice === game.favoredTeam ? -spreadAbs : spreadAbs;
+            }
+          }
+        }
+
         const gameBet = {
           game_id: gameId,
           bet_type: bet.betType === "overUnder" ? "over_under" : bet.betType,
           points_wagered: bet.points,
           ...(teamChoice && { team_choice: teamChoice }),
           ...(overUnderChoice && { over_under_choice: overUnderChoice }),
-          ...(bet.betType === "spread" && {
-            spread_value:
-              bet.teamChoice === "home" ? game.homeSpread : game.awaySpread,
-          }),
+          ...(bet.betType === "spread" &&
+            spreadValue !== null && { spread_value: spreadValue }),
           ...(bet.betType === "overUnder" && { total_value: game.overUnder }),
         };
+
+        if (bet.betType === "spread" && spreadValue === null) {
+          throw new Error(
+            `Game ${gameId} is missing a spread line - cannot place spread bet`,
+          );
+        }
 
         if (!game.date || game.date === null) {
           throw new Error(`Game ${gameId} is missing date - cannot place bet`);
