@@ -201,3 +201,80 @@ describe("useBetSelection — over/under is unaffected", () => {
     expect(gameBet).not.toHaveProperty("spread_value");
   });
 });
+
+describe("useBetSelection — grid selection handlers", () => {
+  it("handleSelectSpread submits a spread bet with the captured line", async () => {
+    const { result, createBet } = setup();
+
+    act(() => result.current.handleGameSelect(GAME_ID));
+    act(() =>
+      result.current.handleSelectSpread(GAME_ID, {
+        teamChoice: "away",
+        takenLine: 3.5,
+      }),
+    );
+
+    await act(async () => {
+      await result.current.handleSubmitBets();
+    });
+
+    const gameBet = gameBetFrom(createBet);
+    expect(gameBet.bet_type).toBe("spread");
+    expect(gameBet.team_choice).toBe("away");
+    expect(gameBet.spread_value).toBe(3.5);
+    expect(gameBet).not.toHaveProperty("over_under_choice");
+  });
+
+  it("handleSelectTotal submits an over/under bet and clears spread state", async () => {
+    const { result, createBet } = setup();
+
+    act(() => result.current.handleGameSelect(GAME_ID));
+    // First pick a spread, then switch to a total via the grid.
+    act(() =>
+      result.current.handleSelectSpread(GAME_ID, {
+        teamChoice: "home",
+        takenLine: -3.5,
+      }),
+    );
+    act(() =>
+      result.current.handleSelectTotal(GAME_ID, { overUnderChoice: "under" }),
+    );
+
+    await act(async () => {
+      await result.current.handleSubmitBets();
+    });
+
+    const gameBet = gameBetFrom(createBet);
+    expect(gameBet.bet_type).toBe("over_under");
+    expect(gameBet.over_under_choice).toBe("under");
+    expect(gameBet.total_value).toBe(44.5);
+    expect(gameBet).not.toHaveProperty("spread_value");
+    expect(gameBet).not.toHaveProperty("team_choice");
+  });
+
+  it("switching from total back to spread records the new line and drops the total", async () => {
+    const { result, createBet } = setup();
+
+    act(() => result.current.handleGameSelect(GAME_ID));
+    act(() =>
+      result.current.handleSelectTotal(GAME_ID, { overUnderChoice: "over" }),
+    );
+    act(() =>
+      result.current.handleSelectSpread(GAME_ID, {
+        teamChoice: "away",
+        takenLine: 3.5,
+      }),
+    );
+
+    await act(async () => {
+      await result.current.handleSubmitBets();
+    });
+
+    const gameBet = gameBetFrom(createBet);
+    expect(gameBet.bet_type).toBe("spread");
+    expect(gameBet.team_choice).toBe("away");
+    expect(gameBet.spread_value).toBe(3.5);
+    expect(gameBet).not.toHaveProperty("over_under_choice");
+    expect(gameBet).not.toHaveProperty("total_value");
+  });
+});

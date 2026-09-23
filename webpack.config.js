@@ -1,17 +1,29 @@
 const path = require("path");
 const HtmlWebPackPlugin = require("html-webpack-plugin");
 
+const isProduction = process.env.NODE_ENV === "production";
+
 module.exports = {
-  mode: "development",
+  mode: isProduction ? "production" : "development",
   entry: "./src/index.js",
   output: {
     path: path.resolve(__dirname, "dist"),
     filename: "bundle.js",
     publicPath: "/",
-    clean: true,
+    // Only wipe dist for production builds; the dev server keeps it warm.
+    clean: isProduction,
   },
 
-  devtool: "eval-source-map",
+  // Persistent filesystem cache dramatically speeds up warm dev/prod starts.
+  cache: {
+    type: "filesystem",
+    buildDependencies: {
+      config: [__filename],
+    },
+  },
+
+  // Lighter source maps in dev rebuild faster; full maps for production.
+  devtool: isProduction ? "source-map" : "eval-cheap-module-source-map",
   resolve: {
     extensions: [".js", ".jsx"],
   },
@@ -21,7 +33,8 @@ module.exports = {
       publicPath: "/",
     },
     historyApiFallback: true,
-    compress: true,
+    // Skip gzip in dev to save per-reload CPU; prod hosting handles compression.
+    compress: false,
     port: 8080,
     hot: true,
     open: true,
@@ -35,7 +48,21 @@ module.exports = {
         use: {
           loader: "babel-loader",
           options: {
-            presets: ["@babel/preset-env", "@babel/preset-react"],
+            presets: [
+              [
+                "@babel/preset-env",
+                {
+                  // Target modern browsers in dev to cut transform work; a
+                  // production build can rely on a browserslist if added later.
+                  targets: isProduction
+                    ? "defaults"
+                    : "last 2 Chrome versions, last 2 Firefox versions, last 2 Safari versions",
+                },
+              ],
+              "@babel/preset-react",
+            ],
+            // Reuse transforms across runs.
+            cacheDirectory: true,
           },
         },
       },

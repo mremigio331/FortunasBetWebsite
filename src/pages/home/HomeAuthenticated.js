@@ -6,6 +6,7 @@ import useGetHomeData from "../../hooks/home/useGetHomeData";
 import { EyeInvisibleOutlined } from "@ant-design/icons";
 import { Collapse, Row, Col } from "antd";
 import TrophyIndicators from "../../components/bet/TrophyIndicators";
+import { formatPlacedBetSpread } from "../../utils/spreadFormat";
 const { Content } = Layout;
 const { Title, Text } = Typography;
 
@@ -39,7 +40,6 @@ const HomeAuthenticated = () => {
       if (home?.name) homeTeam = home.name;
       if (away?.name) awayTeam = away.name;
     }
-    const spreadValue = bet.game_bet?.spread_value || bet.odds_snapshot?.spread;
     const totalValue =
       bet.game_bet?.total_value || bet.odds_snapshot?.overUnder;
     const getBetStatusInfo = () => {
@@ -148,7 +148,7 @@ const HomeAuthenticated = () => {
                             let teamName = teamChoice;
                             if (teamChoice === "home") teamName = homeTeam;
                             else if (teamChoice === "away") teamName = awayTeam;
-                            return `${teamName} ${spreadValue ? (spreadValue > 0 ? `+${spreadValue}` : spreadValue) : "TBD"}`;
+                            return `${teamName} ${formatPlacedBetSpread(bet)}`;
                           })()
                         : `${bet.game_bet.over_under_choice?.toUpperCase()} ${totalValue || "TBD"}`}
                     </Text>

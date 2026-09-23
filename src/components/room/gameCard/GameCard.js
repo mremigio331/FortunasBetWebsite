@@ -4,7 +4,7 @@ import { CheckCircleOutlined } from "@ant-design/icons";
 import GameCardHeader from "./GameCardHeader";
 import TeamRow from "./TeamRow";
 import BettingLines from "./BettingLines";
-import BettingControls from "./BettingControls";
+import BettingGrid from "./BettingGrid";
 
 const GameCard = ({
   game,
@@ -17,16 +17,15 @@ const GameCard = ({
   onGameSelect,
   onBetTypeChange,
   onTeamChoiceChange,
+  onSelectSpread,
+  onSelectTotal,
   onPointsChange,
   roomSport = "NFL",
   sportRules,
   sessionPointCounts = {},
 }) => {
   const hasValidSpread =
-    game.spread !== null &&
-    game.spread !== undefined &&
-    game.spread !== 0 &&
-    game.spreadDetails;
+    game.spread !== null && game.spread !== undefined && game.spread !== 0;
 
   const hasValidTotal = game.overUnder !== null && game.overUnder !== undefined;
 
@@ -35,26 +34,6 @@ const GameCard = ({
     game.status &&
     game.status.state === "pre" &&
     (hasValidSpread || hasValidTotal);
-
-  // Derive per-side lines from favoredTeam + spread magnitude
-  const spreadAbs =
-    game.spread !== null && game.spread !== undefined
-      ? Math.abs(Number(game.spread))
-      : null;
-
-  const homeLine =
-    spreadAbs == null
-      ? null
-      : game.favoredTeam === "home"
-        ? -spreadAbs
-        : +spreadAbs;
-
-  const awayLine =
-    spreadAbs == null
-      ? null
-      : game.favoredTeam === "away"
-        ? -spreadAbs
-        : +spreadAbs;
 
   return (
     <Card
@@ -144,14 +123,13 @@ const GameCard = ({
       />
 
       {isSelected && (
-        <BettingControls
+        <BettingGrid
           game={game}
           bet={bet}
           hasValidSpread={hasValidSpread}
-          homeLine={homeLine}
-          awayLine={awayLine}
-          onBetTypeChange={onBetTypeChange}
-          onTeamChoiceChange={onTeamChoiceChange}
+          hasValidTotal={hasValidTotal}
+          onSelectSpread={onSelectSpread}
+          onSelectTotal={onSelectTotal}
           onPointsChange={onPointsChange}
           roomSport={roomSport}
           sportRules={sportRules}

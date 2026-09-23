@@ -259,6 +259,8 @@ const Room = () => {
     handleGameSelect,
     handleBetTypeChange,
     handleTeamChoiceChange,
+    handleSelectSpread,
+    handleSelectTotal,
     handlePointsChange,
     handleSubmitBets,
   } = useBetSelection({
@@ -449,6 +451,8 @@ const Room = () => {
               handleGameSelect={handleGameSelect}
               handleBetTypeChange={handleBetTypeChange}
               handleTeamChoiceChange={handleTeamChoiceChange}
+              handleSelectSpread={handleSelectSpread}
+              handleSelectTotal={handleSelectTotal}
               handlePointsChange={handlePointsChange}
               roomSport={roomSport}
               sportRules={sportRules}
@@ -495,6 +499,8 @@ const Room = () => {
               handleGameSelect={handleGameSelect}
               handleBetTypeChange={handleBetTypeChange}
               handleTeamChoiceChange={handleTeamChoiceChange}
+              handleSelectSpread={handleSelectSpread}
+              handleSelectTotal={handleSelectTotal}
               handlePointsChange={handlePointsChange}
               existingBets={existingBets}
               members={members}

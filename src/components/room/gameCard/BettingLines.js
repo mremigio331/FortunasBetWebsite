@@ -1,5 +1,6 @@
 import React from "react";
 import { Typography, Divider } from "antd";
+import { formatSpreadForSide } from "../../../utils/spreadFormat";
 
 const { Text } = Typography;
 
@@ -16,7 +17,13 @@ const BettingLines = ({ game, hasValidSpread, hasValidTotal, roomSport }) => {
           </Text>
           {hasValidSpread ? (
             <div style={{ fontSize: 14, fontWeight: 600 }}>
-              {game.spreadDetails}
+              {`${game.teams?.away?.abbreviation || "Away"} ${formatSpreadForSide(
+                "away",
+                game,
+              )} · ${game.teams?.home?.abbreviation || "Home"} ${formatSpreadForSide(
+                "home",
+                game,
+              )}`}
             </div>
           ) : (
             <div

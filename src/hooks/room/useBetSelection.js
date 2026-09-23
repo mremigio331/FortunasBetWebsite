@@ -198,6 +198,39 @@ const useBetSelection = ({
     }));
   }, []);
 
+  // Grid-cell selection: one action sets bet type + choice + captured line.
+  // Selecting a spread cell flips the bet to a spread bet on the given side and
+  // records the exact signed line taken (`takenLine`), clearing any prior
+  // over/under choice. Selecting a total cell does the mirror.
+  const handleSelectSpread = useCallback(
+    (gameId, { teamChoice, takenLine }) => {
+      setSelectedBets((prev) => ({
+        ...prev,
+        [gameId]: {
+          ...prev[gameId],
+          betType: "spread",
+          teamChoice,
+          takenLine,
+          overUnderChoice: undefined,
+        },
+      }));
+    },
+    [],
+  );
+
+  const handleSelectTotal = useCallback((gameId, { overUnderChoice }) => {
+    setSelectedBets((prev) => ({
+      ...prev,
+      [gameId]: {
+        ...prev[gameId],
+        betType: "overUnder",
+        overUnderChoice,
+        teamChoice: undefined,
+        takenLine: undefined,
+      },
+    }));
+  }, []);
+
   const handlePointsChange = useCallback(
     (gameId, points) => {
       if (sportRules.allowedPoints.includes(points)) {
@@ -370,6 +403,8 @@ const useBetSelection = ({
     handleGameSelect,
     handleBetTypeChange,
     handleTeamChoiceChange,
+    handleSelectSpread,
+    handleSelectTotal,
     handlePointsChange,
     handleSubmitBets,
   };

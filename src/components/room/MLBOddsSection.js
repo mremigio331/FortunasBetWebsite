@@ -48,6 +48,8 @@ const MLBOddsSection = ({
   handleGameSelect,
   handleBetTypeChange,
   handleTeamChoiceChange,
+  handleSelectSpread,
+  handleSelectTotal,
   handlePointsChange,
   sportRules,
   sessionPointCounts,
@@ -120,6 +122,8 @@ const MLBOddsSection = ({
                 onGameSelect={handleGameSelect}
                 onBetTypeChange={handleBetTypeChange}
                 onTeamChoiceChange={handleTeamChoiceChange}
+                onSelectSpread={handleSelectSpread}
+                onSelectTotal={handleSelectTotal}
                 onPointsChange={handlePointsChange}
                 roomSport="MLB"
                 sportRules={sportRules}

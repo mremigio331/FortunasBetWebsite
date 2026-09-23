@@ -67,6 +67,8 @@ const NFLOddsSection = ({
   handleGameSelect,
   handleBetTypeChange,
   handleTeamChoiceChange,
+  handleSelectSpread,
+  handleSelectTotal,
   handlePointsChange,
   roomId,
   roomSport = "NFL",
@@ -302,6 +304,8 @@ const NFLOddsSection = ({
                     onGameSelect={handleGameSelect}
                     onBetTypeChange={handleBetTypeChange}
                     onTeamChoiceChange={handleTeamChoiceChange}
+                    onSelectSpread={handleSelectSpread}
+                    onSelectTotal={handleSelectTotal}
                     onPointsChange={handlePointsChange}
                     roomSport={roomSport}
                     sportRules={sportRules}

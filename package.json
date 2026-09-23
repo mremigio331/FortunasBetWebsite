@@ -4,7 +4,7 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "build": "npm run generate-commit-hash && webpack --mode production",
+    "build": "npm run generate-commit-hash && NODE_ENV=production webpack --mode production",
     "start": "npm run generate-commit-hash && npm run build && node server.js",
     "dev": "npm run generate-commit-hash && webpack serve --mode development",
     "format": "prettier --write .",
