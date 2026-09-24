@@ -33,6 +33,7 @@ import { computeUserStats } from "../../utils/betUtils";
 import LoadingSpinner from "../shared/LoadingSpinner";
 import useUpdateBet from "../../hooks/bet/useUpdateBet";
 import useRemoveBet from "../../hooks/bet/useRemoveBet";
+import useBetHistoryExpansion from "../../hooks/room/useBetHistoryExpansion";
 import { getSportBettingRules } from "../../configs/sportConfig";
 
 const { Title, Text } = Typography;
@@ -50,7 +51,7 @@ const RoomBetsDisplay = ({
 }) => {
   const isMobile = useIsMobile();
   const { user } = useContext(UserAuthenticationContext);
-  const [expandedUsers, setExpandedUsers] = useState({});
+  const expansion = useBetHistoryExpansion();
   const [editingBet, setEditingBet] = useState(null);
   const { updateBet, isLoading: isUpdateLoading } = useUpdateBet();
   const { removeBet, isLoading: isRemoveLoading } = useRemoveBet();
@@ -211,23 +212,19 @@ const RoomBetsDisplay = ({
           size="small"
           type="link"
           icon={
-            expandedUsers[record.user_id] ? <DownOutlined /> : <RightOutlined />
+            expansion.isUserExpanded(record.user_id) ? (
+              <DownOutlined />
+            ) : (
+              <RightOutlined />
+            )
           }
-          onClick={() => toggleUserExpansion(record.user_id)}
+          onClick={() => expansion.toggleUser(record.user_id)}
         >
-          {expandedUsers[record.user_id] ? "Hide" : "View"} Bets
+          {expansion.isUserExpanded(record.user_id) ? "Hide" : "View"} Bets
         </Button>
       ),
     },
   ];
-
-  // Toggle user bet expansion
-  const toggleUserExpansion = (userId) => {
-    setExpandedUsers((prev) => ({
-      ...prev,
-      [userId]: !prev[userId],
-    }));
-  };
 
   const totalPointsWagered = useMemo(() => {
     return betsSource.reduce(
@@ -315,6 +312,7 @@ const RoomBetsDisplay = ({
                 {isMobile ? (
                   <RoomBetsCards
                     userStats={userStats}
+                    expansion={expansion}
                     getAvatarStyle={getAvatarStyle}
                     user={user}
                     BetCardComponent={BetCard}
@@ -325,8 +323,7 @@ const RoomBetsDisplay = ({
                   <RoomBetsTable
                     userStats={userStats}
                     userStatsColumns={userStatsColumns}
-                    expandedUsers={expandedUsers}
-                    toggleUserExpansion={toggleUserExpansion}
+                    expansion={expansion}
                     getAvatarStyle={getAvatarStyle}
                     user={user}
                     BetCardComponent={BetCard}

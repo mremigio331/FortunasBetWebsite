@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Card, Space, Avatar, Tag, Typography, Button, Divider } from "antd";
 import { UserOutlined, DownOutlined, RightOutlined } from "@ant-design/icons";
 import WeekHeader from "./WeekHeader";
@@ -8,32 +8,14 @@ const { Text } = Typography;
 
 const RoomBetsCards = ({
   userStats,
+  expansion,
   getAvatarStyle,
   user,
   BetCardComponent,
   onEditBet,
   onRemoveBet,
 }) => {
-  const [expandedUsers, setExpandedUsers] = useState({});
-  // track expanded weeks per user: { [userId]: { [week]: boolean } }
-  const [expandedWeeks, setExpandedWeeks] = useState({});
-
-  const toggleUserExpansion = (userId) => {
-    setExpandedUsers((prev) => ({
-      ...prev,
-      [userId]: !prev[userId],
-    }));
-  };
-
-  const toggleWeek = (userId, week) => {
-    setExpandedWeeks((prev) => ({
-      ...prev,
-      [userId]: {
-        ...(prev[userId] || {}),
-        [week]: !(prev[userId] || {})[week],
-      },
-    }));
-  };
+  const { isUserExpanded, toggleUser, isWeekExpanded, toggleWeek } = expansion;
 
   return (
     <div className="bet-history-mobile-wrapper">
@@ -80,18 +62,18 @@ const RoomBetsCards = ({
               size="small"
               type="link"
               icon={
-                expandedUsers[userStat.user_id] ? (
+                isUserExpanded(userStat.user_id) ? (
                   <DownOutlined />
                 ) : (
                   <RightOutlined />
                 )
               }
-              onClick={() => toggleUserExpansion(userStat.user_id)}
+              onClick={() => toggleUser(userStat.user_id)}
               style={{ paddingLeft: 0 }}
             >
-              {expandedUsers[userStat.user_id] ? "Hide Bets" : "View All Bets"}
+              {isUserExpanded(userStat.user_id) ? "Hide Bets" : "View All Bets"}
             </Button>
-            {expandedUsers[userStat.user_id] && (
+            {isUserExpanded(userStat.user_id) && (
               <>
                 <Divider style={{ margin: "8px 0" }} />
                 {/* Group bets by week for mobile view */}
@@ -113,12 +95,10 @@ const RoomBetsCards = ({
                       <WeekHeader
                         week={week}
                         bets={byWeek[week]}
-                        expanded={
-                          !!(expandedWeeks[userStat.user_id] || {})[week]
-                        }
+                        expanded={isWeekExpanded(userStat.user_id, week)}
                         onToggle={() => toggleWeek(userStat.user_id, week)}
                       />
-                      {(expandedWeeks[userStat.user_id] || {})[week] && (
+                      {isWeekExpanded(userStat.user_id, week) && (
                         <div style={{ marginTop: 8 }}>
                           {byWeek[week].map((bet) => (
                             <BetCardComponent

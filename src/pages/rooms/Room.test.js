@@ -378,7 +378,7 @@ const renderRoom = () => {
     defaultOptions: { queries: { retry: false } },
   });
 
-  return render(
+  const result = render(
     <QueryClientProvider client={queryClient}>
       <UserAuthenticationContext.Provider
         value={{ idToken: ID_TOKEN, isAuthenticated: true }}
@@ -391,6 +391,16 @@ const renderRoom = () => {
       </UserAuthenticationContext.Provider>
     </QueryClientProvider>,
   );
+
+  // The odds/week-selection UI under test now lives behind the "Place Bets"
+  // tab (the room page defaults to the Leaderboard tab). Activate it so the
+  // week selectors this suite drives are mounted and visible.
+  const placeBetsTab = screen.getByRole("tab", { name: /Place Bets/i });
+  act(() => {
+    fireEvent.click(placeBetsTab);
+  });
+
+  return result;
 };
 
 /**

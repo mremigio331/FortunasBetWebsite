@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Table, Avatar, Tag, Space, Button, Card, Typography } from "antd";
 import { UserOutlined, DownOutlined } from "@ant-design/icons";
 import WeekHeader from "./WeekHeader";
@@ -10,22 +10,14 @@ const { Text } = Typography;
 const RoomBetsTable = ({
   userStats,
   userStatsColumns,
-  expandedUsers,
-  toggleUserExpansion,
+  expansion,
   getAvatarStyle,
   user,
   BetCardComponent,
   onEditBet,
   onRemoveBet,
 }) => {
-  const [expandedWeeks, setExpandedWeeks] = useState({});
-
-  const toggleWeekExpansion = (week) => {
-    setExpandedWeeks((prev) => ({
-      ...prev,
-      [week]: !prev[week],
-    }));
-  };
+  const { isUserExpanded, toggleUser, isWeekExpanded, toggleWeek } = expansion;
 
   return (
     <div className="bet-history-table-wrapper">
@@ -59,7 +51,7 @@ const RoomBetsTable = ({
                     </td>
                   ))}
                 </tr>
-                {expandedUsers[userStat.user_id] && (
+                {isUserExpanded(userStat.user_id) && (
                   <tr>
                     <td
                       colSpan={userStatsColumns.length}
@@ -89,23 +81,23 @@ const RoomBetsTable = ({
                             size="small"
                             type="text"
                             icon={<DownOutlined />}
-                            onClick={() =>
-                              toggleUserExpansion(userStat.user_id)
-                            }
+                            onClick={() => toggleUser(userStat.user_id)}
                           >
                             Hide
                           </Button>
                         }
                       >
                         {Object.keys(betsByWeek).map((week) => (
-                          <div key={week}>
+                          <div key={`${userStat.user_id}-week-${week}`}>
                             <WeekHeader
                               week={week}
                               bets={betsByWeek[week]}
-                              expanded={!!expandedWeeks[week]}
-                              onToggle={() => toggleWeekExpansion(week)}
+                              expanded={isWeekExpanded(userStat.user_id, week)}
+                              onToggle={() =>
+                                toggleWeek(userStat.user_id, week)
+                              }
                             />
-                            {expandedWeeks[week] && (
+                            {isWeekExpanded(userStat.user_id, week) && (
                               <div style={{ marginLeft: "16px" }}>
                                 {betsByWeek[week].map((bet) => (
                                   <BetCardComponent
