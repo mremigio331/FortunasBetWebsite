@@ -1,19 +1,19 @@
 import React from "react";
 import RoomLeaderboard from "../RoomLeaderboard";
-import RoomBetsDisplay from "../RoomBetsDisplay";
+import StandingsBetsLoader from "../StandingsBetsLoader";
 
 /**
- * Standings tab: room leaderboard plus the full bets display.
+ * Standings tab: room leaderboard plus the bets display.
+ *
+ * Bets load progressively — StandingsBetsLoader fetches the active members
+ * first, then each member's bets in parallel — so the table renders quickly
+ * instead of waiting on a single room-wide bets fetch.
  */
 const StandingsTab = ({
   isLeaderboardLoading,
   leaderboard,
-  isRoomBetsAllLoading,
   roomId,
-  roomBetsAll,
   room,
-  members,
-  roomBetsUsers,
   roomSport,
   removedBets,
   onRefetchBets,
@@ -23,16 +23,12 @@ const StandingsTab = ({
       isLoading={isLeaderboardLoading}
       leaderboard={leaderboard}
     />
-    <RoomBetsDisplay
-      isFetching={isRoomBetsAllLoading}
+    <StandingsBetsLoader
       roomId={roomId}
-      existingBets={roomBetsAll}
-      roomWeeks={room ? room.nfl_weeks : null}
-      members={members}
-      users={roomBetsUsers}
+      room={room}
       roomSport={roomSport}
-      refetchBets={onRefetchBets}
       removedBets={removedBets}
+      onRefetchBets={onRefetchBets}
     />
   </>
 );

@@ -48,6 +48,7 @@ const RoomBetsDisplay = ({
   roomSport,
   refetchBets,
   removedBets: removedBetsProp,
+  loadingBanner = null,
 }) => {
   const isMobile = useIsMobile();
   const { user } = useContext(UserAuthenticationContext);
@@ -281,6 +282,7 @@ const RoomBetsDisplay = ({
         }
         style={{ marginBottom: "24px" }}
       >
+        {loadingBanner}
         {!hasBets ? (
           <Empty
             description="No bets placed yet"

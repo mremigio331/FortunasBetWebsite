@@ -41,9 +41,6 @@ const RoomContent = () => {
     isMLB,
     leaderboard,
     isLeaderboardLoading,
-    roomBetsAll,
-    roomBetsUsers,
-    isRoomBetsAllLoading,
     removedBets,
     refetchStandings,
     mlbOddsProps,
@@ -286,12 +283,8 @@ const RoomContent = () => {
                   <StandingsTab
                     isLeaderboardLoading={isLeaderboardLoading}
                     leaderboard={leaderboard}
-                    isRoomBetsAllLoading={isRoomBetsAllLoading}
                     roomId={roomId}
-                    roomBetsAll={roomBetsAll}
                     room={room}
-                    members={members}
-                    roomBetsUsers={roomBetsUsers}
                     roomSport={roomSport}
                     removedBets={removedBets}
                     onRefetchBets={refetchStandings}
