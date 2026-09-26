@@ -83,6 +83,11 @@ const useGetGameSlate = ({
     date: data ? data.data.date : date,
     message: data ? data.data.message : null,
     isSlateFetching: isFetching,
+    // True while the query is enabled but has not yet produced data — used
+    // to keep a loading state during the brief gap between the query
+    // becoming enabled and react-query flipping isFetching on.
+    isSlatePending: isEnabled && !data,
+    isSlateEnabled: isEnabled,
     isSlateError: isError,
     slateStatus: status,
     slateError: error,

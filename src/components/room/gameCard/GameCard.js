@@ -23,6 +23,9 @@ const GameCard = ({
   roomSport = "NFL",
   sportRules,
   sessionPointCounts = {},
+  oddsLoading = false,
+  oddsError = false,
+  onRetryOdds,
 }) => {
   const hasValidSpread =
     game.spread !== null && game.spread !== undefined && game.spread !== 0;
@@ -120,6 +123,9 @@ const GameCard = ({
         hasValidSpread={hasValidSpread}
         hasValidTotal={hasValidTotal}
         roomSport={roomSport}
+        oddsLoading={oddsLoading}
+        oddsError={oddsError}
+        onRetryOdds={onRetryOdds}
       />
 
       {isSelected && (

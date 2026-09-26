@@ -16,7 +16,7 @@ import WeekYearSelector from "./WeekYearSelector";
 import WeekResolutionNotice from "./WeekResolutionNotice";
 import BettingSummary from "./BettingSummary";
 import StatusMessages from "./StatusMessages";
-import GameCard from "./gameCard/GameCard";
+import GameCardWithOdds from "./gameCard/GameCardWithOdds";
 import CurrentWeekUserBetsAlert from "./CurrentWeekUserBetsAlert";
 import RoomBetsDisplay from "./RoomBetsDisplay";
 import LoadingSpinner from "../shared/LoadingSpinner";
@@ -72,6 +72,8 @@ const NFLOddsSection = ({
   handlePointsChange,
   roomId,
   roomSport = "NFL",
+  sport,
+  league,
   sportRules,
   sessionPointCounts,
 }) => {
@@ -86,7 +88,7 @@ const NFLOddsSection = ({
         }
       >
         <LoadingSpinner
-          message={`Loading ${roomSport === "MLB" ? "MLB" : "NFL"} odds...`}
+          message={`Loading ${roomSport === "MLB" ? "MLB" : "NFL"} games...`}
         />
       </Card>
     );
@@ -195,9 +197,13 @@ const NFLOddsSection = ({
           style={{ marginBottom: "16px" }}
         />
       )}
-      {isOddsFetching && (
+      {(isWeekLoading || isOddsFetching) && (
         <LoadingSpinner
-          message={`Loading ${roomSport === "MLB" ? "MLB" : "NFL"} odds...`}
+          message={
+            isWeekLoading
+              ? "Finding the current week..."
+              : `Loading ${roomSport === "MLB" ? "MLB" : "NFL"} games...`
+          }
         />
       )}
       {isOddsError && (
@@ -212,13 +218,13 @@ const NFLOddsSection = ({
           />
         </div>
       )}
-      {!isOddsFetching && !isOddsError && !hasOdds && (
+      {!isWeekLoading && !isOddsFetching && !isOddsError && !hasOdds && (
         <Empty
-          description="No odds available for this week"
+          description="No games available for this week"
           image={Empty.PRESENTED_IMAGE_SIMPLE}
         />
       )}
-      {!isOddsFetching && !isOddsError && hasOdds && (
+      {!isWeekLoading && !isOddsFetching && !isOddsError && hasOdds && (
         <>
           <BettingSummary
             selectedBets={selectedBets}
@@ -293,8 +299,10 @@ const NFLOddsSection = ({
                 isSelected && bet && duplicatePointValues.includes(bet.points);
               return (
                 <Col xs={24} sm={12} lg={8} key={game.game_id}>
-                  <GameCard
+                  <GameCardWithOdds
                     game={game}
+                    sport={sport}
+                    league={league}
                     isSelected={isSelected}
                     bet={bet}
                     canSelect={canSelect}

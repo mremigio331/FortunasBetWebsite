@@ -110,6 +110,35 @@ describe("useGetGameSlate", () => {
     expect(result.current.games).toEqual([]);
   });
 
+  it("reports isSlatePending while enabled but before data arrives", async () => {
+    // A never-resolving request keeps the query enabled with no data yet.
+    apiRequestGet.mockReturnValue(new Promise(() => {}));
+
+    const { result } = renderHook(
+      () =>
+        useGetGameSlate({
+          sport: "football",
+          league: "nfl",
+          week: 4,
+          year: 2025,
+        }),
+      { wrapper: makeWrapper() },
+    );
+
+    await waitFor(() => expect(result.current.isSlatePending).toBe(true));
+    expect(result.current.hasGames).toBe(false);
+  });
+
+  it("is not pending when disabled (missing params)", async () => {
+    const { result } = renderHook(
+      () => useGetGameSlate({ sport: "football", league: "nfl" }),
+      { wrapper: makeWrapper() },
+    );
+
+    await new Promise((r) => setTimeout(r, 0));
+    expect(result.current.isSlatePending).toBe(false);
+  });
+
   it("does not fire when disabled", async () => {
     renderHook(
       () =>

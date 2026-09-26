@@ -47,6 +47,7 @@ import useGetNFLWeeksInRange from "../../hooks/odds/useGetNFLWeeksInRange";
 import useGetMLBWeeksInRange from "../../hooks/odds/useGetMLBWeeksInRange";
 import useGetNFLOdds from "../../hooks/odds/useGetNFLOdds";
 import useGetMLBOdds from "../../hooks/odds/useGetMLBOdds";
+import useGetSlateWithOdds from "../../hooks/games/useGetSlateWithOdds";
 
 // --- Leaf data hooks: mocked. Everything between them and the DOM is real. ---
 // The factories are inlined rather than shared: `jest.mock` is hoisted above
@@ -96,6 +97,10 @@ jest.mock("../../hooks/odds/useGetNFLOdds", () => ({
   default: jest.fn(),
 }));
 jest.mock("../../hooks/odds/useGetMLBOdds", () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
+jest.mock("../../hooks/games/useGetSlateWithOdds", () => ({
   __esModule: true,
   default: jest.fn(),
 }));
@@ -495,6 +500,7 @@ beforeEach(() => {
 
   useGetNFLOdds.mockReturnValue(noOdds);
   useGetMLBOdds.mockReturnValue(noOdds);
+  useGetSlateWithOdds.mockReturnValue(noOdds);
 
   useGetRoomMembers.mockReturnValue({
     members: [{ user_id: CURRENT_USER_ID, status: "approved" }],

@@ -1,11 +1,56 @@
 import React from "react";
 import { Typography, Divider } from "antd";
+import { LoadingOutlined } from "@ant-design/icons";
 import { formatSpreadForSide } from "../../../utils/spreadFormat";
 
 const { Text } = Typography;
 
-const BettingLines = ({ game, hasValidSpread, hasValidTotal, roomSport }) => {
+const BettingLines = ({
+  game,
+  hasValidSpread,
+  hasValidTotal,
+  roomSport,
+  oddsLoading = false,
+  oddsError = false,
+  onRetryOdds,
+}) => {
   if (game.status?.state !== "pre") return null;
+
+  // Progressive load: the slate renders this card before its betting line
+  // has been fetched. Show a per-card loading/error state on the lines area
+  // instead of blocking the whole grid.
+  if (oddsLoading) {
+    return (
+      <>
+        <Divider style={{ margin: "12px 0" }} />
+        <div style={{ fontSize: 12, color: "#888" }}>
+          <LoadingOutlined style={{ marginRight: 6 }} spin />
+          Loading odds…
+        </div>
+      </>
+    );
+  }
+
+  if (oddsError) {
+    return (
+      <>
+        <Divider style={{ margin: "12px 0" }} />
+        <div style={{ fontSize: 12, color: "#faad14" }}>
+          Couldn't load odds.{" "}
+          {onRetryOdds && (
+            <a
+              onClick={(e) => {
+                e.stopPropagation();
+                onRetryOdds();
+              }}
+            >
+              Retry
+            </a>
+          )}
+        </div>
+      </>
+    );
+  }
 
   return (
     <>

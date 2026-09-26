@@ -18,6 +18,7 @@ import { UserAuthenticationContext } from "../../provider/UserAuthenticationProv
 import { getUserIdFromToken } from "../../utils/authUtils";
 import useGetRoom from "../../hooks/room/useGetRoom";
 import useGetNFLOdds from "../../hooks/odds/useGetNFLOdds";
+import useGetSlateWithOdds from "../../hooks/games/useGetSlateWithOdds";
 import useGetMLBOdds from "../../hooks/odds/useGetMLBOdds";
 import useGetNFLWeeksInRange from "../../hooks/odds/useGetNFLWeeksInRange";
 import useGetMLBWeeksInRange from "../../hooks/odds/useGetMLBWeeksInRange";
@@ -169,10 +170,13 @@ const Room = () => {
     oddsError: nflOddsError,
     oddsRefetch: nflOddsRefetch,
     hasOdds: nflHasOdds,
-  } = useGetNFLOdds(
-    nflSelectedWeek,
-    nflSelectedYear,
-    nflSelectedSeasonType,
+  } = useGetSlateWithOdds(
+    "NFL",
+    {
+      week: nflSelectedWeek,
+      year: nflSelectedYear,
+      seasonType: nflSelectedSeasonType,
+    },
     !isMLB,
   );
 
@@ -413,6 +417,8 @@ const Room = () => {
       existingBets={existingBets}
       members={members}
       roomSport={roomSport}
+      sport={sport}
+      league={league}
       sportRules={sportRules}
     />
   );
