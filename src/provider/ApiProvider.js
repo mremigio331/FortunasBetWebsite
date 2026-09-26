@@ -8,7 +8,7 @@ import {
 const endpointMap = {
   prod: PROD_API_ENDPOINT,
   testing: TESTING_API_ENDPOINT,
-  dev: "http://localhost:5000",
+  dev: "http://localhost:5050",
 };
 
 const ApiContext = createContext();
