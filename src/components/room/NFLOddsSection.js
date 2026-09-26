@@ -201,7 +201,7 @@ const NFLOddsSection = ({
         <LoadingSpinner
           message={
             isWeekLoading
-              ? "Finding the current week..."
+              ? "Loading current week..."
               : `Loading ${roomSport === "MLB" ? "MLB" : "NFL"} games...`
           }
         />

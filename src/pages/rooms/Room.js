@@ -1,11 +1,12 @@
 import React, {
+  useEffect,
   useMemo,
   useContext,
   useState,
   useRef,
   useLayoutEffect,
 } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { Card, Row, Col, Alert, Button, Tabs } from "antd";
 import {
   TrophyOutlined,
@@ -52,7 +53,35 @@ const Room = () => {
   const isMobile = useIsMobile();
   const { idToken } = useContext(UserAuthenticationContext);
 
-  const [activeTab, setActiveTab] = useState("standings");
+  // Valid room tabs. The active tab is mirrored to a `tab` query param so a
+  // shared/bookmarked URL reopens the same tab; anything else falls back to
+  // Standings.
+  const VALID_TABS = ["standings", "place-bets", "info"];
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const initialTab = VALID_TABS.includes(tabParam) ? tabParam : "standings";
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  // Keep tab state and the URL in sync. Writing the param with replace keeps
+  // tab switches out of the browser history stack.
+  const handleTabChange = (key) => {
+    setActiveTab(key);
+    const next = new URLSearchParams(searchParams);
+    if (key === "standings") {
+      next.delete("tab");
+    } else {
+      next.set("tab", key);
+    }
+    setSearchParams(next, { replace: true });
+  };
+
+  // Sync the active tab when the URL param changes externally (e.g. browser
+  // back/forward, or opening a shared link after mount).
+  useEffect(() => {
+    const resolved = VALID_TABS.includes(tabParam) ? tabParam : "standings";
+    setActiveTab((prev) => (prev === resolved ? prev : resolved));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tabParam]);
 
   // On mobile the room-name + tab header is fixed to the top of the screen so
   // the user can switch tabs without scrolling back up. Because it is removed
@@ -567,7 +596,7 @@ const Room = () => {
         >
           <Tabs
             activeKey={activeTab}
-            onChange={setActiveTab}
+            onChange={handleTabChange}
             tabPosition={isMobile ? "top" : "bottom"}
             size="large"
             centered

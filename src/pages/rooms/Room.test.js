@@ -378,7 +378,10 @@ const ID_TOKEN = `${base64Url({ alg: "none", typ: "JWT" })}.${base64Url({
   sub: CURRENT_USER_ID,
 })}.signature`;
 
-const renderRoom = () => {
+const renderRoom = (
+  initialEntry = "/rooms/room-1",
+  { activatePlaceBets = true } = {},
+) => {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
@@ -388,7 +391,7 @@ const renderRoom = () => {
       <UserAuthenticationContext.Provider
         value={{ idToken: ID_TOKEN, isAuthenticated: true }}
       >
-        <MemoryRouter initialEntries={["/rooms/room-1"]}>
+        <MemoryRouter initialEntries={[initialEntry]}>
           <Routes>
             <Route path="/rooms/:roomId" element={<Room />} />
           </Routes>
@@ -399,11 +402,14 @@ const renderRoom = () => {
 
   // The odds/week-selection UI under test now lives behind the "Place Bets"
   // tab (the room page defaults to the Leaderboard tab). Activate it so the
-  // week selectors this suite drives are mounted and visible.
-  const placeBetsTab = screen.getByRole("tab", { name: /Place Bets/i });
-  act(() => {
-    fireEvent.click(placeBetsTab);
-  });
+  // week selectors this suite drives are mounted and visible. Tests that
+  // assert URL-driven tab selection opt out via activatePlaceBets: false.
+  if (activatePlaceBets) {
+    const placeBetsTab = screen.getByRole("tab", { name: /Place Bets/i });
+    act(() => {
+      fireEvent.click(placeBetsTab);
+    });
+  }
 
   return result;
 };
@@ -766,5 +772,31 @@ describe("Room — MLB", () => {
     await waitFor(() =>
       expect(selectedValueOf("MLB Week:")).toBe("Week 3 (Jul 15 - Jul 21)"),
     );
+  });
+});
+
+describe("Room — tab query param", () => {
+  it("defaults to the Standings tab when no tab param is present", () => {
+    renderRoom("/rooms/room-1", { activatePlaceBets: false });
+    const standings = screen.getByRole("tab", { name: /Standings/i });
+    expect(standings).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("opens the Place Bets tab when ?tab=place-bets is in the URL", () => {
+    renderRoom("/rooms/room-1?tab=place-bets", { activatePlaceBets: false });
+    const placeBets = screen.getByRole("tab", { name: /Place Bets/i });
+    expect(placeBets).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("opens the Info tab when ?tab=info is in the URL", () => {
+    renderRoom("/rooms/room-1?tab=info", { activatePlaceBets: false });
+    const info = screen.getByRole("tab", { name: /Info/i });
+    expect(info).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("falls back to Standings for an unknown tab param", () => {
+    renderRoom("/rooms/room-1?tab=bogus", { activatePlaceBets: false });
+    const standings = screen.getByRole("tab", { name: /Standings/i });
+    expect(standings).toHaveAttribute("aria-selected", "true");
   });
 });
