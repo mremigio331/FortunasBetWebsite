@@ -153,7 +153,7 @@ const useBetSelection = ({
   }, []);
 
   const handleGameSelect = useCallback(
-    (gameId, betData) => {
+    (gameId, game) => {
       setSelectedBets((prev) => {
         if (prev[gameId]) {
           const newBets = { ...prev };
@@ -170,7 +170,15 @@ const useBetSelection = ({
         }
         return {
           ...prev,
-          [gameId]: { betType: "spread", teamChoice: "home", points: 1 },
+          // Capture the game (with its lazily-loaded odds merged in) at
+          // selection time so submit can build an accurate odds_snapshot
+          // without re-reading the odds-less slate array.
+          [gameId]: {
+            betType: "spread",
+            teamChoice: "home",
+            points: 1,
+            oddsSnapshot: game || null,
+          },
         };
       });
     },
@@ -203,10 +211,11 @@ const useBetSelection = ({
   // records the exact signed line taken (`takenLine`), clearing any prior
   // over/under choice. Selecting a total cell does the mirror.
   const handleSelectSpread = useCallback(
-    (gameId, { teamChoice, takenLine }) => {
+    (gameId, { teamChoice, takenLine, game }) => {
       setSelectedBets((prev) => ({
         ...prev,
         [gameId]: {
+          ...(game ? { oddsSnapshot: game } : {}),
           ...prev[gameId],
           betType: "spread",
           teamChoice,
@@ -218,10 +227,11 @@ const useBetSelection = ({
     [],
   );
 
-  const handleSelectTotal = useCallback((gameId, { overUnderChoice }) => {
+  const handleSelectTotal = useCallback((gameId, { overUnderChoice, game }) => {
     setSelectedBets((prev) => ({
       ...prev,
       [gameId]: {
+        ...(game ? { oddsSnapshot: game } : {}),
         ...prev[gameId],
         betType: "overUnder",
         overUnderChoice,
@@ -279,7 +289,11 @@ const useBetSelection = ({
 
     try {
       const betPromises = betEntries.map(async ([gameId, bet]) => {
-        const game = nflOdds.find((g) => g.game_id === gameId);
+        // Prefer the game+odds captured when the user selected the bet
+        // (the card had the lazily-loaded odds merged in). Fall back to the
+        // slate array only if no snapshot was captured.
+        const game =
+          bet.oddsSnapshot || nflOdds.find((g) => g.game_id === gameId);
         if (!game) throw new Error(`Game not found: ${gameId}`);
 
         let teamChoice = null;
@@ -321,6 +335,15 @@ const useBetSelection = ({
         if (bet.betType === "spread" && spreadValue === null) {
           throw new Error(
             `Game ${gameId} is missing a spread line - cannot place spread bet`,
+          );
+        }
+
+        if (
+          bet.betType === "overUnder" &&
+          (game.overUnder === null || game.overUnder === undefined)
+        ) {
+          throw new Error(
+            `Game ${gameId} is missing a total line - cannot place total bet`,
           );
         }
 

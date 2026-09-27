@@ -81,7 +81,11 @@ const BettingGrid = ({
         style={cellStyle(selected, disabled)}
         onClick={(e) => {
           e.stopPropagation();
-          onSelectSpread(game.game_id, { teamChoice: side, takenLine: line });
+          onSelectSpread(game.game_id, {
+            teamChoice: side,
+            takenLine: line,
+            game,
+          });
         }}
       >
         {disabled ? "N/A" : formatLine(line)}
@@ -100,7 +104,7 @@ const BettingGrid = ({
         style={cellStyle(selected, disabled)}
         onClick={(e) => {
           e.stopPropagation();
-          onSelectTotal(game.game_id, { overUnderChoice: choice });
+          onSelectTotal(game.game_id, { overUnderChoice: choice, game });
         }}
       >
         {disabled ? "N/A" : `${prefix} ${game.overUnder}`}

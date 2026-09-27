@@ -278,3 +278,96 @@ describe("useBetSelection — grid selection handlers", () => {
     expect(gameBet).not.toHaveProperty("total_value");
   });
 });
+
+/**
+ * Regression: with progressive odds loading the `nflOdds` slate array carries
+ * null odds (odds are fetched lazily per card). The bug sent that null-odds
+ * game as `odds_snapshot`, so the backend's validate_odds_snapshot rejected
+ * every bet with a 500. The fix captures the card's merged game (with odds) at
+ * selection time and submits that snapshot.
+ */
+describe("useBetSelection — odds_snapshot from captured selection", () => {
+  const slateGame = {
+    game_id: GAME_ID,
+    date: "2024-09-08T17:00:00Z",
+    // Slate has NO odds — this is what the odds-less array looks like now.
+    spread: null,
+    favoredTeam: null,
+    overUnder: null,
+    status: { state: "pre" },
+    teams: { home: { abbreviation: "KC" }, away: { abbreviation: "BAL" } },
+  };
+
+  const mergedGame = {
+    ...slateGame,
+    // Odds the card loaded lazily and passed into the select handler.
+    spread: 3.5,
+    favoredTeam: "home",
+    overUnder: 44.5,
+    homeTeamOdds: { moneyLine: -150, spreadOdds: -110 },
+    awayTeamOdds: { moneyLine: 130, spreadOdds: -110 },
+  };
+
+  const setupSlate = () => {
+    const createBet = jest.fn().mockResolvedValue({});
+    const hook = renderHook(() =>
+      useBetSelection({
+        roomId: "room-1",
+        currentUserId: "user-1",
+        existingBets: [],
+        selectedWeek: 1,
+        selectedSeasonType: 2,
+        selectedYear: 2024,
+        sport: "football",
+        league: "nfl",
+        roomSport: "NFL",
+        nflOdds: [slateGame], // odds-less slate
+        createBet,
+        refetchBets: jest.fn(),
+      }),
+    );
+    return { ...hook, createBet };
+  };
+
+  it("submits the captured merged odds, not the null-odds slate", async () => {
+    const { result, createBet } = setupSlate();
+
+    // Select via the total cell, passing the merged game (as the card does).
+    act(() =>
+      result.current.handleSelectTotal(GAME_ID, {
+        overUnderChoice: "over",
+        game: mergedGame,
+      }),
+    );
+
+    await act(async () => {
+      await result.current.handleSubmitBets();
+    });
+
+    expect(createBet).toHaveBeenCalledTimes(1);
+    const payload = createBet.mock.calls[0][0];
+    // The snapshot must carry real odds, not the slate's nulls.
+    expect(payload.odds_snapshot.overUnder).toBe(44.5);
+    expect(payload.odds_snapshot.spread).toBe(3.5);
+    expect(payload.game_bet.total_value).toBe(44.5);
+  });
+
+  it("blocks an over/under bet whose captured game still has no total", async () => {
+    const { result, createBet } = setupSlate();
+
+    // Select total but pass a game with no overUnder (odds never loaded).
+    act(() =>
+      result.current.handleSelectTotal(GAME_ID, {
+        overUnderChoice: "over",
+        game: { ...slateGame },
+      }),
+    );
+
+    await act(async () => {
+      await result.current.handleSubmitBets();
+    });
+
+    // Guard should prevent sending a null-total snapshot.
+    expect(createBet).not.toHaveBeenCalled();
+  });
+});

@@ -60,7 +60,7 @@ const GameCard = ({
         position: "relative",
       }}
       bodyStyle={{ padding: 16 }}
-      onClick={() => isGameSelectable && onGameSelect(game.game_id)}
+      onClick={() => isGameSelectable && onGameSelect(game.game_id, game)}
       hoverable={isGameSelectable}
     >
       {/* Selection Indicator */}

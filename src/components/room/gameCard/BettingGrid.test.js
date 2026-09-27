@@ -70,35 +70,37 @@ describe("BettingGrid — labels match actions", () => {
   it("tapping the GB spread cell submits away with the -3.5 line", () => {
     const { onSelectSpread } = renderGrid();
     fireEvent.click(screen.getByText("-3.5"));
-    expect(onSelectSpread).toHaveBeenCalledWith("401872936", {
-      teamChoice: "away",
-      takenLine: -3.5,
-    });
+    expect(onSelectSpread).toHaveBeenCalledWith(
+      "401872936",
+      expect.objectContaining({ teamChoice: "away", takenLine: -3.5 }),
+    );
   });
 
   it("tapping the NYJ spread cell submits home with the +3.5 line", () => {
     const { onSelectSpread } = renderGrid();
     fireEvent.click(screen.getByText("+3.5"));
-    expect(onSelectSpread).toHaveBeenCalledWith("401872936", {
-      teamChoice: "home",
-      takenLine: 3.5,
-    });
+    expect(onSelectSpread).toHaveBeenCalledWith(
+      "401872936",
+      expect.objectContaining({ teamChoice: "home", takenLine: 3.5 }),
+    );
   });
 
   it("tapping the Over cell submits over", () => {
     const { onSelectTotal } = renderGrid();
     fireEvent.click(screen.getByText("O 44.5"));
-    expect(onSelectTotal).toHaveBeenCalledWith("401872936", {
-      overUnderChoice: "over",
-    });
+    expect(onSelectTotal).toHaveBeenCalledWith(
+      "401872936",
+      expect.objectContaining({ overUnderChoice: "over" }),
+    );
   });
 
   it("tapping the Under cell submits under", () => {
     const { onSelectTotal } = renderGrid();
     fireEvent.click(screen.getByText("U 44.5"));
-    expect(onSelectTotal).toHaveBeenCalledWith("401872936", {
-      overUnderChoice: "under",
-    });
+    expect(onSelectTotal).toHaveBeenCalledWith(
+      "401872936",
+      expect.objectContaining({ overUnderChoice: "under" }),
+    );
   });
 
   it("tapping a points button reports that point value", () => {
@@ -136,9 +138,9 @@ describe("BettingGrid — labels match actions", () => {
     const { onSelectSpread } = renderGrid({ game: { favoredTeam: "home" } });
     // Tapping the away (GB) +3.5 cell records the underdog line for away.
     fireEvent.click(screen.getByText("+3.5"));
-    expect(onSelectSpread).toHaveBeenCalledWith("401872936", {
-      teamChoice: "away",
-      takenLine: 3.5,
-    });
+    expect(onSelectSpread).toHaveBeenCalledWith(
+      "401872936",
+      expect.objectContaining({ teamChoice: "away", takenLine: 3.5 }),
+    );
   });
 });
