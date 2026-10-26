@@ -8,7 +8,11 @@ module.exports = {
   entry: "./src/index.js",
   output: {
     path: path.resolve(__dirname, "dist"),
-    filename: "bundle.js",
+    // Content-hash the production bundle so each build emits a unique filename.
+    // A changed build produces a new URL CloudFront cannot serve stale, and
+    // HtmlWebpackPlugin rewrites index.html to point at it. Dev keeps the
+    // stable name so the dev server/HMR stays simple.
+    filename: isProduction ? "bundle.[contenthash].js" : "bundle.js",
     publicPath: "/",
     // Only wipe dist for production builds; the dev server keeps it warm.
     clean: isProduction,
