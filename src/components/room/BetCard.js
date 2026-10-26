@@ -8,6 +8,7 @@ import {
 } from "@ant-design/icons";
 import ScoreDisplay from "./ScoreDisplay";
 import computeDisplayedSpread from "../../utils/spreadUtils";
+import { formatBrowserDateTime } from "../../utils/browserTime";
 
 const { Text } = Typography;
 
@@ -93,10 +94,17 @@ const BetCard = ({
   const gameNotStarted =
     bet.event_datetime && bet.event_datetime > now && !bet.game_bet?.result;
 
-  // Format date
-  const betDate = bet.event_datetime
-    ? new Date(bet.event_datetime * 1000).toLocaleDateString()
+  // Game start time, in the viewer's own browser timezone (date + time + tz).
+  const gameStart = bet.event_datetime
+    ? formatBrowserDateTime(bet.event_datetime)
     : "Unknown";
+
+  // Bet placement time, in the viewer's browser timezone. Shown on ALL bets —
+  // including other users' hidden bets on games that haven't started — so
+  // everyone can see when a bet was placed.
+  const placedAt = bet.submitted_at
+    ? formatBrowserDateTime(bet.submitted_at)
+    : null;
 
   // Get teams from odds_snapshot
   let homeTeam = "Home Team";
@@ -165,13 +173,18 @@ const BetCard = ({
                 <div
                   style={{
                     display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
+                    flexDirection: "column",
+                    gap: 2,
                   }}
                 >
                   <Text type="secondary" style={{ fontSize: "12px" }}>
-                    {betDate}
+                    Game starts: {gameStart}
                   </Text>
+                  {placedAt && (
+                    <Text type="secondary" style={{ fontSize: "11px" }}>
+                      Bet placed: {placedAt}
+                    </Text>
+                  )}
                 </div>
               </>
             )}
@@ -180,19 +193,37 @@ const BetCard = ({
               <div
                 style={{
                   display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
+                  flexDirection: "column",
+                  gap: 4,
                 }}
               >
-                <Space size="small">
-                  <EyeInvisibleOutlined style={{ color: "#8c8c8c" }} />
-                  <Text type="secondary" style={{ fontSize: "12px" }}>
-                    Bet details hidden until game starts
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <Space size="small">
+                    <EyeInvisibleOutlined style={{ color: "#8c8c8c" }} />
+                    <Text type="secondary" style={{ fontSize: "12px" }}>
+                      Bet details hidden until game starts
+                    </Text>
+                  </Space>
+                  <Tag color={statusInfo.tagColor} size="small">
+                    {statusInfo.statusIcon} {statusInfo.statusText}
+                  </Tag>
+                </div>
+                {/* Even when the bet itself is hidden, show when the game
+                    starts and when the bet was placed. */}
+                <Text type="secondary" style={{ fontSize: "12px" }}>
+                  Game starts: {gameStart}
+                </Text>
+                {placedAt && (
+                  <Text type="secondary" style={{ fontSize: "11px" }}>
+                    Bet placed: {placedAt}
                   </Text>
-                </Space>
-                <Tag color={statusInfo.tagColor} size="small">
-                  {statusInfo.statusIcon} {statusInfo.statusText}
-                </Tag>
+                )}
               </div>
             )}
 
