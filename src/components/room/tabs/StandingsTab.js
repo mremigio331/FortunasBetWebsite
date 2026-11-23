@@ -12,6 +12,7 @@ import StandingsBetsLoader from "../StandingsBetsLoader";
 const StandingsTab = ({
   isLeaderboardLoading,
   leaderboard,
+  clinch,
   roomId,
   room,
   roomSport,
@@ -22,6 +23,7 @@ const StandingsTab = ({
     <RoomLeaderboard
       isLoading={isLeaderboardLoading}
       leaderboard={leaderboard}
+      clinch={clinch}
     />
     <StandingsBetsLoader
       roomId={roomId}

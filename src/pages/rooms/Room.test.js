@@ -38,6 +38,7 @@ import { getSeasonTypeDisplayName } from "../../configs/nflSeasonTypes";
 import useGetRoom from "../../hooks/room/useGetRoom";
 import useGetRoomMembers from "../../hooks/membership/useGetRoomMembers";
 import useGetRoomLeaderboard from "../../hooks/room/useGetRoomLeaderboard";
+import useGetRoomClinch from "../../hooks/room/useGetRoomClinch";
 import useGetRoomBetsAll from "../../hooks/room/useGetRoomBetsAll";
 import useGetRemovedBets from "../../hooks/bet/useGetRemovedBets";
 import useGetBetsForRoom from "../../hooks/bet/useGetBetsForRoom";
@@ -63,6 +64,10 @@ jest.mock("../../hooks/membership/useGetRoomMembers", () => ({
   default: jest.fn(),
 }));
 jest.mock("../../hooks/room/useGetRoomLeaderboard", () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
+jest.mock("../../hooks/room/useGetRoomClinch", () => ({
   __esModule: true,
   default: jest.fn(),
 }));
@@ -542,6 +547,11 @@ beforeEach(() => {
     leaderboard: [],
     isLeaderboardLoading: false,
     refetchLeaderboard: jest.fn(),
+  });
+  useGetRoomClinch.mockReturnValue({
+    clinch: null,
+    isClinchLoading: false,
+    refetchClinch: jest.fn(),
   });
   useGetRoomBetsAll.mockReturnValue({
     bets: [],

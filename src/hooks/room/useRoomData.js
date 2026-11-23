@@ -7,6 +7,7 @@ import { getEasternDateParts } from "../../utils/easternTime";
 import useGetRoom from "./useGetRoom";
 import useGetRoomMembers from "../membership/useGetRoomMembers";
 import useGetRoomLeaderboard from "./useGetRoomLeaderboard";
+import useGetRoomClinch from "./useGetRoomClinch";
 import useGetRoomBetsAll from "./useGetRoomBetsAll";
 import useGetRemovedBets from "../bet/useGetRemovedBets";
 import useCreateBet from "../bet/useCreateBet";
@@ -60,6 +61,8 @@ const useRoomData = (roomId) => {
 
   const { leaderboard, isLeaderboardLoading, refetchLeaderboard } =
     useGetRoomLeaderboard(roomId, !!room);
+
+  const { clinch, refetchClinch } = useGetRoomClinch(roomId, !!room);
 
   const {
     bets: roomBetsAll,
@@ -263,6 +266,7 @@ const useRoomData = (roomId) => {
   const refetchStandings = () => {
     refetchRoomBetsAll();
     refetchLeaderboard();
+    refetchClinch();
     refetchBets();
     refetchRemovedBets();
   };
@@ -383,6 +387,7 @@ const useRoomData = (roomId) => {
     // Standings tab data
     leaderboard,
     isLeaderboardLoading,
+    clinch,
     roomBetsAll,
     roomBetsUsers,
     isRoomBetsAllLoading,

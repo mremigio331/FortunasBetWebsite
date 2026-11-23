@@ -41,6 +41,7 @@ const RoomContent = () => {
     isMLB,
     leaderboard,
     isLeaderboardLoading,
+    clinch,
     removedBets,
     refetchStandings,
     mlbOddsProps,
@@ -283,6 +284,7 @@ const RoomContent = () => {
                   <StandingsTab
                     isLeaderboardLoading={isLeaderboardLoading}
                     leaderboard={leaderboard}
+                    clinch={clinch}
                     roomId={roomId}
                     room={room}
                     roomSport={roomSport}
