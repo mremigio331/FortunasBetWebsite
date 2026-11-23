@@ -24,9 +24,10 @@ const renderBetCardOrPrompt = (bet, pointLabel) => {
     );
   }
   const isPrivate = !bet.game_bet;
-  const betDate = bet.event_datetime
-    ? new Date(bet.event_datetime * 1000).toLocaleDateString()
-    : "Unknown";
+  const betDate =
+    !isPrivate && bet.event_datetime
+      ? new Date(bet.event_datetime * 1000).toLocaleDateString()
+      : "";
   let homeTeam = "Home Team";
   let awayTeam = "Away Team";
   if (bet.odds_snapshot?.teams) {

@@ -95,9 +95,11 @@ const BetCard = ({
     bet.event_datetime && bet.event_datetime > now && !bet.game_bet?.result;
 
   // Game start time, in the viewer's own browser timezone (date + time + tz).
-  const gameStart = bet.event_datetime
-    ? formatBrowserDateTime(bet.event_datetime)
-    : "Unknown";
+  // Hidden bets have no event_datetime from the API and never render this.
+  const gameStart =
+    !isPrivate && bet.event_datetime
+      ? formatBrowserDateTime(bet.event_datetime)
+      : "Unknown";
 
   // Bet placement time, in the viewer's browser timezone. Shown on ALL bets —
   // including other users' hidden bets on games that haven't started — so
@@ -214,11 +216,8 @@ const BetCard = ({
                     {statusInfo.statusIcon} {statusInfo.statusText}
                   </Tag>
                 </div>
-                {/* Even when the bet itself is hidden, show when the game
-                    starts and when the bet was placed. */}
-                <Text type="secondary" style={{ fontSize: "12px" }}>
-                  Game starts: {gameStart}
-                </Text>
+                {/* Hidden bet: show only when the bet was placed. The game
+                    start time is not shown until the bet is revealed. */}
                 {placedAt && (
                   <Text type="secondary" style={{ fontSize: "11px" }}>
                     Bet placed: {placedAt}
