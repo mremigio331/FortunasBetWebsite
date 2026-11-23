@@ -28,6 +28,7 @@ const GameCard = ({
   roomSport = "NFL",
   sportRules,
   sessionPointCounts = {},
+  oddsFlash = false,
 }) => {
   // ----- helpers -----
   const getOverallRecord = (records) => {
@@ -83,19 +84,24 @@ const GameCard = ({
     <Card
       size="small"
       style={{
-        border: hasConflictingPoints
-          ? "2px solid #ff4d4f"
-          : isSelected
-            ? "2px solid #1890ff"
-            : "1px solid #f0f0f0",
+        border: oddsFlash
+          ? "2px solid #52c41a"
+          : hasConflictingPoints
+            ? "2px solid #ff4d4f"
+            : isSelected
+              ? "2px solid #1890ff"
+              : "1px solid #f0f0f0",
         borderRadius: 8,
         height: "100%",
         cursor: isGameSelectable ? "pointer" : "not-allowed",
-        boxShadow: hasConflictingPoints
-          ? "0 4px 12px rgba(255, 77, 79, 0.15)"
-          : isSelected
-            ? "0 4px 12px rgba(24, 144, 255, 0.15)"
-            : undefined,
+        boxShadow: oddsFlash
+          ? "0 0 0 3px rgba(82, 196, 26, 0.25)"
+          : hasConflictingPoints
+            ? "0 4px 12px rgba(255, 77, 79, 0.15)"
+            : isSelected
+              ? "0 4px 12px rgba(24, 144, 255, 0.15)"
+              : undefined,
+        transition: "border-color 0.3s ease, box-shadow 0.3s ease",
         opacity: isGameSelectable ? 1 : 0.6,
         filter: isGameSelectable ? "none" : "grayscale(30%)",
         position: "relative",

@@ -49,6 +49,13 @@ const useCreateBet = () => {
               message.error("Points wagered must be 1, 2, or 3");
             } else if (data.error === "Invalid bet type") {
               message.error(`Invalid bet: ${data.message}`);
+            } else if (
+              typeof data.message === "string" &&
+              data.message.toLowerCase().includes("do not match")
+            ) {
+              // Odds-snapshot mismatch: the caller (useBetSelection) shows a
+              // "refreshing" message and re-pulls the live odds, so stay quiet
+              // here to avoid a duplicate generic error toast.
             } else {
               message.error(data.message || "Invalid bet data");
             }

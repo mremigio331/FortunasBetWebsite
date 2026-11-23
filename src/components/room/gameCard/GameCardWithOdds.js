@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect, useRef, useState } from "react";
 import useGetGameOdds from "../../../hooks/games/useGetGameOdds";
 import GameCard from "./GameCard";
 
@@ -47,6 +47,44 @@ const GameCardWithOdds = ({ game, sport, league, ...rest }) => {
     };
   }, [game, odds, hasOdds]);
 
+  // Flash the card when the live line actually changes (e.g. after a
+  // mismatch-triggered odds invalidation re-pulls a moved line). We compare a
+  // signature of the bet-relevant fields and ignore the very first value so a
+  // normal initial load does not flash.
+  const [oddsFlash, setOddsFlash] = useState(false);
+  const prevOddsKeyRef = useRef(null);
+  const flashTimerRef = useRef(null);
+
+  const oddsKey = useMemo(() => {
+    const g = mergedGame || {};
+    return JSON.stringify({
+      spread: g.spread ?? null,
+      overUnder: g.overUnder ?? null,
+      home: g.homeTeamOdds?.spreadOdds ?? null,
+      away: g.awayTeamOdds?.spreadOdds ?? null,
+    });
+  }, [mergedGame]);
+
+  useEffect(() => {
+    if (prevOddsKeyRef.current === null) {
+      prevOddsKeyRef.current = oddsKey;
+      return;
+    }
+    if (prevOddsKeyRef.current !== oddsKey) {
+      prevOddsKeyRef.current = oddsKey;
+      setOddsFlash(true);
+      if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+      flashTimerRef.current = setTimeout(() => setOddsFlash(false), 2000);
+    }
+  }, [oddsKey]);
+
+  useEffect(
+    () => () => {
+      if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+    },
+    [],
+  );
+
   return (
     <GameCard
       game={mergedGame}
@@ -54,6 +92,7 @@ const GameCardWithOdds = ({ game, sport, league, ...rest }) => {
       league={league}
       oddsLoading={shouldFetchOdds && isOddsFetching}
       oddsError={shouldFetchOdds && isOddsError}
+      oddsFlash={oddsFlash}
       onRetryOdds={oddsRefetch}
       {...rest}
     />

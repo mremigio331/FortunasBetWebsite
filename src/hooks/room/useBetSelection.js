@@ -365,26 +365,89 @@ const useBetSelection = ({
           );
         }
 
-        return createBet({
-          room_id: roomId,
-          game_id: gameId,
-          sport: sport || "football",
-          league: league || "nfl",
-          season_type: parseInt(selectedSeasonType),
-          week: selectedWeek,
-          event_datetime: eventDateTime,
-          game_bet: gameBet,
-          odds_snapshot: game,
-        });
+        try {
+          return await createBet({
+            room_id: roomId,
+            game_id: gameId,
+            sport: sport || "football",
+            league: league || "nfl",
+            season_type: parseInt(selectedSeasonType),
+            week: selectedWeek,
+            event_datetime: eventDateTime,
+            game_bet: gameBet,
+            odds_snapshot: game,
+          });
+        } catch (err) {
+          // Odds moved between when the card cached the line and when the
+          // bet was submitted: the API rejects with a 400 "odds do not
+          // match". Refresh this game's odds so the card re-pulls the live
+          // line, tell the user the bet is refreshing, and surface a tagged
+          // error so the outer handler does not report success.
+          const resp = err?.response;
+          const isOddsMismatch =
+            resp?.status === 400 &&
+            typeof resp?.data?.message === "string" &&
+            resp.data.message.toLowerCase().includes("do not match");
+
+          if (isOddsMismatch) {
+            message.warning(
+              "Odds changed for this game — your bet is refreshing. Please re-confirm at the new line.",
+            );
+            queryClient.invalidateQueries({
+              queryKey: [
+                "gameOdds",
+                sport || "football",
+                league || "nfl",
+                gameId,
+              ],
+            });
+            const mismatchError = new Error("odds-snapshot-mismatch");
+            mismatchError.oddsMismatch = true;
+            mismatchError.gameId = gameId;
+            throw mismatchError;
+          }
+          throw err;
+        }
       });
 
-      await Promise.all(betPromises);
-      message.success(
-        `Successfully placed ${betEntries.length} bet${betEntries.length !== 1 ? "s" : ""}!`,
-      );
-      refetchBets();
-      queryClient.invalidateQueries({ queryKey: ["homeData"] });
-      setSelectedBets({});
+      const results = await Promise.allSettled(betPromises);
+      const rejected = results.filter((r) => r.status === "rejected");
+      const mismatches = rejected.filter((r) => r.reason?.oddsMismatch);
+      const placed = results.length - rejected.length;
+
+      if (placed > 0) {
+        message.success(
+          `Successfully placed ${placed} bet${placed !== 1 ? "s" : ""}!`,
+        );
+        refetchBets();
+        queryClient.invalidateQueries({ queryKey: ["homeData"] });
+      }
+
+      // Keep the mismatched games selected so the user can re-confirm at the
+      // refreshed line; clear the ones that placed. If nothing placed and the
+      // only failures were mismatches, the per-game warning already fired.
+      if (mismatches.length > 0) {
+        const mismatchedIds = new Set(mismatches.map((r) => r.reason.gameId));
+        setSelectedBets((prev) =>
+          Object.fromEntries(
+            Object.entries(prev).filter(([gameId]) =>
+              mismatchedIds.has(gameId),
+            ),
+          ),
+        );
+      } else {
+        setSelectedBets({});
+      }
+
+      // Surface a generic error only for non-mismatch failures (the mismatch
+      // path and useCreateBet already messaged the user).
+      const otherFailures = rejected.filter((r) => !r.reason?.oddsMismatch);
+      if (placed === 0 && otherFailures.length > 0) {
+        console.error(
+          "Error submitting bets:",
+          otherFailures.map((r) => r.reason),
+        );
+      }
     } catch (error) {
       console.error("Error submitting bets:", error);
     }
